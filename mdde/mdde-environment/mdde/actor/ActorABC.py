@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+from mdde.common.data.Fragment import Fragment, FragmentData
 from mdde.core.exception.ActorInitializationError import ActorInitializationError
 
 
@@ -17,7 +18,8 @@ class ActorABC(ABC):
         """
         # Prevent instantiation of the abstract class
         if type(self) is ActorABC:
-            raise ActorInitializationError("Create a subclass")
+            raise ActorInitializationError("ActorABC is an abstract class, "
+                                           "subclass it with overriding all methods marked as @abstractmethod")
         # Check id for correctness
         if a_id is None:
             raise ValueError("Actor id can't be None")
@@ -61,9 +63,27 @@ class ActorABC(ABC):
         """
         raise NotImplementedError()
 
-    def read(self, key):
+    @abstractmethod
+    def read_fragment(self, f_key: int) -> Fragment:
         """
+        Retrieve Fragment from the agent (without data).
+        Used for point retrieval of meta data ().
 
-        :param key:
-        :return:
+        :param f_key: Fragment hash key value
+        :return: Fragment
         """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def read_fragment_data(self, f_key: int) -> FragmentData:
+        """
+        Retrieve Fragment from the agent (with data).
+        Used for making copies or moving data between agents.
+
+        :param f_key: Fragment hash key value
+        :return: FragmentData
+        """
+        raise NotImplementedError()
+
+    def _attach_environment(self, c_env):
+        raise NotImplementedError()
