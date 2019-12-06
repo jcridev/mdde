@@ -1,0 +1,7 @@
+LICENSE
+*.md
+!README*.md
+**/.idea
+**/.code
+.git
+.cache
