@@ -3,7 +3,7 @@
 ## Default workload generator (benchmark)
 
 ### YCSB
-Our [YCSB fork](https://github.com/jcridev/YCSB) implementing redis for MDDE.
+Our [YCSB fork](https://github.com/jcridev/YCSB/tree/redis-mdde-client)(Branch: redis-mdde-client) implementing redis for MDDE.
 
 Build: `mvn -pl redis-mdde -am clean package `
 
