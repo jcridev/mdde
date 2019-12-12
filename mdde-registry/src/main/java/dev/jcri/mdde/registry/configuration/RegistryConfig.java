@@ -12,4 +12,9 @@ public class RegistryConfig {
      * Port on which the server is running
      */
     private int _listenPort=8942;
+
+    /**
+     * Configuration for the registry storage
+     */
+    private RegistryDataStoreConfig _backStoreConfig;
 }
