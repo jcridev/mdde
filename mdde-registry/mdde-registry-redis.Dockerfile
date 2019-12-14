@@ -23,4 +23,8 @@ WORKDIR BINPATH
 COPY --from=d-builder BUILDPATH/target/mdde-registry.jar .
 
 
+# Usage example:  
+# docker build -f ./mdde-registry-redis.Dockerfile -t "mdde-registry:latest" .
+
+
 

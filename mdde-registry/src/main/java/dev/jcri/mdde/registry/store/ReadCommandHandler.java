@@ -1,18 +1,26 @@
 package dev.jcri.mdde.registry.store;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
+import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public abstract class ReadCommandHandler {
+public abstract class ReadCommandHandler<T> {
 
-    public String runCommand(Commands readCommand, Map<String, Object> arguments)
-            throws JsonProcessingException, UnknownRegistryCommandExceptions {
+    IResponseSerializer<T> _serializer;
+    public ReadCommandHandler(IResponseSerializer<T> serializer){
+        Objects.requireNonNull(serializer, "Response serialization handler is not supplied ");
+        _serializer = serializer;
+    }
+
+    public T runCommand(Commands readCommand, Map<String, Object> arguments)
+            throws JsonProcessingException, UnknownRegistryCommandExceptions, ResponseSerializationException {
         switch (readCommand)    {
             case GET_REGISTRY:
                 return processGetFullRegistryCommand();
@@ -35,105 +43,162 @@ public abstract class ReadCommandHandler {
         throw new UnknownRegistryCommandExceptions(readCommand.toString());
     }
 
-    private String processGetFullRegistryCommand(){
-        return getFullRegistry().toString();
+    private T processGetFullRegistryCommand() throws ResponseSerializationException {
+        return _serializer.serialize(getFullRegistry());
     }
 
-    private String processFindTupleCommand(@NotNull Map<String, Object> arguments){
+    private T processFindTupleCommand(@NotNull Map<String, Object> arguments)
+            throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.FIND_TUPLE.toString()));
 
         var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID), String.format("%s must be invoked with %s",
                 Commands.FIND_TUPLE.toString(), ARG_TUPLE_ID));
 
-        return getTupleNodes(tupleId);
+        return _serializer.serialize(getTupleNodes(tupleId));
     }
 
-    private String processFindTupleFragmentCommand(@NotNull Map<String, Object> arguments){
+    private T processFindTupleFragmentCommand(@NotNull Map<String, Object> arguments)
+            throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.FIND_TUPLE_FRAGMENT.toString()));
 
         var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID), String.format("%s must be invoked with %s",
                 Commands.FIND_TUPLE.toString(), ARG_TUPLE_ID));
 
-        return getTupleFragment(tupleId);
+        return _serializer.serialize(getTupleFragment(tupleId));
     }
 
-    private String processFindFragmentNodesCommand(@NotNull Map<String, Object> arguments){
+    private T processFindFragmentNodesCommand(@NotNull Map<String, Object> arguments)
+            throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
 
         var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
 
-        return getFragmentNodes(fragmentId);
+        return _serializer.serialize(getFragmentNodes(fragmentId));
     }
 
-    private String processGetFragmentTuplesCommand(@NotNull Map<String, Object> arguments){
+    private T processGetFragmentTuplesCommand(@NotNull Map<String, Object> arguments)
+            throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
 
         var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
 
-        return getFragmentTuples(fragmentId);
+        return _serializer.serialize(getFragmentTuples(fragmentId));
     }
 
-    private String processCountFragmentsCommand(@NotNull Map<String, Object> arguments){
+    private T processCountFragmentsCommand(@NotNull Map<String, Object> arguments)
+            throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
 
         var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
 
-        return Integer.toString(getCountFragment(fragmentId));
+        return _serializer.serialize(getCountFragment(fragmentId));
     }
 
-    private String processCountTuplesCommand(@NotNull Map<String, Object> arguments){
+    private T processCountTuplesCommand(@NotNull Map<String, Object> arguments)
+            throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
 
         var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID), String.format("%s must be invoked with %s",
                 Commands.FIND_TUPLE.toString(), ARG_TUPLE_ID));
 
-        return Integer.toString(getCountTuple(tupleId));
+        return _serializer.serialize(getCountTuple(tupleId));
     }
 
-    private String processGetNodesCommand()
-            throws JsonProcessingException {
+    private T processGetNodesCommand()
+            throws ResponseSerializationException {
         var nodesList = getNodes();
-
-        // TODO: Convert output to dedicatedClass
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(nodesList);
+        return _serializer.serialize(nodesList);
     }
 
+    /**
+     * Retrieve a snapshot of the current state for the entire registry including tuples, nodes and fragments
+     * @return Current registry snapshot
+     */
     public abstract FullRegistry getFullRegistry();
 
-    public abstract String getTupleNodes(@NotNull final String tupleId);
+    /**
+     * Get the list of node Ids where the tuple is located
+     * @param tupleId Tuple ID
+     * @return list of nodes where the specific tuple can be found
+     */
+    public abstract List<String> getTupleNodes(final String tupleId);
 
-    public abstract String getTupleFragment(@NotNull final String tupleId);
+    /**
+     * Get the id of a fragment to which the tuple belongs
+     * @param tupleId Tuple ID
+     * @return Fragment ID
+     */
+    public abstract String getTupleFragment(final String tupleId);
 
-    public abstract String getFragmentNodes(@NotNull final String fragmentId);
+    /**
+     * Get the list of node IDs where the fragment is located
+     * @param fragmentId Fragment ID
+     * @return List of Node IDs
+     */
+    public abstract List<String> getFragmentNodes(final String fragmentId);
 
-    public abstract String getFragmentTuples(@NotNull final String fragmentId);
+    /**
+     * Get the list of all tuple IDs that belong to the fragment
+     * @param fragmentId Fragment ID
+     * @return List of Tuple IDs
+     */
+    public abstract List<String> getFragmentTuples(final String fragmentId);
 
-    public abstract int getCountFragment(@NotNull final String fragmentId);
+    /**
+     * Get the number of instances of a specific fragment
+     * @param fragmentId Fragment ID
+     * @return Count of the specified fragment instances across all nodes
+     */
+    public abstract int getCountFragment(final String fragmentId);
 
-    public abstract int getCountTuple(@NotNull final String tupleId);
+    /**
+     * Get the number of instances of a specific tuple
+     * @param tupleId Tuple ID
+     * @return Count of the specified tuple instances across all nodes
+     */
+    public abstract int getCountTuple(final String tupleId);
 
+    /**
+     * Get the list of all node IDs
+     * @return List of all node IDs that are present in the registry
+     */
     public abstract List<String> getNodes();
 
-    public abstract boolean getIsNodeExists(@NotNull final String nodeId);
-
-    public boolean getIsTupleExists(@NotNull final String tupleId){
+    /**
+     * Check if the specified node ID is registered within the registry
+     * @param nodeId Node ID
+     * @return True if node exists, False otherwise
+     */
+    public abstract boolean getIsNodeExists(final String nodeId);
+    /**
+     * Check if the specified tuple ID is registered within the registry
+     * @param tupleId Tuple ID
+     * @return True if tuple exists, False otherwise
+     */
+    public boolean getIsTupleExists(final String tupleId){
         return getCountFragment(tupleId) > 0;
     }
-
-    public boolean getIsFragmentExists(@NotNull final String fragmentId){
+    /**
+     * Check if the specified fragment ID is registered within the registry
+     * @param fragmentId Fragment ID
+     * @return True if fragment exists, False otherwise
+     */
+    public boolean getIsFragmentExists(final String fragmentId){
         return getCountFragment(fragmentId) > 0;
     }
 
+    /**
+     * Catalog of the available READ operations
+     */
     public enum Commands {
         GET_REGISTRY("GETALL"),
         FIND_TUPLE("FINDTUPLE"),
