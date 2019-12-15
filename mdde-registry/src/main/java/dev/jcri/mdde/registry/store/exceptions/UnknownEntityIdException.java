@@ -1,8 +1,9 @@
 package dev.jcri.mdde.registry.store.exceptions;
 
+import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import org.jetbrains.annotations.NotNull;
 
-public class UnknownEntityIdException extends Exception {
+public class UnknownEntityIdException extends MddeRegistryException {
     /**
      * Custom message constructor
      * @param message Meaningful message

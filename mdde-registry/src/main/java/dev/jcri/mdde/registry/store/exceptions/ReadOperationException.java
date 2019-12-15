@@ -1,6 +1,8 @@
 package dev.jcri.mdde.registry.store.exceptions;
 
-public class ReadOperationException extends Exception {
+import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
+
+public class ReadOperationException extends MddeRegistryException {
     public ReadOperationException(String message){
         super(message);
     }

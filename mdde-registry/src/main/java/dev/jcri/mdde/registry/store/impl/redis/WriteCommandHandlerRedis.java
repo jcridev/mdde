@@ -12,7 +12,6 @@ import redis.clients.jedis.commands.JedisCommands;
 import java.util.*;
 
 public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
-    private final ConfigRedis _redisConfiguration;
     private RedisConnectionHelper _redisConnection;
 
     public WriteCommandHandlerRedis(ReadCommandHandler<T> readCommandHandler,
@@ -21,7 +20,6 @@ public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
         super(readCommandHandler, serializer);
 
         Objects.requireNonNull(config, "Redis configuration must be set for the writer");
-        _redisConfiguration = config;
 
         _redisConnection = new RedisConnectionHelper(config);
         _redisConnection.getRedisCommands();
