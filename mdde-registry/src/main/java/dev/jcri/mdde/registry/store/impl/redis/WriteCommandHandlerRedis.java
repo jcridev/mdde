@@ -106,21 +106,25 @@ public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
     }
 
     @Override
-    protected String runFormFragment(Set<String> tupleIds, String fragmentId) throws WriteOperationException {
-        var t = _redisConnection.getTransaction(Collections.singleton(Constants.FRAGMENT_PREFIX + fragmentId));
+    protected String runFormFragment(Set<String> tupleIds, String fragmentId, String nodeId) throws WriteOperationException {
+        final String keyFragment = Constants.FRAGMENT_PREFIX + fragmentId;
+        var t = _redisConnection.getTransaction(Collections.singleton(keyFragment));
+        t.sadd(Constants.FRAGMENT_SET , fragmentId);
+        t.sadd(Constants.NODE_PREFIX + nodeId, fragmentId);
         Map<String, Response<Long>> responses = new HashMap<>();
         for(String tupleId: tupleIds){
-            Response<Long> r = t.sadd(Constants.FRAGMENT_PREFIX + fragmentId,  tupleId);
+            Response<Long> r = t.sadd(keyFragment,  tupleId);
             responses.put(tupleId, r);
         }
-        var res = t.save();
+
+        var res = t.exec();
 
         for(Map.Entry<String, Response<Long>> r: responses.entrySet()){
             if (r.getValue().get() == 0){
                 throw new WriteOperationException(String.format("Failed to add %s", r.getKey()));
             }
         }
-        return res.get();
+        return "";
     }
 
     @Override

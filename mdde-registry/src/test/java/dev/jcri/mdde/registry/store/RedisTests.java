@@ -1,8 +1,6 @@
 package dev.jcri.mdde.registry.store;
 
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
-import dev.jcri.mdde.registry.store.exceptions.DuplicateEntityRecordException;
-import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
 import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
 import dev.jcri.mdde.registry.store.impl.redis.ConfigRedis;
@@ -29,24 +27,17 @@ public class RedisTests {
         var testConfig = new ConfigRedis();
         var serializer = new ResponseSerializerPassThrough();
         var redisReader = new ReadCommandHandlerRedis<Object>(serializer, testConfig);
-        try {
-            var result = redisReader.getFragmentTuples("TEST");
-            assertNotNull(result);
-        } catch (ReadOperationException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
     }
 
     @Test
-    public void testWriteReadDeleteTuple(){
+    public void testTupleLifecycle(){
         var testConfig = new ConfigRedis();
         var serializer = new ResponseSerializerPassThrough();
         var redisReader = new ReadCommandHandlerRedis<Object>(serializer, testConfig);
         var redisWriter = new WriteCommandHandlerRedis<Object>(redisReader, serializer, testConfig);
 
-        String randNodeId = UUID.randomUUID().toString();
-        String randTupleId = UUID.randomUUID().toString();
+        final String randNodeId = UUID.randomUUID().toString();
+        final String randTupleId = UUID.randomUUID().toString();
         try {
             try {
                 redisWriter.populateNodes(Collections.singleton(randNodeId));
@@ -70,6 +61,22 @@ public class RedisTests {
             var nodeUnassignedTuples = redisReader.getUnassignedTuples(randNodeId);
             assertEquals(1, nodeUnassignedTuples.size());
             assertEquals(randTupleId, nodeUnassignedTuples.toArray()[0]);
+
+            final String randFragmentId = UUID.randomUUID().toString();
+
+            try {
+                redisWriter.formFragment(Collections.singleton(randTupleId), randFragmentId, randNodeId);
+            } catch (MddeRegistryException e) {
+                fail("Failed to form a fragment", e);
+            }
+
+            tupleNodes = redisReader.getTupleNodes(randTupleId);
+            assertEquals(1, tupleNodes.size());
+            assertEquals(randNodeId, tupleNodes.toArray()[0]);
+
+            var tupleFragment = redisReader.getTupleFragment(randTupleId);
+            assertEquals(randFragmentId, tupleFragment);
+
 
             try {
                 redisWriter.deleteTuple(randTupleId);

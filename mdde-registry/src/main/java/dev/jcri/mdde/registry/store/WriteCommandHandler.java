@@ -110,7 +110,7 @@ public abstract class WriteCommandHandler<T> {
     }
 
     private T processFormFragmentCommand(final Map<String, Object> arguments)
-            throws ResponseSerializationException, WriteOperationException {
+            throws ResponseSerializationException, WriteOperationException, IllegalRegistryActionException, UnknownEntityIdException, DuplicateEntityRecordException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.FORM_FRAGMENT.toString()));
 
@@ -125,7 +125,10 @@ public abstract class WriteCommandHandler<T> {
         var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
                 Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
 
-        return _serializer.serialize(runFormFragment((Set<String>) tupleIdsArg, fragmentId));
+        var nodeId = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID), String.format("%s must be invoked with %s",
+                Commands.FORM_FRAGMENT.toString(), ARG_NODE_ID));
+
+        return _serializer.serialize(verifyAndRunFormFragment((Set<String>) tupleIdsArg, fragmentId, nodeId));
     }
 
     private void processAppendToFragmentCommand(final Map<String, Object> arguments)
@@ -293,30 +296,29 @@ public abstract class WriteCommandHandler<T> {
      * @throws UnknownEntityIdException
      * @throws WriteOperationException
      */
-    public final String formFragment(final Set<String> tupleIds, final String fragmentId)
-            throws UnknownEntityIdException, WriteOperationException {
+    public final String formFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
+            throws UnknownEntityIdException, WriteOperationException, DuplicateEntityRecordException, IllegalRegistryActionException {
         _commandExecutionLock.lock();
         try {
-            return verifyAndRunFormFragment(tupleIds, fragmentId);
+            return verifyAndRunFormFragment(tupleIds, fragmentId, nodeId);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
 
-    private String verifyAndRunFormFragment(final Set<String> tupleIds, final String fragmentId)
-            throws UnknownEntityIdException, WriteOperationException{
-        for(String tupleId: tupleIds){
-            if (readCommandHandler.getIsTupleExists(tupleId)) {
-                throw new UnknownEntityIdException(RegistryEntityType.Tuple, tupleId);
-            }
+    private String verifyAndRunFormFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
+            throws UnknownEntityIdException, WriteOperationException, DuplicateEntityRecordException, IllegalRegistryActionException {
+        if(!readCommandHandler.getIsTuplesUnassigned(nodeId, tupleIds)){
+            throw new IllegalRegistryActionException("Fragments can only be formed from colocated exiting tuples",
+                    IllegalRegistryActionException.IllegalActions.FormingFragmentFromNonColocatedTuples);
+        }
+        if (readCommandHandler.getIsFragmentExists(fragmentId)) {
+            throw new DuplicateEntityRecordException(RegistryEntityType.Fragment, fragmentId);
         }
 
-        if (!readCommandHandler.getIsFragmentExists(fragmentId)) {
-            throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
-        }
 
-        return runFormFragment(tupleIds, fragmentId);
+        return runFormFragment(tupleIds, fragmentId, nodeId);
     }
 
     public final void appendTupleToFragment(final String tupleId, final String fragmentId)
@@ -331,9 +333,9 @@ public abstract class WriteCommandHandler<T> {
     }
 
     private void verifyAndRunAppendTupleToFragment(final String tupleId, final String fragmentId)
-            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
-        if (readCommandHandler.getIsTupleExists(tupleId)) {
-            throw new DuplicateEntityRecordException(RegistryEntityType.Tuple, tupleId);
+            throws UnknownEntityIdException, WriteOperationException {
+        if (!readCommandHandler.getIsTupleExists(tupleId)) {
+            throw new UnknownEntityIdException(RegistryEntityType.Tuple, tupleId);
         }
         if (!readCommandHandler.getIsFragmentExists(fragmentId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
@@ -475,7 +477,7 @@ public abstract class WriteCommandHandler<T> {
      * @param tupleIds IDs of Tuples that will be placed into the same fragment
      * @return
      */
-    protected abstract String runFormFragment(final Set<String> tupleIds, String fragmentId) throws WriteOperationException;
+    protected abstract String runFormFragment(final Set<String> tupleIds, String fragmentId, String nodeId) throws WriteOperationException;
 
     /**
      * Attach tuple to a fragment. If a fragment is already part of a tuple, exclude it from the current fragment.

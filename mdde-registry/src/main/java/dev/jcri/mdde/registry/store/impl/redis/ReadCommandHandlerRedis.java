@@ -148,4 +148,16 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
     public Set<String> getAllFragmentIds() {
         return _redisConnection.getRedisCommands().smembers(Constants.FRAGMENT_SET);
     }
+
+    @Override
+    public Boolean getIsTuplesUnassigned(String nodeId, Set<String> tupleIds) {
+        var p = _redisConnection.getPipeline();
+        Map<String,  Response<Boolean>> responses = new HashMap<>();
+        for(String tupleId: tupleIds){
+            responses.put(tupleId, p.sismember(Constants.NODE_HEAP + nodeId, tupleId));
+        }
+        p.sync();
+
+        return responses.entrySet().stream().allMatch(x -> x.getValue().get());
+    }
 }

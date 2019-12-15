@@ -13,12 +13,20 @@ public class IllegalRegistryActionException extends MddeRegistryException {
         this._action = action;
     }
 
+    /**
+     * Specific illegal action attempted
+     * @return
+     */
     public IllegalActions getAction() {
         return _action;
     }
 
+    /**
+     * List of possible illegal actions
+     */
     public enum IllegalActions {
         UniqueFragmentRemoval,
-        AttemptToSeedNonEmptyRegistry
+        AttemptToSeedNonEmptyRegistry,
+        FormingFragmentFromNonColocatedTuples
     }
 }

@@ -208,11 +208,14 @@ public abstract class ReadCommandHandler<T> {
      */
     public abstract Set<String> getUnassignedTuples(String nodeId);
 
+    public abstract Boolean getIsTuplesUnassigned(String nodeId, Set<String> tupleIds);
+
     /**
      * Get the set of all fragments IDs
      * @return All registered fragment IDs
      */
     public abstract Set<String> getAllFragmentIds();
+
     /**
      * Catalog of the available READ operations
      */
