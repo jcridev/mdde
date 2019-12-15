@@ -4,10 +4,7 @@ import dev.jcri.mdde.registry.store.exceptions.*;
 import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -45,7 +42,8 @@ public abstract class WriteCommandHandler<T> {
      * @return JSON serialized result
      */
     public final T runCommand(Commands writeCommand, Map<String, Object> arguments)
-            throws DuplicateEntityRecordException, UnknownEntityIdException, ResponseSerializationException, IllegalRegistryActionException {
+            throws DuplicateEntityRecordException, UnknownEntityIdException,
+                    ResponseSerializationException, IllegalRegistryActionException, WriteOperationException {
         _commandExecutionLock.lock(); // Ensure sequential execution of registry manipulation
         try {
             switch (writeCommand) {
@@ -196,7 +194,7 @@ public abstract class WriteCommandHandler<T> {
     }
 
     private T processPopulateNodes(final Map<String, Object> arguments)
-            throws IllegalRegistryActionException, ResponseSerializationException {
+            throws IllegalRegistryActionException, ResponseSerializationException, WriteOperationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.POPULATE_NODES.toString()));
 
@@ -208,12 +206,12 @@ public abstract class WriteCommandHandler<T> {
         var nodeIdsArg = Objects.requireNonNull(arguments.get(ARG_NODE_IDs), String.format("%s must be invoked with %s",
                 Commands.POPULATE_NODES.toString(), ARG_NODE_IDs));
 
-        if(!(nodeIdsArg instanceof List<?>)){
-            throw new IllegalArgumentException(String.format("%s must be invoked with a collection %s ",
+        if(!(nodeIdsArg instanceof Set<?>)){
+            throw new IllegalArgumentException(String.format("%s must be invoked with a set collection %s ",
                     Commands.POPULATE_NODES.toString(), ARG_NODE_IDs));
         }
 
-        return _serializer.serialize(runPopulateNodes((List<String>)nodeIdsArg));
+        return _serializer.serialize(runPopulateNodes((Set<String>)nodeIdsArg));
     }
 
     /**
@@ -454,7 +452,7 @@ public abstract class WriteCommandHandler<T> {
      * @param nodeIds
      * @return
      */
-    protected abstract String runPopulateNodes(final List<String> nodeIds);
+    protected abstract boolean runPopulateNodes(final Set<String> nodeIds) throws WriteOperationException;
     /**
      * Registry manipulation commands available
      */

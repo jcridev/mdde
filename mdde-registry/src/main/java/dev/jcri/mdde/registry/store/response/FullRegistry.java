@@ -8,18 +8,18 @@ public class FullRegistry implements Serializable {
     /**
      * Map<Node ID, Map<Fragment ID, List<Tuple ID>>>
      */
-    private final Map<String, Map<String, List<String>>> _registry;
+    private final Map<String, Map<String, Set<String>>> _registry;
 
     /**
      * Construct registry
      * @param registry Map<Node ID, Map<Fragment ID, List<Tuple ID>>>
      */
-    public FullRegistry(Map<String, Map<String, List<String>>> registry){
+    public FullRegistry(Map<String, Map<String, Set<String>>> registry){
         Objects.requireNonNull(registry, "Registry map can't be null");
         _registry = registry;
     }
 
-    public Map<String, Map<String, List<String>>> getRegistry() {
+    public Map<String, Map<String, Set<String>>> getRegistry() {
         return _registry;
     }
 
@@ -29,7 +29,7 @@ public class FullRegistry implements Serializable {
     }
 
     @Transient
-    public Map<String, List<String>> getNodeContents(String nodeId){
+    public Map<String, Set<String>> getNodeContents(String nodeId){
         if(nodeId == null || nodeId.isEmpty()){
             throw new IllegalArgumentException("Node ID must be supplied");
         }

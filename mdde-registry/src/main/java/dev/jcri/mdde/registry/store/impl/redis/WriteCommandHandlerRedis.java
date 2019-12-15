@@ -2,6 +2,7 @@ package dev.jcri.mdde.registry.store.impl.redis;
 
 import dev.jcri.mdde.registry.store.ReadCommandHandler;
 import dev.jcri.mdde.registry.store.WriteCommandHandler;
+import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
 import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
 import org.jetbrains.annotations.NotNull;
 import redis.clients.jedis.Jedis;
@@ -9,6 +10,7 @@ import redis.clients.jedis.commands.JedisCommands;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
     private final ConfigRedis _redisConfiguration;
@@ -67,7 +69,13 @@ public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
     }
 
     @Override
-    protected String runPopulateNodes(List<String> nodeIds) {
-        return null;
+    protected boolean runPopulateNodes(Set<String> nodeIds) throws WriteOperationException {
+        for(String nodeId: nodeIds){
+            Long added = _redisConnection.sadd(Constants.NODES_SET, nodeId);
+            if(added < 1){
+                throw new WriteOperationException(String.format("Failed to append node: %s", nodeId));
+            }
+        }
+        return true;
     }
 }

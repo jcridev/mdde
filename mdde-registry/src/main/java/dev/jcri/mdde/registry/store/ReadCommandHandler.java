@@ -1,6 +1,6 @@
 package dev.jcri.mdde.registry.store;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class ReadCommandHandler<T> {
 
@@ -20,7 +19,7 @@ public abstract class ReadCommandHandler<T> {
     }
 
     public T runCommand(Commands readCommand, Map<String, Object> arguments)
-            throws JsonProcessingException, UnknownRegistryCommandExceptions, ResponseSerializationException {
+            throws UnknownRegistryCommandExceptions, ResponseSerializationException, ReadOperationException {
         switch (readCommand)    {
             case GET_REGISTRY:
                 return processGetFullRegistryCommand();
@@ -43,7 +42,7 @@ public abstract class ReadCommandHandler<T> {
         throw new UnknownRegistryCommandExceptions(readCommand.toString());
     }
 
-    private T processGetFullRegistryCommand() throws ResponseSerializationException {
+    private T processGetFullRegistryCommand() throws ResponseSerializationException, ReadOperationException {
         return _serializer.serialize(getFullRegistry());
     }
 
@@ -81,7 +80,7 @@ public abstract class ReadCommandHandler<T> {
     }
 
     private T processGetFragmentTuplesCommand(@NotNull Map<String, Object> arguments)
-            throws ResponseSerializationException {
+            throws ResponseSerializationException, ReadOperationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
 
@@ -123,14 +122,14 @@ public abstract class ReadCommandHandler<T> {
      * Retrieve a snapshot of the current state for the entire registry including tuples, nodes and fragments
      * @return Current registry snapshot
      */
-    public abstract FullRegistry getFullRegistry();
+    public abstract FullRegistry getFullRegistry() throws ReadOperationException;
 
     /**
      * Get the list of node Ids where the tuple is located
      * @param tupleId Tuple ID
      * @return list of nodes where the specific tuple can be found
      */
-    public abstract List<String> getTupleNodes(final String tupleId);
+    public abstract Set<String> getTupleNodes(final String tupleId);
 
     /**
      * Get the id of a fragment to which the tuple belongs
@@ -144,14 +143,21 @@ public abstract class ReadCommandHandler<T> {
      * @param fragmentId Fragment ID
      * @return List of Node IDs
      */
-    public abstract List<String> getFragmentNodes(final String fragmentId);
+    public abstract Set<String> getFragmentNodes(final String fragmentId);
+
+    /**
+     * Get all of the fragments stored within the node
+     * @param nodeId Node ID
+     * @return Set of fragments mapped to the node
+     */
+    public abstract Set<String> getNodeFragments(final String nodeId);
 
     /**
      * Get the list of all tuple IDs that belong to the fragment
      * @param fragmentId Fragment ID
      * @return List of Tuple IDs
      */
-    public abstract List<String> getFragmentTuples(final String fragmentId);
+    public abstract Set<String> getFragmentTuples(final String fragmentId) throws ReadOperationException;
 
     /**
      * Get the number of instances of a specific fragment
@@ -171,7 +177,7 @@ public abstract class ReadCommandHandler<T> {
      * Get the list of all node IDs
      * @return List of all node IDs that are present in the registry
      */
-    public abstract List<String> getNodes();
+    public abstract Set<String> getNodes();
 
     /**
      * Check if the specified node ID is registered within the registry
@@ -196,6 +202,11 @@ public abstract class ReadCommandHandler<T> {
         return getCountFragment(fragmentId) > 0;
     }
 
+    /**
+     * Get the set of all fragments IDs
+     * @return All registered fragment IDs
+     */
+    public abstract Set<String> getAllFragmentIds();
     /**
      * Catalog of the available READ operations
      */
