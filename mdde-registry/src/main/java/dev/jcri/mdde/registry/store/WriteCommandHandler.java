@@ -2,7 +2,6 @@ package dev.jcri.mdde.registry.store;
 
 import dev.jcri.mdde.registry.store.exceptions.*;
 import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -22,7 +21,7 @@ public abstract class WriteCommandHandler<T> {
     /**
      * Corresponding reader for the registry store
      */
-    final ReadCommandHandler<T> _readCommandHandler;
+    protected final ReadCommandHandler<T> readCommandHandler;
     /**
      * Serialization handler for the commands execution
      */
@@ -32,102 +31,93 @@ public abstract class WriteCommandHandler<T> {
         Objects.requireNonNull(readCommandHandler, "Handler for reads can't be null");
         Objects.requireNonNull(serializer, "Response serialization handler is not supplied ");
         _serializer = serializer;
-        _readCommandHandler = readCommandHandler;
+        this.readCommandHandler = readCommandHandler;
     }
 
     /**
      * Execute the specified query-like command
      * @param writeCommand WriteCommandHandler.Commands
      * @param arguments Key-value pairs
-     * @return JSON serialized result
      */
-    public final T runCommand(Commands writeCommand, Map<String, Object> arguments)
+    public final void runCommand(Commands writeCommand, Map<String, Object> arguments)
             throws DuplicateEntityRecordException, UnknownEntityIdException,
                     ResponseSerializationException, IllegalRegistryActionException, WriteOperationException {
         _commandExecutionLock.lock(); // Ensure sequential execution of registry manipulation
         try {
             switch (writeCommand) {
                 case INSERT_TUPLE:
-                    return processInsertTupleCommand(arguments);
+                    processInsertTupleCommand(arguments);
                 case INSERT_TUPLE_BULK:
-                    return processInsertTupleInBulkCommand(arguments);
+                    processInsertTupleInBulkCommand(arguments);
                 case DELETE_TUPLE:
-                    return processDeleteTupleCommand(arguments);
+                    processDeleteTupleCommand(arguments);
                 case FORM_FRAGMENT:
-                    return processFormFragmentCommand(arguments);
+                    processFormFragmentCommand(arguments);
                 case APPEND_TO_FRAGMENT:
-                    return processAppendToFragmentCommand(arguments);
+                    processAppendToFragmentCommand(arguments);
                 case REPLICATE_FRAGMENT:
-                    return processReplicateFragmentCommand(arguments);
+                    processReplicateFragmentCommand(arguments);
                 case DELETE_FRAGMENT:
-                    return processDeleteFragmentExemplar(arguments);
+                    processDeleteFragmentExemplar(arguments);
                 case DESTROY_FRAGMENT:
-                    return processDestroyFragment(arguments);
+                    processDestroyFragment(arguments);
                 case POPULATE_NODES:
-                    return processPopulateNodes(arguments);
+                    processPopulateNodes(arguments);
             }
         }
         finally {
             _commandExecutionLock.unlock();
         }
-
-        return null;
     }
 
-    private T processInsertTupleCommand(final Map<String, Object> arguments)
-            throws DuplicateEntityRecordException, UnknownEntityIdException, ResponseSerializationException {
+    private void processInsertTupleCommand(final Map<String, Object> arguments)
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.INSERT_TUPLE.toString()));
-        var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID), String.format("%s must be invoked with %s",
-                Commands.INSERT_TUPLE.toString(), ARG_TUPLE_ID));
+        var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID),
+                String.format("%s must be invoked with %s", Commands.INSERT_TUPLE.toString(), ARG_TUPLE_ID));
+        var nodeId = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID),
+                String.format("%s must be invoked with %s", Commands.INSERT_TUPLE.toString(), ARG_NODE_ID));
 
-        var nodeId = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID), String.format("%s must be invoked with %s",
-                Commands.INSERT_TUPLE.toString(), ARG_NODE_ID));
-
-        String fragmentId = (String) arguments.get(ARG_FRAGMENT_ID);
-
-        return _serializer.serialize(insertTuple(tupleId, nodeId, fragmentId));
+        verifyAndRunInsertTuple(tupleId, nodeId);
     }
 
-    private T processInsertTupleInBulkCommand(final Map<String, Object> arguments)
-            throws DuplicateEntityRecordException, UnknownEntityIdException, ResponseSerializationException {
+    private void processInsertTupleInBulkCommand(final Map<String, Object> arguments)
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.INSERT_TUPLE.toString()));
         var tupleIdsArg = Objects.requireNonNull(arguments.get(ARG_TUPLE_IDs), String.format("%s must be invoked with %s",
                 Commands.INSERT_TUPLE.toString(), ARG_TUPLE_IDs));
 
-        if(!(tupleIdsArg instanceof List<?>)){
+        if(!(tupleIdsArg instanceof Set<?>)){
             throw new IllegalArgumentException(String.format("%s must be invoked with a collection %s ",
                     Commands.INSERT_TUPLE.toString(), ARG_TUPLE_IDs));
         }
-
         var nodeId = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID), String.format("%s must be invoked with %s",
                 Commands.INSERT_TUPLE.toString(), ARG_NODE_ID));
 
-        String fragmentId = (String) arguments.get(ARG_FRAGMENT_ID);
-
-        return _serializer.serialize(insertTuple((List<String>) tupleIdsArg, nodeId, fragmentId));
+        verifyAndRunInsertTuple((Set<String>) tupleIdsArg, nodeId);
     }
 
-    private T processDeleteTupleCommand(final Map<String, Object> arguments)
-            throws ResponseSerializationException {
+    private void processDeleteTupleCommand(final Map<String, Object> arguments)
+            throws ResponseSerializationException, UnknownEntityIdException, WriteOperationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.DELETE_TUPLE.toString()));
         var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID), String.format("%s must be invoked with %s",
                 Commands.DELETE_TUPLE.toString(), ARG_TUPLE_ID));
 
-        return _serializer.serialize(runDeleteTuple(tupleId));
+        runCompleteTupleDeletion(tupleId); //TODO
     }
 
     private T processFormFragmentCommand(final Map<String, Object> arguments)
-            throws ResponseSerializationException {
+            throws ResponseSerializationException, WriteOperationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.FORM_FRAGMENT.toString()));
 
         var tupleIdsArg = Objects.requireNonNull(arguments.get(ARG_TUPLE_IDs), String.format("%s must be invoked with %s",
                 Commands.FORM_FRAGMENT.toString(), ARG_TUPLE_IDs));
 
-        if(!(tupleIdsArg instanceof List<?>)){
+        if(!(tupleIdsArg instanceof Set<?>)){
             throw new IllegalArgumentException(String.format("%s must be invoked with a collection %s ",
                     Commands.FORM_FRAGMENT.toString(), ARG_TUPLE_IDs));
         }
@@ -135,11 +125,11 @@ public abstract class WriteCommandHandler<T> {
         var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
                 Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
 
-        return _serializer.serialize(runFormFragment((List<String>) tupleIdsArg, fragmentId));
+        return _serializer.serialize(runFormFragment((Set<String>) tupleIdsArg, fragmentId));
     }
 
-    private T processAppendToFragmentCommand(final Map<String, Object> arguments)
-            throws ResponseSerializationException {
+    private void processAppendToFragmentCommand(final Map<String, Object> arguments)
+            throws ResponseSerializationException, WriteOperationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.FORM_FRAGMENT.toString()));
 
@@ -149,11 +139,11 @@ public abstract class WriteCommandHandler<T> {
         var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
                 Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
 
-        return _serializer.serialize(runAppendTupleToFragment(tupleId, fragmentId));
+        runAppendTupleToFragment(tupleId, fragmentId);
     }
 
-    private T processReplicateFragmentCommand(final Map<String, Object> arguments)
-            throws ResponseSerializationException {
+    private void processReplicateFragmentCommand(final Map<String, Object> arguments)
+            throws ResponseSerializationException, WriteOperationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.FORM_FRAGMENT.toString()));
 
@@ -165,11 +155,11 @@ public abstract class WriteCommandHandler<T> {
         var nodeIdB = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID_B), String.format("%s must be invoked with %s",
                 Commands.INSERT_TUPLE.toString(), ARG_NODE_ID_B));
 
-        return _serializer.serialize(runReplicateFragment(fragmentId, nodeIdA, nodeIdB));
+        runReplicateFragment(fragmentId, nodeIdA, nodeIdB);
     }
 
-    private T processDeleteFragmentExemplar(final Map<String, Object> arguments)
-            throws ResponseSerializationException {
+    private void processDeleteFragmentExemplar(final Map<String, Object> arguments)
+            throws ResponseSerializationException, WriteOperationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.FORM_FRAGMENT.toString()));
 
@@ -179,7 +169,7 @@ public abstract class WriteCommandHandler<T> {
         var nodeIdA = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID), String.format("%s must be invoked with %s",
                 Commands.INSERT_TUPLE.toString(), ARG_NODE_ID));
 
-        return _serializer.serialize(runDeleteFragmentExemplar(fragmentId, nodeIdA));
+        runDeleteFragmentExemplar(fragmentId, nodeIdA);
     }
 
     private T processDestroyFragment(final Map<String, Object> arguments)
@@ -198,9 +188,9 @@ public abstract class WriteCommandHandler<T> {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.POPULATE_NODES.toString()));
 
-        var currentNodes = _readCommandHandler.getNodes();
+        var currentNodes = readCommandHandler.getNodes();
         if(currentNodes != null && !currentNodes.isEmpty()){
-            throw new IllegalRegistryActionException("Nodes population is now allowed in non-empty registry");
+            throw new IllegalRegistryActionException("Nodes population is now allowed in non-empty registry", IllegalRegistryActionException.IllegalActions.AttemptToSeedNonEmptyRegistry);
         }
 
         var nodeIdsArg = Objects.requireNonNull(arguments.get(ARG_NODE_IDs), String.format("%s must be invoked with %s",
@@ -218,239 +208,310 @@ public abstract class WriteCommandHandler<T> {
      * Insert tuple id to the specified node, optionally assigning it to a fragment
      * @param tupleId
      * @param nodeId
-     * @param fragmentId
      * @return
      * @throws DuplicateEntityRecordException
      * @throws UnknownEntityIdException
      */
-    public final String insertTuple(final String tupleId, final String nodeId, String fragmentId)
-            throws DuplicateEntityRecordException, UnknownEntityIdException {
+    public final void insertTuple(final String tupleId, final String nodeId)
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
         _commandExecutionLock.lock();
         try {
-            return verifyAndRunInsertTuple(tupleId, nodeId, fragmentId);
+            verifyAndRunInsertTuple(tupleId, nodeId);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
 
-    private final String verifyAndRunInsertTuple(final String tupleId, final String nodeId, String fragmentId)
-            throws DuplicateEntityRecordException, UnknownEntityIdException {
-        if (_readCommandHandler.getIsTupleExists(tupleId)) {
+    private void verifyAndRunInsertTuple(final String tupleId, final String nodeId)
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
+        if (readCommandHandler.getIsTupleExists(tupleId)) {
             throw new DuplicateEntityRecordException(RegistryEntityType.Tuple, tupleId);
         }
-        if (!_readCommandHandler.getIsFragmentExists(fragmentId)) {
-            throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
-        }
-        if (!_readCommandHandler.getIsNodeExists(nodeId)) {
+        if (!readCommandHandler.getIsNodeExists(nodeId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
         }
 
-        return runInsertTuple(tupleId, nodeId, fragmentId);
+        runInsertTupleToNode(tupleId, nodeId);
     }
 
-    public final String insertTuple(final List<String> tupleIds, final String nodeId, String fragmentId){
+    /**
+     * Insert tuples to node as unassigned to a fragment
+     * @param tupleIds Tuple IDs
+     * @param nodeId Node ID
+     * @throws DuplicateEntityRecordException
+     * @throws UnknownEntityIdException
+     * @throws WriteOperationException
+     */
+    public final void insertTuple(final Set<String> tupleIds, final String nodeId)
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException{
         _commandExecutionLock.lock();
         try {
-            throw new UnsupportedOperationException();
+            verifyAndRunInsertTuple(tupleIds, nodeId);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
 
-    private final String verifyAndRunInsertTuple(final List<String> tupleIds, final String nodeId, String fragmentId)
-            throws DuplicateEntityRecordException, UnknownEntityIdException {
+    private void verifyAndRunInsertTuple(final Set<String> tupleIds, final String nodeId)
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
 
         for(String tupleId: tupleIds){
-            if (_readCommandHandler.getIsTupleExists(tupleId)) {
+            if (readCommandHandler.getIsTupleExists(tupleId)) {
                 throw new DuplicateEntityRecordException(RegistryEntityType.Tuple, tupleId);
             }
         }
-
-        if (!_readCommandHandler.getIsFragmentExists(fragmentId)) {
-            throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
-        }
-        if (!_readCommandHandler.getIsNodeExists(nodeId)) {
+        if (!readCommandHandler.getIsNodeExists(nodeId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
         }
 
-        return runInsertTuple(tupleIds, nodeId, fragmentId);
+        runInsertTupleToNode(tupleIds, nodeId);
     }
 
-    public final String deleteTuple(final String tupleId){
+    /**
+     * Completely remove tuple from the registry with excluding from fragments
+     * @param tupleId Tuple ID
+     * @throws UnknownEntityIdException
+     * @throws WriteOperationException
+     */
+    public final void deleteTuple(final String tupleId) throws UnknownEntityIdException, WriteOperationException {
         _commandExecutionLock.lock();
         try {
-            return runDeleteTuple(tupleId);
+            runCompleteTupleDeletion(tupleId);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
 
-    public final String formFragment(final List<String> tupleIds, final String fragmentId)
-            throws UnknownEntityIdException {
+    /**
+     * Form a fragment from tuples located on the same node
+     * @param tupleIds Set of tuple IDs
+     * @param fragmentId new Fragment ID
+     * @return
+     * @throws UnknownEntityIdException
+     * @throws WriteOperationException
+     */
+    public final String formFragment(final Set<String> tupleIds, final String fragmentId)
+            throws UnknownEntityIdException, WriteOperationException {
         _commandExecutionLock.lock();
         try {
-            for(String tupleId: tupleIds){
-                if (_readCommandHandler.getIsTupleExists(tupleId)) {
-                    throw new UnknownEntityIdException(RegistryEntityType.Tuple, tupleId);
-                }
-            }
-
-            if (!_readCommandHandler.getIsFragmentExists(fragmentId)) {
-                throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
-            }
-
-            return runFormFragment(tupleIds, fragmentId);
+            return verifyAndRunFormFragment(tupleIds, fragmentId);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
 
-    public final String appendTupleToFragment(final String tupleId, final String fragmentId)
-            throws DuplicateEntityRecordException, UnknownEntityIdException {
+    private String verifyAndRunFormFragment(final Set<String> tupleIds, final String fragmentId)
+            throws UnknownEntityIdException, WriteOperationException{
+        for(String tupleId: tupleIds){
+            if (readCommandHandler.getIsTupleExists(tupleId)) {
+                throw new UnknownEntityIdException(RegistryEntityType.Tuple, tupleId);
+            }
+        }
+
+        if (!readCommandHandler.getIsFragmentExists(fragmentId)) {
+            throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
+        }
+
+        return runFormFragment(tupleIds, fragmentId);
+    }
+
+    public final void appendTupleToFragment(final String tupleId, final String fragmentId)
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
         _commandExecutionLock.lock();
         try {
-            if (_readCommandHandler.getIsTupleExists(tupleId)) {
-                throw new DuplicateEntityRecordException(RegistryEntityType.Tuple, tupleId);
-            }
-            if (!_readCommandHandler.getIsFragmentExists(fragmentId)) {
-                throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
-            }
-
-            return runAppendTupleToFragment(tupleId, fragmentId);
+            verifyAndRunAppendTupleToFragment(tupleId, fragmentId);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
 
-    public final String replicateFragment( final String fragmentId,
-                                    final String sourceNodeId,
-                                    final String destinationNodeId)
-            throws UnknownEntityIdException {
+    private void verifyAndRunAppendTupleToFragment(final String tupleId, final String fragmentId)
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
+        if (readCommandHandler.getIsTupleExists(tupleId)) {
+            throw new DuplicateEntityRecordException(RegistryEntityType.Tuple, tupleId);
+        }
+        if (!readCommandHandler.getIsFragmentExists(fragmentId)) {
+            throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
+        }
+
+        runAppendTupleToFragment(tupleId, fragmentId);
+    }
+
+    public final void replicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
+            throws UnknownEntityIdException, WriteOperationException {
         _commandExecutionLock.lock();
         try {
-            if (!_readCommandHandler.getIsFragmentExists(fragmentId)) {
-                throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
-            }
-            if (!_readCommandHandler.getIsNodeExists(sourceNodeId)) {
-                throw new UnknownEntityIdException(RegistryEntityType.Node, sourceNodeId);
-            }
-            if (!_readCommandHandler.getIsNodeExists(destinationNodeId)) {
-                throw new UnknownEntityIdException(RegistryEntityType.Node, destinationNodeId);
-            }
-
-            return runReplicateFragment(fragmentId, sourceNodeId, destinationNodeId);
+            verifyAndRunReplicateFragment(fragmentId, sourceNodeId, destinationNodeId);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
 
-    public final String deleteFragmentExemplar(final String fragmentId, final String nodeId)
-            throws UnknownEntityIdException {
+    private void verifyAndRunReplicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
+            throws UnknownEntityIdException, WriteOperationException {
+        if (!readCommandHandler.getIsFragmentExists(fragmentId)) {
+            throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
+        }
+        if (!readCommandHandler.getIsNodeExists(sourceNodeId)) {
+            throw new UnknownEntityIdException(RegistryEntityType.Node, sourceNodeId);
+        }
+        if (!readCommandHandler.getIsNodeExists(destinationNodeId)) {
+            throw new UnknownEntityIdException(RegistryEntityType.Node, destinationNodeId);
+        }
+
+        runReplicateFragment(fragmentId, sourceNodeId, destinationNodeId);
+    }
+
+    /**
+     * Remove a specific copy of a fragment
+     * @param fragmentId ID of the fragment to be removed
+     * @param nodeId ID of the node from which the fragment should be removed
+     * @throws UnknownEntityIdException
+     * @throws WriteOperationException
+     */
+    public final void deleteFragmentExemplar(final String fragmentId, final String nodeId)
+            throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException {
         _commandExecutionLock.lock();
         try {
-            if (!_readCommandHandler.getIsFragmentExists(fragmentId)) {
-                throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
-            }
-            if (!_readCommandHandler.getIsNodeExists(nodeId)) {
-                throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
-            }
-            return runDeleteFragmentExemplar(fragmentId, nodeId);
+            verifyAndRunDeleteFragmentExemplar(fragmentId, nodeId);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
 
+    private void verifyAndRunDeleteFragmentExemplar(final String fragmentId, final String nodeId)
+            throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException {
+        var fragmentCount = readCommandHandler.getCountFragment(fragmentId);
+        if(fragmentCount == 0){
+            throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
+        } else if (fragmentCount == 1){
+            throw new IllegalRegistryActionException(String.format("Attempted to remove a unique fragment %s", fragmentId),
+                    IllegalRegistryActionException.IllegalActions.UniqueFragmentRemoval);
+        }
+        if (!readCommandHandler.getIsNodeExists(nodeId)) {
+            throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
+        }
+        runDeleteFragmentExemplar(fragmentId, nodeId);
+    }
+
+    /**
+     * Completely remove the fragment from the Registry, including all associated tuples
+     * @param fragmentId Fragment ID to be removed
+     * @return
+     * @throws UnknownEntityIdException
+     */
     public final String deleteFragmentCompletely(final String fragmentId)
             throws UnknownEntityIdException {
         _commandExecutionLock.lock();
         try {
-            if (!_readCommandHandler.getIsFragmentExists(fragmentId)) {
-                throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
-            }
-            return runCompleteFragmentDeletion(fragmentId);
+            return verifyAndRunCompleteFragmentDeletion(fragmentId);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
 
-    /**
-     * Insert tuple to the registry, optionally attaching it to a fragment right away
-     * @param tupleId
-     * @param fragmentId
-     * @param nodeId Destination node
-     * @return
-     */
-    protected abstract String runInsertTuple(final String tupleId, final String nodeId, String fragmentId);
+    private String verifyAndRunCompleteFragmentDeletion(final String fragmentId)
+            throws UnknownEntityIdException {
+        if (!readCommandHandler.getIsFragmentExists(fragmentId)) {
+            throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
+        }
+        return runCompleteFragmentDeletion(fragmentId);
+    }
 
     /**
-     * Bulk insertion (intended to initial data population mostly)
-     * @param tupleId
-     * @param nodeId
-     * @param fragmentId
-     * @return
+     * Populate node catalog
+     * @param nodeIds Node IDs
+     * @throws WriteOperationException
      */
-    protected abstract String runInsertTuple(final List<String> tupleId, final String nodeId, String fragmentId);
+    public final void populateNodes(Set<String> nodeIds) throws WriteOperationException {
+        Objects.requireNonNull(nodeIds, "nodeIds can't be null");
+        runPopulateNodes(nodeIds);
+    }
+
+    /**
+     * Insert tuple to the registry, optionally attaching it to a fragment right away
+     * @param tupleId Tuple ID
+     * @param nodeId Destination node
+     */
+    protected abstract void runInsertTupleToNode(final String tupleId, final String nodeId) throws UnknownEntityIdException, WriteOperationException;
+
+    /**
+     * Bulk insert tuple to the registry, optionally attaching it to a fragment right away
+     * @param tupleIds Tuple IDs
+     * @param nodeId Destination node
+     */
+    protected abstract void runInsertTupleToNode(final Set<String> tupleIds, String nodeId) throws WriteOperationException, UnknownEntityIdException;
+
+    /**
+     * Insert tuple to a specific fragment
+     * @param tupleId Tuple ID
+     * @param fragmentId Destination fragment ID
+     */
+    protected abstract void runInsertTupleToFragment(final String tupleId, String fragmentId) throws WriteOperationException;
+    /**
+     * Bulk insertion to a specific fragment
+     * @param tupleIds
+     * @param fragmentId
+     */
+    protected abstract void runInsertTupleToFragment(final Set<String> tupleIds, String fragmentId) throws WriteOperationException;
 
     /**
      * Deleter tuple and exclude from all of the fragments it's in
      * @param tupleId
      * @return
      */
-    protected abstract String runDeleteTuple(final String tupleId);
+    protected abstract void runCompleteTupleDeletion(final String tupleId) throws UnknownEntityIdException, WriteOperationException;
 
     /**
      * Create fragment including the specified tuples. A tuple can belong to only one fragment at a time
-     * @param tupleId
+     * @param tupleIds IDs of Tuples that will be placed into the same fragment
      * @return
      */
-    protected abstract String runFormFragment(final List<String> tupleId, String fragmentId);
+    protected abstract String runFormFragment(final Set<String> tupleIds, String fragmentId) throws WriteOperationException;
 
     /**
      * Attach tuple to a fragment. If a fragment is already part of a tuple, exclude it from the current fragment.
      * @param tupleId Tuple Id that should be added to the specified fragment
      * @param fragmentId Destination fragment Id
-     * @return
      */
-    protected abstract String runAppendTupleToFragment(final String tupleId, final String fragmentId);
+    protected abstract void runAppendTupleToFragment(final String tupleId, final String fragmentId) throws WriteOperationException;
 
     /**
      * Create a copy of a fragment
-     * @param fragmentId
-     * @param sourceNodeId
-     * @param destinationNodeId
-     * @return
+     * @param fragmentId Fragment ID
+     * @param sourceNodeId ID of the source node from where the fragment is copied
+     * @param destinationNodeId ID of the destination node where the copy is placed
      */
-    protected abstract String runReplicateFragment(final String fragmentId,
+    protected abstract void runReplicateFragment(final String fragmentId,
                                                    final String sourceNodeId,
-                                                   final String destinationNodeId);
+                                                   final String destinationNodeId) throws WriteOperationException;
 
     /**
      * Remove replicated copy of a fragment, if a fragment it not
      * @param fragmentId Fragment Id
      * @param nodeId Node from which the fragment must be erased
-     * @return
      */
-    protected abstract String runDeleteFragmentExemplar(final String fragmentId, final String nodeId);
+    protected abstract void runDeleteFragmentExemplar(final String fragmentId, final String nodeId) throws WriteOperationException;
 
     /**
      * **Destructive operation**, removes the fragment completely from the registry.
-     * @param fragmentId
+     * @param fragmentId Fragment ID
      * @return
      */
     protected abstract String runCompleteFragmentDeletion(final String fragmentId);
 
     /**
      * Add nodes to the store
-     * @param nodeIds
-     * @return
+     * @param nodeIds Set of data storage node IDs that are tracked by this registry
+     * @return True - all of the nodes were added
      */
     protected abstract boolean runPopulateNodes(final Set<String> nodeIds) throws WriteOperationException;
     /**

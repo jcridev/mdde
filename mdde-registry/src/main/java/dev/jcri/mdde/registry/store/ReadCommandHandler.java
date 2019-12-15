@@ -5,7 +5,6 @@ import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
 import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,7 +45,7 @@ public abstract class ReadCommandHandler<T> {
         return _serializer.serialize(getFullRegistry());
     }
 
-    private T processFindTupleCommand(@NotNull Map<String, Object> arguments)
+    private T processFindTupleCommand(Map<String, Object> arguments)
             throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.FIND_TUPLE.toString()));
@@ -57,7 +56,7 @@ public abstract class ReadCommandHandler<T> {
         return _serializer.serialize(getTupleNodes(tupleId));
     }
 
-    private T processFindTupleFragmentCommand(@NotNull Map<String, Object> arguments)
+    private T processFindTupleFragmentCommand(Map<String, Object> arguments)
             throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.FIND_TUPLE_FRAGMENT.toString()));
@@ -68,7 +67,7 @@ public abstract class ReadCommandHandler<T> {
         return _serializer.serialize(getTupleFragment(tupleId));
     }
 
-    private T processFindFragmentNodesCommand(@NotNull Map<String, Object> arguments)
+    private T processFindFragmentNodesCommand(Map<String, Object> arguments)
             throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
@@ -79,7 +78,7 @@ public abstract class ReadCommandHandler<T> {
         return _serializer.serialize(getFragmentNodes(fragmentId));
     }
 
-    private T processGetFragmentTuplesCommand(@NotNull Map<String, Object> arguments)
+    private T processGetFragmentTuplesCommand(Map<String, Object> arguments)
             throws ResponseSerializationException, ReadOperationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
@@ -90,7 +89,7 @@ public abstract class ReadCommandHandler<T> {
         return _serializer.serialize(getFragmentTuples(fragmentId));
     }
 
-    private T processCountFragmentsCommand(@NotNull Map<String, Object> arguments)
+    private T processCountFragmentsCommand(Map<String, Object> arguments)
             throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
@@ -101,7 +100,7 @@ public abstract class ReadCommandHandler<T> {
         return _serializer.serialize(getCountFragment(fragmentId));
     }
 
-    private T processCountTuplesCommand(@NotNull Map<String, Object> arguments)
+    private T processCountTuplesCommand(Map<String, Object> arguments)
             throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
@@ -201,6 +200,13 @@ public abstract class ReadCommandHandler<T> {
     public boolean getIsFragmentExists(final String fragmentId){
         return getCountFragment(fragmentId) > 0;
     }
+
+    /**
+     * Get a set of tuples not assigned to a fragment, located on a specific node
+     * @param nodeId Node ID
+     * @return Set of Tuple IDs
+     */
+    public abstract Set<String> getUnassignedTuples(String nodeId);
 
     /**
      * Get the set of all fragments IDs

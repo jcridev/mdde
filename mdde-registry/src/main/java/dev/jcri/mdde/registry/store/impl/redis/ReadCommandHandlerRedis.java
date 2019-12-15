@@ -7,9 +7,11 @@ import dev.jcri.mdde.registry.store.response.FullRegistry;
 import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
 import org.jetbrains.annotations.NotNull;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Response;
 import redis.clients.jedis.commands.JedisCommands;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
     private RedisConnectionHelper _redisConnection;
@@ -43,11 +45,27 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
         return new FullRegistry(temp);
     }
 
+    private Set<String> getUnassignedTupleNodes(String tupleId){
+        var nodes = getNodes();
+        var p = _redisConnection.getPipeline();
+        var tempRes = new HashMap<String, Response<Boolean>>();
+        for(String nodeId: nodes){
+            tempRes.put(nodeId, p.sismember(Constants.NODE_HEAP  + nodeId, tupleId));
+        }
+        p.sync();
+
+        return  tempRes.entrySet()
+                .stream()
+                .filter(x -> x.getValue().get())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+    }
+
     @Override
     public Set<String> getTupleNodes(String tupleId) {
         String containingFragment = getTupleFragment(tupleId);
         if(containingFragment == null){
-            return new HashSet<String>();
+            return getUnassignedTupleNodes(tupleId);
         }
         return getFragmentNodes(containingFragment);
     }
@@ -119,6 +137,11 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
     @Override
     public boolean getIsNodeExists(String nodeId) {
         return _redisConnection.getRedisCommands().sismember(Constants.NODES_SET, nodeId);
+    }
+
+    @Override
+    public Set<String> getUnassignedTuples(String nodeId) {
+        return _redisConnection.getRedisCommands().smembers(Constants.NODE_HEAP + nodeId);
     }
 
     @Override
