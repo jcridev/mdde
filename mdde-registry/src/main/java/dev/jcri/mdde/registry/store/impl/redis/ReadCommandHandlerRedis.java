@@ -12,14 +12,14 @@ import redis.clients.jedis.commands.JedisCommands;
 import java.util.*;
 
 public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
-    private JedisCommands _redisConnection;
+    private RedisConnectionHelper _redisConnection;
 
     public ReadCommandHandlerRedis(IResponseSerializer<T> serializer, ConfigRedis config){
         super(serializer);
         Objects.requireNonNull(config, "Redis configuration must be set for the reader");
 
-        _redisConnection = config.getRedisConnection();
-        ((Jedis)_redisConnection).connect();
+        _redisConnection = new RedisConnectionHelper(config);
+        _redisConnection.getRedisCommands();
     }
 
     @Override
@@ -54,10 +54,10 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
 
     @Override
     public String getTupleFragment(String tupleId) {
-        var fragments = _redisConnection.smembers(Constants.FRAGMENT_SET);
+        var fragments = _redisConnection.getRedisCommands().smembers(Constants.FRAGMENT_SET);
         String containingFragment = null;
         for(String fragmentId: fragments){
-            if(_redisConnection.sismember(Constants.FRAGMENT_PREFIX + fragmentId, tupleId)){
+            if(_redisConnection.getRedisCommands().sismember(Constants.FRAGMENT_PREFIX + fragmentId, tupleId)){
                 containingFragment = fragmentId;
                 break;
             }
@@ -67,10 +67,10 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
 
     @Override
     public Set<String> getFragmentNodes(String fragmentId) {
-        var nodes = _redisConnection.smembers(Constants.NODES_SET);
+        var nodes = _redisConnection.getRedisCommands().smembers(Constants.NODES_SET);
         Set<String> result = new HashSet<>();
         for(String nodeId: nodes){
-            if(_redisConnection.sismember(Constants.NODE_PREFIX + nodeId, fragmentId)){
+            if(_redisConnection.getRedisCommands().sismember(Constants.NODE_PREFIX + nodeId, fragmentId)){
                 result.add(nodeId);
             }
         }
@@ -79,22 +79,22 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
 
     @Override
     public Set<String> getNodeFragments(String nodeId) {
-        return _redisConnection.smembers(Constants.NODE_PREFIX + nodeId);
+        return _redisConnection.getRedisCommands().smembers(Constants.NODE_PREFIX + nodeId);
     }
 
     @Override
     public Set<String> getFragmentTuples(String fragmentId) throws ReadOperationException {
-        Boolean isInSet = _redisConnection.sismember(Constants.FRAGMENT_SET, fragmentId);
+        Boolean isInSet = _redisConnection.getRedisCommands().sismember(Constants.FRAGMENT_SET, fragmentId);
         if(!isInSet){
             throw new ReadOperationException(String.format("Fragment '%s' can't be found in %s",
                     fragmentId, Constants.FRAGMENT_SET));
         }
         final String fragmentSet = Constants.FRAGMENT_PREFIX + fragmentId;
-        if(!_redisConnection.exists(fragmentSet)){
+        if(!_redisConnection.getRedisCommands().exists(fragmentSet)){
             throw new ReadOperationException(String.format("Fragment set '%s' does not exist",
                     fragmentSet));
         }
-        return _redisConnection.smembers(fragmentSet);
+        return _redisConnection.getRedisCommands().smembers(fragmentSet);
     }
 
     @Override
@@ -113,16 +113,16 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
 
     @Override
     public Set<String> getNodes() {
-        return _redisConnection.smembers(Constants.NODES_SET);
+        return _redisConnection.getRedisCommands().smembers(Constants.NODES_SET);
     }
 
     @Override
     public boolean getIsNodeExists(String nodeId) {
-        return _redisConnection.sismember(Constants.NODES_SET, nodeId);
+        return _redisConnection.getRedisCommands().sismember(Constants.NODES_SET, nodeId);
     }
 
     @Override
     public Set<String> getAllFragmentIds() {
-        return _redisConnection.smembers(Constants.FRAGMENT_SET);
+        return _redisConnection.getRedisCommands().smembers(Constants.FRAGMENT_SET);
     }
 }

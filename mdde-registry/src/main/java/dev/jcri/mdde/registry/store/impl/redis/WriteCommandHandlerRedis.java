@@ -6,15 +6,14 @@ import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
 import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
 import org.jetbrains.annotations.NotNull;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Response;
 import redis.clients.jedis.commands.JedisCommands;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
     private final ConfigRedis _redisConfiguration;
-    private JedisCommands _redisConnection;
+    private RedisConnectionHelper _redisConnection;
 
     public WriteCommandHandlerRedis(ReadCommandHandler<T> readCommandHandler,
                                     IResponseSerializer<T> serializer,
@@ -24,8 +23,8 @@ public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
         Objects.requireNonNull(config, "Redis configuration must be set for the writer");
         _redisConfiguration = config;
 
-        _redisConnection = config.getRedisConnection();
-        ((Jedis)_redisConnection).connect();
+        _redisConnection = new RedisConnectionHelper(config);
+        _redisConnection.getRedisCommands();
     }
 
     @Override
@@ -70,12 +69,20 @@ public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
 
     @Override
     protected boolean runPopulateNodes(Set<String> nodeIds) throws WriteOperationException {
+        var p = _redisConnection.getPipeline();
+        Map<String, Response<Long>> responses = new HashMap<>();
         for(String nodeId: nodeIds){
-            Long added = _redisConnection.sadd(Constants.NODES_SET, nodeId);
-            if(added < 1){
-                throw new WriteOperationException(String.format("Failed to append node: %s", nodeId));
+            Response<Long> r = p.sadd(Constants.NODES_SET, nodeId);
+            responses.put(nodeId, r);
+        }
+        p.sync();
+
+        for(Map.Entry<String, Response<Long>> r: responses.entrySet()){
+            if (r.getValue().get() == 0){
+                throw new WriteOperationException(String.format("Failed to add %s", r.getKey()));
             }
         }
+
         return true;
     }
 }

@@ -1,7 +1,6 @@
 package dev.jcri.mdde.registry.store;
 
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
-import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
 import dev.jcri.mdde.registry.store.impl.redis.ConfigRedis;
 import dev.jcri.mdde.registry.store.impl.redis.ReadCommandHandlerRedis;
 
