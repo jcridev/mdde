@@ -27,6 +27,8 @@ public class IllegalRegistryActionException extends MddeRegistryException {
     public enum IllegalActions {
         UniqueFragmentRemoval,
         AttemptToSeedNonEmptyRegistry,
-        FormingFragmentFromNonColocatedTuples
+        FormingFragmentFromNonColocatedTuples,
+        LocalFragmentReplication,
+        DuplicateFragmentReplication
     }
 }

@@ -160,4 +160,9 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
 
         return responses.entrySet().stream().allMatch(x -> x.getValue().get());
     }
+
+    @Override
+    public Boolean getIsNodeContainsFragment(String nodeId, String fragmentId) {
+        return _redisConnection.getRedisCommands().sismember(Constants.NODE_PREFIX + nodeId, fragmentId);
+    }
 }

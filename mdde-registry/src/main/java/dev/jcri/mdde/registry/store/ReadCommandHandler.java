@@ -208,7 +208,21 @@ public abstract class ReadCommandHandler<T> {
      */
     public abstract Set<String> getUnassignedTuples(String nodeId);
 
+    /**
+     * Check of the specific tuple is unassigned on a specific node
+     * @param nodeId Tuple ID
+     * @param tupleIds Node ID
+     * @return True - tuple is unassigned
+     */
     public abstract Boolean getIsTuplesUnassigned(String nodeId, Set<String> tupleIds);
+
+    /**
+     * Check if node contains fragment
+     * @param nodeId Node ID
+     * @param fragmentId Fragment ID
+     * @return True - specified fragment is located within the specified node
+     */
+    public abstract Boolean getIsNodeContainsFragment(String nodeId, String fragmentId);
 
     /**
      * Get the set of all fragments IDs

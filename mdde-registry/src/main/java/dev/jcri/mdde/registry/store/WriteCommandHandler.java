@@ -345,7 +345,7 @@ public abstract class WriteCommandHandler<T> {
     }
 
     public final void replicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
-            throws UnknownEntityIdException, WriteOperationException {
+            throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException {
         _commandExecutionLock.lock();
         try {
             verifyAndRunReplicateFragment(fragmentId, sourceNodeId, destinationNodeId);
@@ -356,7 +356,7 @@ public abstract class WriteCommandHandler<T> {
     }
 
     private void verifyAndRunReplicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
-            throws UnknownEntityIdException, WriteOperationException {
+            throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException {
         if (!readCommandHandler.getIsFragmentExists(fragmentId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
         }
@@ -366,7 +366,14 @@ public abstract class WriteCommandHandler<T> {
         if (!readCommandHandler.getIsNodeExists(destinationNodeId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Node, destinationNodeId);
         }
-
+        if(sourceNodeId.equals(destinationNodeId)){
+            throw new IllegalRegistryActionException("Source and destination nodes can't be the same",
+                    IllegalRegistryActionException.IllegalActions.LocalFragmentReplication);
+        }
+        if(readCommandHandler.getIsNodeContainsFragment(destinationNodeId, fragmentId)){
+            throw new IllegalRegistryActionException(String.format("Destination node %s already contains fragment %s",
+                    destinationNodeId, fragmentId), IllegalRegistryActionException.IllegalActions.DuplicateFragmentReplication);
+        }
         runReplicateFragment(fragmentId, sourceNodeId, destinationNodeId);
     }
 
