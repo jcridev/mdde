@@ -17,7 +17,7 @@ public abstract class ReadCommandHandler<T> {
         _serializer = serializer;
     }
 
-    public T runCommand(Commands readCommand, Map<String, Object> arguments)
+    public T runCommand(Commands readCommand, List<Object> arguments)
             throws UnknownRegistryCommandExceptions, ResponseSerializationException, ReadOperationException {
         switch (readCommand)    {
             case GET_REGISTRY:
@@ -45,67 +45,67 @@ public abstract class ReadCommandHandler<T> {
         return _serializer.serialize(getFullRegistry());
     }
 
-    private T processFindTupleCommand(Map<String, Object> arguments)
+    private T processFindTupleCommand(List<Object> arguments)
             throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.FIND_TUPLE.toString()));
 
-        var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID), String.format("%s must be invoked with %s",
+        var tupleId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
                 Commands.FIND_TUPLE.toString(), ARG_TUPLE_ID));
 
         return _serializer.serialize(getTupleNodes(tupleId));
     }
 
-    private T processFindTupleFragmentCommand(Map<String, Object> arguments)
+    private T processFindTupleFragmentCommand(List<Object> arguments)
             throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 Commands.FIND_TUPLE_FRAGMENT.toString()));
 
-        var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID), String.format("%s must be invoked with %s",
+        var tupleId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
                 Commands.FIND_TUPLE.toString(), ARG_TUPLE_ID));
 
         return _serializer.serialize(getTupleFragment(tupleId));
     }
 
-    private T processFindFragmentNodesCommand(Map<String, Object> arguments)
+    private T processFindFragmentNodesCommand(List<Object> arguments)
             throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
+        var fragmentId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
 
         return _serializer.serialize(getFragmentNodes(fragmentId));
     }
 
-    private T processGetFragmentTuplesCommand(Map<String, Object> arguments)
+    private T processGetFragmentTuplesCommand(List<Object> arguments)
             throws ResponseSerializationException, ReadOperationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
+        var fragmentId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
 
         return _serializer.serialize(getFragmentTuples(fragmentId));
     }
 
-    private T processCountFragmentsCommand(Map<String, Object> arguments)
+    private T processCountFragmentsCommand(List<Object> arguments)
             throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
+        var fragmentId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
 
         return _serializer.serialize(getCountFragment(fragmentId));
     }
 
-    private T processCountTuplesCommand(Map<String, Object> arguments)
+    private T processCountTuplesCommand(List<Object> arguments)
             throws ResponseSerializationException {
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
                 WriteCommandHandler.Commands.FORM_FRAGMENT.toString()));
 
-        var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID), String.format("%s must be invoked with %s",
+        var tupleId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
                 Commands.FIND_TUPLE.toString(), ARG_TUPLE_ID));
 
         return _serializer.serialize(getCountTuple(tupleId));
@@ -116,7 +116,7 @@ public abstract class ReadCommandHandler<T> {
         var nodesList = getNodes();
         return _serializer.serialize(nodesList);
     }
-    //endregion
+//endregion
 //region Public reader APIs
 
     /**
@@ -182,7 +182,8 @@ public abstract class ReadCommandHandler<T> {
      * @return
      * @throws ReadOperationException
      */
-    public Set<String> getFragmentTuples(final String fragmentId) throws ReadOperationException {
+    public Set<String> getFragmentTuples(final String fragmentId)
+            throws ReadOperationException {
         if(fragmentId == null || fragmentId.isEmpty()){
             throw new IllegalArgumentException("Fragment ID can't be null or empty");
         }
@@ -464,7 +465,7 @@ public abstract class ReadCommandHandler<T> {
         }
     }
 
-    public final String ARG_TUPLE_ID = "Tuple Id";
-    public final String ARG_FRAGMENT_ID = "Fragment Id";
-    public final String ARG_NODE_ID = "Node Id";
+    public final String ARG_TUPLE_ID = "Tuple ID";
+    public final String ARG_FRAGMENT_ID = "Fragment ID";
+    public final String ARG_NODE_ID = "Node ID";
 }

@@ -40,7 +40,7 @@ public abstract class WriteCommandHandler<T> {
      * @param writeCommand WriteCommandHandler.Commands
      * @param arguments Key-value pairs
      */
-    public final void runCommand(Commands writeCommand, Map<String, Object> arguments)
+    public final void runCommand(Commands writeCommand, List<Object> arguments)
             throws DuplicateEntityRecordException, UnknownEntityIdException,
                     ResponseSerializationException, IllegalRegistryActionException, WriteOperationException {
         _commandExecutionLock.lock(); // Ensure sequential execution of registry manipulation
@@ -71,138 +71,168 @@ public abstract class WriteCommandHandler<T> {
         }
     }
 //region Process query commands
-    private void processInsertTupleCommand(final Map<String, Object> arguments)
+
+    private String getPositionalArgumentError(final Commands command, final ExpectedCommandArgument argument, final int position){
+        return String.format("%s must be invoked with %s at position %d", command.toString(), argument.toString(), position);
+    }
+
+    private void validateNotNullArguments(final List<Object> arguments, final Commands command){
+        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments", command.toString()));
+    }
+
+    private void processInsertTupleCommand(final List<Object> arguments)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                Commands.INSERT_TUPLE.toString()));
-        var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID),
-                String.format("%s must be invoked with %s", Commands.INSERT_TUPLE.toString(), ARG_TUPLE_ID));
-        var nodeId = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID),
-                String.format("%s must be invoked with %s", Commands.INSERT_TUPLE.toString(), ARG_NODE_ID));
+        final var thisCommand = Commands.INSERT_TUPLE;
+        validateNotNullArguments(arguments, thisCommand);
+
+        final int tupleIdPosition = 0 ;
+        var tupleId = (String) Objects.requireNonNull(arguments.get(tupleIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_TUPLE_ID, tupleIdPosition));
+
+        final int nodeIdPosition = 1;
+        var nodeId = (String) Objects.requireNonNull(arguments.get(nodeIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_NODE_ID, nodeIdPosition));
 
         verifyAndRunInsertTuple(tupleId, nodeId);
     }
 
-    private void processInsertTupleInBulkCommand(final Map<String, Object> arguments)
+    private void processInsertTupleInBulkCommand(final List<Object> arguments)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                Commands.INSERT_TUPLE.toString()));
-        var tupleIdsArg = Objects.requireNonNull(arguments.get(ARG_TUPLE_IDs), String.format("%s must be invoked with %s",
-                Commands.INSERT_TUPLE.toString(), ARG_TUPLE_IDs));
+        final var thisCommand = Commands.INSERT_TUPLE_BULK;
+        validateNotNullArguments(arguments, thisCommand);
 
+        final int tupleIdPosition = 0;
+        var tupleIdsArg = Objects.requireNonNull(arguments.get(tupleIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_TUPLE_IDs, tupleIdPosition));
         if(!(tupleIdsArg instanceof Set<?>)){
-            throw new IllegalArgumentException(String.format("%s must be invoked with a collection %s ",
-                    Commands.INSERT_TUPLE.toString(), ARG_TUPLE_IDs));
+            throw new IllegalArgumentException(getPositionalArgumentError(thisCommand, ARG_TUPLE_IDs, tupleIdPosition));
         }
-        var nodeId = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID), String.format("%s must be invoked with %s",
-                Commands.INSERT_TUPLE.toString(), ARG_NODE_ID));
+
+        final int nodeIdPosition = 1;
+        var nodeId = (String) Objects.requireNonNull(arguments.get(nodeIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_NODE_ID, nodeIdPosition));
 
         verifyAndRunInsertTuple((Set<String>) tupleIdsArg, nodeId);
     }
 
-    private void processDeleteTupleCommand(final Map<String, Object> arguments)
+    private void processDeleteTupleCommand(final List<Object> arguments)
             throws ResponseSerializationException, UnknownEntityIdException, WriteOperationException {
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                Commands.DELETE_TUPLE.toString()));
-        var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID), String.format("%s must be invoked with %s",
-                Commands.DELETE_TUPLE.toString(), ARG_TUPLE_ID));
+        final var thisCommand = Commands.DELETE_TUPLE;
+        validateNotNullArguments(arguments, thisCommand);
+
+        final int tupleIdPosition = 0;
+        var tupleId = (String) Objects.requireNonNull(arguments.get(tupleIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_TUPLE_ID, tupleIdPosition));
 
         runCompleteTupleDeletion(tupleId); //TODO
     }
 
-    private T processFormFragmentCommand(final Map<String, Object> arguments)
+    private T processFormFragmentCommand(final List<Object> arguments)
             throws ResponseSerializationException, WriteOperationException, IllegalRegistryActionException, UnknownEntityIdException, DuplicateEntityRecordException {
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                Commands.FORM_FRAGMENT.toString()));
+        final var thisCommand = Commands.FORM_FRAGMENT;
+        validateNotNullArguments(arguments, thisCommand);
 
-        var tupleIdsArg = Objects.requireNonNull(arguments.get(ARG_TUPLE_IDs), String.format("%s must be invoked with %s",
-                Commands.FORM_FRAGMENT.toString(), ARG_TUPLE_IDs));
-
+        final int tupleIdPosition = 0;
+        var tupleIdsArg = Objects.requireNonNull(arguments.get(tupleIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_TUPLE_IDs, tupleIdPosition));
         if(!(tupleIdsArg instanceof Set<?>)){
             throw new IllegalArgumentException(String.format("%s must be invoked with a collection %s ",
-                    Commands.FORM_FRAGMENT.toString(), ARG_TUPLE_IDs));
+                    thisCommand.toString(), ARG_TUPLE_IDs));
         }
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
-                Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
+        final int fragmentIdPosition = 1;
+        var fragmentId = (String) Objects.requireNonNull(arguments.get(fragmentIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_FRAGMENT_ID, fragmentIdPosition));
 
-        var nodeId = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID), String.format("%s must be invoked with %s",
-                Commands.FORM_FRAGMENT.toString(), ARG_NODE_ID));
+        final int nodeIdPosition = 2;
+        var nodeId = (String) Objects.requireNonNull(arguments.get(nodeIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_NODE_ID, nodeIdPosition));
 
         return _serializer.serialize(verifyAndRunFormFragment((Set<String>) tupleIdsArg, fragmentId, nodeId));
     }
 
-    private void processAppendToFragmentCommand(final Map<String, Object> arguments)
-            throws ResponseSerializationException, WriteOperationException {
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                Commands.FORM_FRAGMENT.toString()));
+    private void processAppendToFragmentCommand(final List<Object> arguments)
+            throws WriteOperationException {
+        final var thisCommand = Commands.APPEND_TO_FRAGMENT;
+        validateNotNullArguments(arguments, thisCommand);
 
-        var tupleId = (String) Objects.requireNonNull(arguments.get(ARG_TUPLE_ID), String.format("%s must be invoked with %s",
-                Commands.DELETE_TUPLE.toString(), ARG_TUPLE_ID));
+        final int tupleIdPosition = 0;
+        var tupleId = (String) Objects.requireNonNull(arguments.get(tupleIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_TUPLE_ID, tupleIdPosition));
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
-                Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
+        final int fragmentIdPosition = 1;
+        var fragmentId = (String) Objects.requireNonNull(arguments.get(fragmentIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_FRAGMENT_ID, fragmentIdPosition));
 
         runAppendTupleToFragment(tupleId, fragmentId);
     }
 
-    private void processReplicateFragmentCommand(final Map<String, Object> arguments)
-            throws ResponseSerializationException, WriteOperationException {
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                Commands.FORM_FRAGMENT.toString()));
+    private void processReplicateFragmentCommand(final List<Object> arguments)
+            throws WriteOperationException {
+        final var thisCommand = Commands.REPLICATE_FRAGMENT;
+        validateNotNullArguments(arguments, thisCommand);
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
-                Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
+        final int fragmentIdPosition = 0;
+        var fragmentId = (String) Objects.requireNonNull(arguments.get(fragmentIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_FRAGMENT_ID, fragmentIdPosition));
 
-        var nodeIdA = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID), String.format("%s must be invoked with %s",
-                Commands.INSERT_TUPLE.toString(), ARG_NODE_ID));
-        var nodeIdB = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID_B), String.format("%s must be invoked with %s",
-                Commands.INSERT_TUPLE.toString(), ARG_NODE_ID_B));
+        final int nodeAPosition = 1;
+        var nodeIdA = (String) Objects.requireNonNull(arguments.get(nodeAPosition),
+                getPositionalArgumentError(thisCommand, ARG_NODE_ID, nodeAPosition));
+
+        final int nodeBPosition = 2;
+        var nodeIdB = (String) Objects.requireNonNull(arguments.get(nodeBPosition),
+                getPositionalArgumentError(thisCommand, ARG_NODE_ID_B, nodeBPosition));
 
         runReplicateFragment(fragmentId, nodeIdA, nodeIdB);
     }
 
-    private void processDeleteFragmentExemplar(final Map<String, Object> arguments)
-            throws ResponseSerializationException, WriteOperationException {
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                Commands.FORM_FRAGMENT.toString()));
+    private void processDeleteFragmentExemplar(final List<Object> arguments)
+            throws WriteOperationException {
+        final var thisCommand = Commands.DELETE_FRAGMENT;
+        validateNotNullArguments(arguments, thisCommand);
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
-                Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
+        final int fragmentIdPosition = 0;
+        var fragmentId = (String) Objects.requireNonNull(arguments.get(fragmentIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_FRAGMENT_ID, fragmentIdPosition));
 
-        var nodeIdA = (String) Objects.requireNonNull(arguments.get(ARG_NODE_ID), String.format("%s must be invoked with %s",
-                Commands.INSERT_TUPLE.toString(), ARG_NODE_ID));
+        final int nodeAPosition = 1;
+        var nodeIdA = (String) Objects.requireNonNull(arguments.get(nodeAPosition),
+                getPositionalArgumentError(thisCommand, ARG_NODE_ID, nodeAPosition));
 
         runDeleteFragmentExemplar(fragmentId, nodeIdA);
     }
 
-    private T processDestroyFragment(final Map<String, Object> arguments)
+    private T processDestroyFragment(final List<Object> arguments)
             throws ResponseSerializationException {
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                Commands.FORM_FRAGMENT.toString()));
+        final var thisCommand = Commands.DESTROY_FRAGMENT;
+        validateNotNullArguments(arguments, thisCommand);
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(ARG_FRAGMENT_ID), String.format("%s must be invoked with %s",
-                Commands.FORM_FRAGMENT.toString(), ARG_FRAGMENT_ID));
+        final int fragmentIdPosition = 0;
+        var fragmentId = (String) Objects.requireNonNull(arguments.get(fragmentIdPosition),
+                getPositionalArgumentError(thisCommand, ARG_FRAGMENT_ID, fragmentIdPosition));
 
         return _serializer.serialize(runCompleteFragmentDeletion(fragmentId));
     }
 
-    private T processPopulateNodes(final Map<String, Object> arguments)
+    private T processPopulateNodes(final List<Object> arguments)
             throws IllegalRegistryActionException, ResponseSerializationException, WriteOperationException {
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                Commands.POPULATE_NODES.toString()));
+        final var thisCommand = Commands.POPULATE_NODES;
+        validateNotNullArguments(arguments, thisCommand);
 
-        var currentNodes = readCommandHandler.runGetNodes();
-        if(currentNodes != null && !currentNodes.isEmpty()){
-            throw new IllegalRegistryActionException("Nodes population is now allowed in non-empty registry", IllegalRegistryActionException.IllegalActions.AttemptToSeedNonEmptyRegistry);
-        }
-
-        var nodeIdsArg = Objects.requireNonNull(arguments.get(ARG_NODE_IDs), String.format("%s must be invoked with %s",
-                Commands.POPULATE_NODES.toString(), ARG_NODE_IDs));
+        final int nodePosition = 0;
+        var nodeIdsArg = Objects.requireNonNull(arguments.get(nodePosition),
+                getPositionalArgumentError(thisCommand, ARG_NODE_IDs, nodePosition));
 
         if(!(nodeIdsArg instanceof Set<?>)){
             throw new IllegalArgumentException(String.format("%s must be invoked with a set collection %s ",
-                    Commands.POPULATE_NODES.toString(), ARG_NODE_IDs));
+                    thisCommand.toString(), ARG_NODE_IDs));
+        }
+
+        var currentNodes = readCommandHandler.runGetNodes();
+        if(currentNodes != null && !currentNodes.isEmpty()){
+            throw new IllegalRegistryActionException("Nodes population is now allowed in non-empty registry",
+                    IllegalRegistryActionException.IllegalActions.AttemptToSeedNonEmptyRegistry);
         }
 
         return _serializer.serialize(runPopulateNodes((Set<String>)nodeIdsArg));
@@ -531,22 +561,34 @@ public abstract class WriteCommandHandler<T> {
      * Registry manipulation commands available
      */
     public enum Commands {
-        INSERT_TUPLE("INSERT"),
-        INSERT_TUPLE_BULK("INSERTMANY"),
-        DELETE_TUPLE("DELTUPLE"),
-        FORM_FRAGMENT("GROUP"),
-        APPEND_TO_FRAGMENT("APPEND"),
-        REPLICATE_FRAGMENT("REPLICATE"),
-        DELETE_FRAGMENT("DELFRAGCOPY"),
-        DESTROY_FRAGMENT("ERASE"),
-        POPULATE_NODES("ADDNODES");
+        INSERT_TUPLE("INSERT", new ArrayList<>(){{add(ARG_TUPLE_ID); add(ARG_NODE_ID);}}),
+        INSERT_TUPLE_BULK("INSERTMANY", new ArrayList<>(){{add(ARG_TUPLE_IDs); add(ARG_NODE_ID);}}),
+        DELETE_TUPLE("DELTUPLE", new ArrayList<>(){{add(ARG_TUPLE_ID); }}),
+        FORM_FRAGMENT("GROUP", new ArrayList<>(){{add(ARG_TUPLE_IDs); add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}}),
+        APPEND_TO_FRAGMENT("APPEND", new ArrayList<>(){{add(ARG_TUPLE_ID); add(ARG_FRAGMENT_ID);}}),
+        REPLICATE_FRAGMENT("REPLICATE", new ArrayList<>(){{add(ARG_FRAGMENT_ID); add(ARG_NODE_ID); add(ARG_NODE_ID_B);}}),
+        DELETE_FRAGMENT("DELFRAGCOPY", new ArrayList<>(){{add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}}),
+        DESTROY_FRAGMENT("ERASE", new ArrayList<>(){{add(ARG_FRAGMENT_ID);}}),
+        POPULATE_NODES("ADDNODES", new ArrayList<>(){{add(ARG_NODE_IDs);}});
 
         private final String _command;
+        private final List<ExpectedCommandArgument> _expectedArguments;
+        private final int _numExpectedArguments;
+
         /**
+         *
          * @param command
+         * @param args List of expected arguments,in the order they should arrive
          */
-        Commands(final String command) {
+        Commands(final String command, final List<ExpectedCommandArgument> args) {
             this._command = command;
+            _expectedArguments = args;
+            if(_expectedArguments == null){
+                _numExpectedArguments = 0;
+            }
+            else {
+                _numExpectedArguments = _expectedArguments.size();
+            }
         }
 
         private static Map<String, Commands> _commandsMap = Arrays.stream(Commands.values())
@@ -557,6 +599,20 @@ public abstract class WriteCommandHandler<T> {
             return _command;
         }
 
+        /**
+         * Number of arguments that are expected by a specific command
+         * @return
+         */
+        public int getNumberOfExpectedArguments(){
+            return _numExpectedArguments;
+        }
+
+        /**
+         * Get specific command by the text key tag
+         * @param tag Tag
+         * @return
+         * @throws UnknownRegistryCommandExceptions
+         */
         public static Commands getCommandTag(String tag) throws UnknownRegistryCommandExceptions {
             if(tag == null || tag.isEmpty()){
                 throw new IllegalArgumentException("tag can't be null or empty");
@@ -569,10 +625,34 @@ public abstract class WriteCommandHandler<T> {
         }
     }
 
-    public final String ARG_TUPLE_ID = "tid";
-    public final String ARG_TUPLE_IDs = "tids";
-    public final String ARG_NODE_ID = "nid";
-    public final String ARG_NODE_IDs = "nids";
-    public final String ARG_NODE_ID_B = "nidb";
-    public final String ARG_FRAGMENT_ID = "fid";
+    public static class ExpectedCommandArgument{
+        private final String _title;
+        private final ArgumentType _argumentType;
+
+        public ExpectedCommandArgument(String title, ArgumentType argumentType) {
+            this._title = title;
+            this._argumentType = argumentType;
+        }
+
+        public enum ArgumentType{
+            string,
+            set_strings,
+            list_string
+        }
+
+        @Override
+        public String toString() {
+            return _title;
+        }
+
+        public ArgumentType getArgumentType(){
+            return _argumentType;
+        }
+    }
+    public static final ExpectedCommandArgument ARG_TUPLE_ID = new ExpectedCommandArgument("Tuple ID", ExpectedCommandArgument.ArgumentType.string);
+    public static final ExpectedCommandArgument ARG_TUPLE_IDs = new ExpectedCommandArgument("Tuple IDs", ExpectedCommandArgument.ArgumentType.set_strings);
+    public static final ExpectedCommandArgument ARG_NODE_ID = new ExpectedCommandArgument("Node ID", ExpectedCommandArgument.ArgumentType.string);
+    public static final ExpectedCommandArgument ARG_NODE_IDs = new ExpectedCommandArgument("Node IDs", ExpectedCommandArgument.ArgumentType.set_strings);;
+    public static final ExpectedCommandArgument ARG_NODE_ID_B = new ExpectedCommandArgument("2nd Node ID", ExpectedCommandArgument.ArgumentType.string);
+    public static final ExpectedCommandArgument ARG_FRAGMENT_ID = new ExpectedCommandArgument("Fragment ID", ExpectedCommandArgument.ArgumentType.string);
 }
