@@ -43,7 +43,7 @@ public class RedisTests {
                 fail("Failed to create a random node in the catalog", e);
             }
 
-            var currentNodes = redisReader.getNodes();
+            var currentNodes = redisReader.runGetNodes();
             assertEquals(1, currentNodes.size());
 
             try {
@@ -52,11 +52,11 @@ public class RedisTests {
                 fail("Failed to add a tuple to catalog", e);
             }
 
-            var tupleNodes = redisReader.getTupleNodes(randTupleId);
+            var tupleNodes = redisReader.runGetTupleNodes(randTupleId);
             assertEquals(1, tupleNodes.size());
             assertEquals(randNodeId, tupleNodes.toArray()[0]);
 
-            var nodeUnassignedTuples = redisReader.getUnassignedTuples(randNodeId);
+            var nodeUnassignedTuples = redisReader.runGetUnassignedTuples(randNodeId);
             assertEquals(1, nodeUnassignedTuples.size());
             assertEquals(randTupleId, nodeUnassignedTuples.toArray()[0]);
 
@@ -68,11 +68,11 @@ public class RedisTests {
                 fail("Failed to form a fragment", e);
             }
 
-            tupleNodes = redisReader.getTupleNodes(randTupleId);
+            tupleNodes = redisReader.runGetTupleNodes(randTupleId);
             assertEquals(1, tupleNodes.size());
             assertEquals(randNodeId, tupleNodes.toArray()[0]);
 
-            var tupleFragment = redisReader.getTupleFragment(randTupleId);
+            var tupleFragment = redisReader.runGetTupleFragment(randTupleId);
             assertEquals(randFragmentId, tupleFragment);
 
 
@@ -82,7 +82,7 @@ public class RedisTests {
                 fail("Failed to remove a tuple from catalog", e);
             }
 
-            tupleNodes = redisReader.getTupleNodes(randNodeId);
+            tupleNodes = redisReader.runGetTupleNodes(randNodeId);
             assertEquals(0, tupleNodes.size());
         }
         finally {
@@ -129,7 +129,7 @@ public class RedisTests {
                 fail("Failed to populate nodes", e);
             }
             // Check that the test set and the populated registry nodes are the same
-            var populatedNodes = redisReader.getNodes();
+            var populatedNodes = redisReader.runGetNodes();
             assertEquals(nodes.keySet(), populatedNodes);
             // Populate tuples
             for(Map.Entry<String, Set<String>> node: nodes.entrySet()){
@@ -139,7 +139,7 @@ public class RedisTests {
                     fail(String.format("Failed to populate tuples for node %s", node.getKey()), e);
                 }
                 // Validate insertions
-                var populatedUnassignedTuples = redisReader.getUnassignedTuples(node.getKey());
+                var populatedUnassignedTuples = redisReader.runGetUnassignedTuples(node.getKey());
                 assertEquals(node.getValue(), populatedUnassignedTuples);
             }
 
@@ -147,7 +147,7 @@ public class RedisTests {
             for(Map.Entry<String, Set<String>> node: nodes.entrySet()){
                 Set<String> nodeFragments = new HashSet<>();
                 nodesToFragments.put(node.getKey(), nodeFragments);
-                String[] availableTuplesList = redisReader.getUnassignedTuples(node.getKey()).toArray(new String[0]);
+                String[] availableTuplesList = redisReader.runGetUnassignedTuples(node.getKey()).toArray(new String[0]);
                 // Generate fragments for node
                 int currentStart = 0;
                 while(currentStart < availableTuplesList.length){
@@ -164,19 +164,19 @@ public class RedisTests {
                     // Validate input
                     Set<String> currentFragmentTuplesInRedis = null;
                     try {
-                        currentFragmentTuplesInRedis = redisReader.getFragmentTuples(randFragmentId);
+                        currentFragmentTuplesInRedis = redisReader.runGetFragmentTuples(randFragmentId);
                     } catch (ReadOperationException e) {
                         fail(String.format("Failed to to read tuples for fragment %s", randFragmentId), e);
                     }
                     assertEquals(tupleSubRangeSet, currentFragmentTuplesInRedis);
-                    var fragmentNodes = redisReader.getFragmentNodes(randFragmentId);
+                    var fragmentNodes = redisReader.runGetFragmentNodes(randFragmentId);
                     assertTrue(fragmentNodes.contains(node.getKey()));
 
                     nodeFragments.add(randFragmentId);
                     currentStart = nextStart;
                 }
 
-                var storedNodeFragments = redisReader.getNodeFragments(node.getKey());
+                var storedNodeFragments = redisReader.runGetNodeFragments(node.getKey());
                 assertEquals(nodeFragments, storedNodeFragments);
             }
 
@@ -225,7 +225,7 @@ public class RedisTests {
             nlrFragmentNodesTest.add(nlrNodeA);
             nlrFragmentNodesTest.add(nlrNodeB);
 
-            var nlrFragmentNodesStored = redisReader.getFragmentNodes(nlrFragment);
+            var nlrFragmentNodesStored = redisReader.runGetFragmentNodes(nlrFragment);
             assertEquals(nlrFragmentNodesTest, nlrFragmentNodesStored);
 
             /*

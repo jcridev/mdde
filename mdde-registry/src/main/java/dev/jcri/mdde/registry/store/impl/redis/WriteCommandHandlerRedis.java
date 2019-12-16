@@ -6,13 +6,9 @@ import dev.jcri.mdde.registry.store.exceptions.RegistryEntityType;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
 import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
 import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
-import org.jetbrains.annotations.NotNull;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Response;
-import redis.clients.jedis.commands.JedisCommands;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
     private RedisConnectionHelper _redisConnection;
