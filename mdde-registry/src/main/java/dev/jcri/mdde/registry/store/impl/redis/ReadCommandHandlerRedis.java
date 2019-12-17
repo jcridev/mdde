@@ -1,6 +1,6 @@
 package dev.jcri.mdde.registry.store.impl.redis;
 
-import dev.jcri.mdde.registry.store.ReadCommandHandler;
+import dev.jcri.mdde.registry.store.impl.ReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
 import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
@@ -9,11 +9,10 @@ import redis.clients.jedis.Response;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
+public class ReadCommandHandlerRedis extends ReadCommandHandler {
     private RedisConnectionHelper _redisConnection;
 
-    public ReadCommandHandlerRedis(IResponseSerializer<T> serializer){
-        super(serializer);
+    public ReadCommandHandlerRedis(){
         _redisConnection = RedisConnectionHelper.getInstance();
     }
 

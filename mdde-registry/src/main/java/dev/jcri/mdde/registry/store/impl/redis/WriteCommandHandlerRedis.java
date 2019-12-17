@@ -1,7 +1,7 @@
 package dev.jcri.mdde.registry.store.impl.redis;
 
-import dev.jcri.mdde.registry.store.ReadCommandHandler;
-import dev.jcri.mdde.registry.store.WriteCommandHandler;
+import dev.jcri.mdde.registry.store.impl.ReadCommandHandler;
+import dev.jcri.mdde.registry.store.impl.WriteCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.RegistryEntityType;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
 import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
@@ -11,13 +11,11 @@ import redis.clients.jedis.Response;
 
 import java.util.*;
 
-public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
+public class WriteCommandHandlerRedis extends WriteCommandHandler {
     private RedisConnectionHelper _redisConnection;
 
-    public WriteCommandHandlerRedis(ReadCommandHandler<T> readCommandHandler,
-                                    IResponseSerializer<T> serializer) {
-        super(readCommandHandler, serializer);
-
+    public WriteCommandHandlerRedis(ReadCommandHandler readCommandHandler) {
+        super(readCommandHandler);
         _redisConnection = RedisConnectionHelper.getInstance();
     }
 
@@ -112,7 +110,7 @@ public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
     }
 
     @Override
-    protected String runFormFragment(Set<String> tupleIds, String fragmentId, String nodeId) throws WriteOperationException {
+    protected String runFormFragment(final Set<String> tupleIds, String fragmentId, String nodeId) throws WriteOperationException {
         final String keyFragment = Constants.FRAGMENT_PREFIX + fragmentId;
         Map<String, Response<Long>> responses = new HashMap<>();
         try(var jedis = _redisConnection.getRedisCommands()) {

@@ -8,7 +8,7 @@ import dev.jcri.mdde.registry.store.impl.redis.ReadCommandHandlerRedis;
 import dev.jcri.mdde.registry.store.impl.redis.Constants;
 import dev.jcri.mdde.registry.store.impl.redis.RedisConnectionHelper;
 import dev.jcri.mdde.registry.store.impl.redis.WriteCommandHandlerRedis;
-import dev.jcri.mdde.registry.store.response.serialization.ResponseSerializerPassThrough;
+
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -26,31 +26,27 @@ public class RedisTests {
      */
     @Test
     @Order(0)
-    public void testLocalhostConnection(){
+    public void initializeRedisConnection(){
         var testConfig = new ConfigRedis();
         if(!RedisConnectionHelper.getInstance().getIsInitialized()){
             RedisConnectionHelper.getInstance().initialize(testConfig);
         }
-
-        var serializer = new ResponseSerializerPassThrough();
-        var redisReader = new ReadCommandHandlerRedis<Object>(serializer);
     }
 
     @Test
     @Order(1)
     public void testTupleLifecycle(){
-        var testConfig = new ConfigRedis();
-        var serializer = new ResponseSerializerPassThrough();
+        initializeRedisConnection();
 
-        var redisReader = new ReadCommandHandlerRedis<Object>(serializer);
-        var redisWriter = new WriteCommandHandlerRedis<Object>(redisReader, serializer);
+        var redisReader = new ReadCommandHandlerRedis();
+        var redisWriter = new WriteCommandHandlerRedis(redisReader);
 
         final String randNodeId = UUID.randomUUID().toString();
         final String randTupleId = UUID.randomUUID().toString();
         try {
             try {
                 redisWriter.populateNodes(Collections.singleton(randNodeId));
-            } catch (WriteOperationException e) {
+            } catch (MddeRegistryException e) {
                 fail("Failed to create a random node in the catalog", e);
             }
 
@@ -110,15 +106,9 @@ public class RedisTests {
     @Test
     @Order(2)
     public void testMultiTupleLifecycle(){
-        var testConfig = new ConfigRedis();
-        var serializer = new ResponseSerializerPassThrough();
-
-        if(!RedisConnectionHelper.getInstance().getIsInitialized()){
-            RedisConnectionHelper.getInstance().initialize(testConfig);
-        }
-
-        var redisReader = new ReadCommandHandlerRedis<Object>(serializer);
-        var redisWriter = new WriteCommandHandlerRedis<Object>(redisReader, serializer);
+        initializeRedisConnection();
+        var redisReader = new ReadCommandHandlerRedis();
+        var redisWriter = new WriteCommandHandlerRedis(redisReader);
 
         final int tuplesCountPerNode = 100;
         final int nodesCount = 10;
@@ -149,8 +139,9 @@ public class RedisTests {
             // Check that the test set and the populated registry nodes are the same
             var populatedNodes = redisReader.runGetNodes();
             assertEquals(nodes.keySet(), populatedNodes);
+
             // Populate tuples
-            for(Map.Entry<String, Set<String>> node: nodes.entrySet()){
+            nodes.entrySet().parallelStream().forEach(node -> {
                 try {
                     redisWriter.insertTuple(node.getValue(), node.getKey());
                 } catch (MddeRegistryException e) {
@@ -159,10 +150,10 @@ public class RedisTests {
                 // Validate insertions
                 var populatedUnassignedTuples = redisReader.runGetUnassignedTuples(node.getKey());
                 assertEquals(node.getValue(), populatedUnassignedTuples);
-            }
+            });
 
-            // Create fragments
-            for(Map.Entry<String, Set<String>> node: nodes.entrySet()){
+            // Create fragments in "parallel" (testing the lock)
+            nodes.entrySet().parallelStream().forEach(node -> {
                 Set<String> nodeFragments = new HashSet<>();
                 nodesToFragments.put(node.getKey(), nodeFragments);
                 String[] availableTuplesList = redisReader.runGetUnassignedTuples(node.getKey()).toArray(new String[0]);
@@ -196,7 +187,7 @@ public class RedisTests {
 
                 var storedNodeFragments = redisReader.runGetNodeFragments(node.getKey());
                 assertEquals(nodeFragments, storedNodeFragments);
-            }
+            });
 
             var nodesArray = nodes.keySet().toArray(new String[0]);
             var fragmentsArray = fragments.keySet().toArray(new String[0]);
@@ -246,6 +237,16 @@ public class RedisTests {
             var nlrFragmentNodesStored = redisReader.runGetFragmentNodes(nlrFragment);
             assertEquals(nlrFragmentNodesTest, nlrFragmentNodesStored);
 
+            try {
+                redisWriter.deleteFragmentExemplar(nlrFragment, nlrNodeA);
+            } catch (MddeRegistryException e) {
+                fail("Failed to remove a copy of a fragment");
+            }
+            nlrFragmentNodesTest.remove(nlrNodeA);
+            nlrFragmentNodesStored = redisReader.runGetFragmentNodes(nlrFragment);
+            assertEquals(nlrFragmentNodesTest, nlrFragmentNodesStored);
+
+
             /*
             final int shuffleIterations = 100;
             Random rand = new Random();
@@ -264,7 +265,6 @@ public class RedisTests {
             // Cleanup
             var redisConnectionHelper = RedisConnectionHelper.getInstance();
             try(var jedis = redisConnectionHelper.getRedisCommands()) {
-                jedis.del(Constants.NODES_SET);
                 try (var p = jedis.pipelined()) {
                     // Fragments
                     p.del(Constants.FRAGMENT_SET);
@@ -272,6 +272,7 @@ public class RedisTests {
                         p.del(Constants.FRAGMENT_PREFIX + fragment.getKey());
                     }
                     // Nodes
+                    p.del(Constants.NODES_SET);
                     for (Map.Entry<String, Set<String>> node : nodes.entrySet()) {
                         p.del(Constants.NODE_PREFIX + node.getKey());
                         p.del(Constants.NODE_HEAP + node.getKey());

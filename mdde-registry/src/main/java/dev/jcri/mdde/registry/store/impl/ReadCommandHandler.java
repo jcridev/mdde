@@ -1,124 +1,14 @@
-package dev.jcri.mdde.registry.store;
+package dev.jcri.mdde.registry.store.impl;
 
+import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
-import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
-import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
-import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-public abstract class ReadCommandHandler<T> extends BaseCommandHandler {
+public abstract class ReadCommandHandler implements IReadCommandHandler {
 
-    IResponseSerializer<T> _serializer;
-    public ReadCommandHandler(IResponseSerializer<T> serializer){
-        Objects.requireNonNull(serializer, "Response serialization handler is not supplied ");
-        _serializer = serializer;
-    }
-
-    public T runCommand(Commands readCommand, List<Object> arguments)
-            throws UnknownRegistryCommandExceptions, ResponseSerializationException, ReadOperationException {
-        switch (readCommand)    {
-            case GET_REGISTRY:
-                return processGetFullRegistryCommand();
-            case FIND_TUPLE:
-                return processFindTupleCommand(arguments);
-            case FIND_TUPLE_FRAGMENT:
-                return processFindTupleFragmentCommand(arguments);
-            case FIND_FRAGMENT:
-                return processFindFragmentNodesCommand(arguments);
-            case GET_FRAGMENT_TUPLES:
-                return processGetFragmentTuplesCommand(arguments);
-            case COUNT_FRAGMENT:
-                return processCountFragmentsCommand(arguments);
-            case COUNT_TUPLE:
-                return processCountTuplesCommand(arguments);
-            case GET_NODES:
-                return processGetNodesCommand();
-        }
-
-        throw new UnknownRegistryCommandExceptions(readCommand.toString());
-    }
-//region process Query commands
-    private T processGetFullRegistryCommand() throws ResponseSerializationException, ReadOperationException {
-        return _serializer.serialize(getFullRegistry());
-    }
-
-    private T processFindTupleCommand(List<Object> arguments)
-            throws ResponseSerializationException {
-        final Commands thisCommand = Commands.FIND_TUPLE;
-        validateNotNullArguments(arguments, thisCommand.toString());
-
-        var tupleId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, 0));
-
-        return _serializer.serialize(getTupleNodes(tupleId));
-    }
-
-    private T processFindTupleFragmentCommand(List<Object> arguments)
-            throws ResponseSerializationException {
-        final Commands thisCommand = Commands.FIND_TUPLE_FRAGMENT;
-        validateNotNullArguments(arguments, thisCommand.toString());
-
-        var tupleId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, 0));
-
-        return _serializer.serialize(getTupleFragment(tupleId));
-    }
-
-    private T processFindFragmentNodesCommand(List<Object> arguments)
-            throws ResponseSerializationException {
-        final Commands thisCommand = Commands.FIND_FRAGMENT;
-        validateNotNullArguments(arguments, thisCommand.toString());
-
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, 0));
-
-        return _serializer.serialize(getFragmentNodes(fragmentId));
-    }
-
-    private T processGetFragmentTuplesCommand(List<Object> arguments)
-            throws ResponseSerializationException, ReadOperationException {
-        final Commands thisCommand = Commands.GET_FRAGMENT_TUPLES;
-        validateNotNullArguments(arguments, thisCommand.toString());
-
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, 0));
-
-        return _serializer.serialize(getFragmentTuples(fragmentId));
-    }
-
-    private T processCountFragmentsCommand(List<Object> arguments)
-            throws ResponseSerializationException {
-        final Commands thisCommand = Commands.COUNT_FRAGMENT;
-        validateNotNullArguments(arguments, thisCommand.toString());
-
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, 0));
-
-        return _serializer.serialize(getCountFragment(fragmentId));
-    }
-
-    private T processCountTuplesCommand(List<Object> arguments)
-            throws ResponseSerializationException {
-        final Commands thisCommand = Commands.COUNT_TUPLE;
-        validateNotNullArguments(arguments, thisCommand.toString());
-
-        var tupleId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, 0));
-
-        return _serializer.serialize(getCountTuple(tupleId));
-    }
-
-    private T processGetNodesCommand()
-            throws ResponseSerializationException {
-        var nodesList = getNodes();
-        return _serializer.serialize(nodesList);
-    }
-//endregion
 //region Public reader APIs
-
     /**
      * Get the full registry state
      * @return Full registry state
@@ -424,44 +314,5 @@ public abstract class ReadCommandHandler<T> extends BaseCommandHandler {
      */
     protected abstract Set<String> runGetAllFragmentIds();
 //endregion
-    /**
-     * Catalog of the available READ operations
-     */
-    public enum Commands {
-        GET_REGISTRY("GETALL"),
-        FIND_TUPLE("FINDTUPLE"),
-        FIND_TUPLE_FRAGMENT("TUPLEFRAGMENT"),
-        FIND_FRAGMENT("FINDFRAGMENT"),
-        GET_FRAGMENT_TUPLES("GETFRAGTUPLES"),
-        COUNT_FRAGMENT("COUNTFRAGMENT"),
-        COUNT_TUPLE("COUNTTUPLE"),
-        GET_NODES("NODES");
 
-        private final String _command;
-
-        /**
-         * @param command Command keyword for the processor
-         */
-        Commands(final String command) {
-            this._command = command;
-        }
-
-        private static Map<String, Commands> _commandsMap = Arrays.stream(Commands.values()).collect(Collectors.toMap(e -> e._command, e -> e));
-
-        @Override
-        public String toString() {
-            return _command;
-        }
-
-        public static Commands getCommandTag(String tag) throws UnknownRegistryCommandExceptions {
-            if(tag == null || tag.isEmpty()){
-                throw new IllegalArgumentException("tag can't be null or empty");
-            }
-            var command = _commandsMap.get(tag);
-            if(command == null){
-                throw new UnknownRegistryCommandExceptions(tag);
-            }
-            return command;
-        }
-    }
 }
