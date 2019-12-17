@@ -12,10 +12,8 @@ import java.util.stream.Collectors;
 public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
     private RedisConnectionHelper _redisConnection;
 
-    public ReadCommandHandlerRedis(IResponseSerializer<T> serializer, ConfigRedis config){
+    public ReadCommandHandlerRedis(IResponseSerializer<T> serializer){
         super(serializer);
-        Objects.requireNonNull(config, "Redis configuration must be set for the reader");
-
         _redisConnection = RedisConnectionHelper.getInstance();
     }
 

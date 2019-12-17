@@ -15,11 +15,8 @@ public class WriteCommandHandlerRedis<T> extends WriteCommandHandler<T> {
     private RedisConnectionHelper _redisConnection;
 
     public WriteCommandHandlerRedis(ReadCommandHandler<T> readCommandHandler,
-                                    IResponseSerializer<T> serializer,
-                                    ConfigRedis config) {
+                                    IResponseSerializer<T> serializer) {
         super(readCommandHandler, serializer);
-
-        Objects.requireNonNull(config, "Redis configuration must be set for the writer");
 
         _redisConnection = RedisConnectionHelper.getInstance();
     }

@@ -9,35 +9,41 @@ import dev.jcri.mdde.registry.store.impl.redis.Constants;
 import dev.jcri.mdde.registry.store.impl.redis.RedisConnectionHelper;
 import dev.jcri.mdde.registry.store.impl.redis.WriteCommandHandlerRedis;
 import dev.jcri.mdde.registry.store.response.serialization.ResponseSerializerPassThrough;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class RedisTests {
     /**
      * Creates a reader class that opens a connection in the constructor with the default localhost Redis instance
      * (assuming Redis is running within the system is where this test is executed)
      */
     @Test
+    @Order(0)
     public void testLocalhostConnection(){
         var testConfig = new ConfigRedis();
-        var serializer = new ResponseSerializerPassThrough();
-        var redisReader = new ReadCommandHandlerRedis<Object>(serializer, testConfig);
-    }
-
-    @Test
-    public void testTupleLifecycle(){
-        var testConfig = new ConfigRedis();
-        var serializer = new ResponseSerializerPassThrough();
-
         if(!RedisConnectionHelper.getInstance().getIsInitialized()){
             RedisConnectionHelper.getInstance().initialize(testConfig);
         }
 
-        var redisReader = new ReadCommandHandlerRedis<Object>(serializer, testConfig);
-        var redisWriter = new WriteCommandHandlerRedis<Object>(redisReader, serializer, testConfig);
+        var serializer = new ResponseSerializerPassThrough();
+        var redisReader = new ReadCommandHandlerRedis<Object>(serializer);
+    }
+
+    @Test
+    @Order(1)
+    public void testTupleLifecycle(){
+        var testConfig = new ConfigRedis();
+        var serializer = new ResponseSerializerPassThrough();
+
+        var redisReader = new ReadCommandHandlerRedis<Object>(serializer);
+        var redisWriter = new WriteCommandHandlerRedis<Object>(redisReader, serializer);
 
         final String randNodeId = UUID.randomUUID().toString();
         final String randTupleId = UUID.randomUUID().toString();
@@ -102,6 +108,7 @@ public class RedisTests {
     }
 
     @Test
+    @Order(2)
     public void testMultiTupleLifecycle(){
         var testConfig = new ConfigRedis();
         var serializer = new ResponseSerializerPassThrough();
@@ -110,8 +117,8 @@ public class RedisTests {
             RedisConnectionHelper.getInstance().initialize(testConfig);
         }
 
-        var redisReader = new ReadCommandHandlerRedis<Object>(serializer, testConfig);
-        var redisWriter = new WriteCommandHandlerRedis<Object>(redisReader, serializer, testConfig);
+        var redisReader = new ReadCommandHandlerRedis<Object>(serializer);
+        var redisWriter = new WriteCommandHandlerRedis<Object>(redisReader, serializer);
 
         final int tuplesCountPerNode = 100;
         final int nodesCount = 10;
