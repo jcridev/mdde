@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
- * Abstract bas class facilitating interaction with the underlying backend.
+ * Abstract base class facilitating interaction with the underlying backend.
  * Available actions can be called through a query-like interface as well as directly.
  *
  * Subclass with implementing abstract functions with concrete underlying registry storage.

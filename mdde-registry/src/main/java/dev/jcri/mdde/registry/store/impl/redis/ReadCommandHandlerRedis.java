@@ -16,8 +16,7 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
         super(serializer);
         Objects.requireNonNull(config, "Redis configuration must be set for the reader");
 
-        _redisConnection = new RedisConnectionHelper(config);
-        _redisConnection.getRedisCommands();
+        _redisConnection = RedisConnectionHelper.getInstance();
     }
 
     @Override
@@ -43,18 +42,21 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
 
     private Set<String> getUnassignedTupleNodes(String tupleId){
         var nodes = runGetNodes();
-        var p = _redisConnection.getPipeline();
-        var tempRes = new HashMap<String, Response<Boolean>>();
-        for(String nodeId: nodes){
-            tempRes.put(nodeId, p.sismember(Constants.NODE_HEAP  + nodeId, tupleId));
-        }
-        p.sync();
+        try(var jedis = _redisConnection.getRedisCommands()) {
+            try (var p = jedis.pipelined()) {
+                var tempRes = new HashMap<String, Response<Boolean>>();
+                for (String nodeId : nodes) {
+                    tempRes.put(nodeId, p.sismember(Constants.NODE_HEAP + nodeId, tupleId));
+                }
+                p.sync();
 
-        return  tempRes.entrySet()
-                .stream()
-                .filter(x -> x.getValue().get())
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toSet());
+                return tempRes.entrySet()
+                        .stream()
+                        .filter(x -> x.getValue().get())
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.toSet());
+            }
+        }
     }
 
     @Override
@@ -68,47 +70,56 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
 
     @Override
     public String runGetTupleFragment(String tupleId) {
-        var fragments = _redisConnection.getRedisCommands().smembers(Constants.FRAGMENT_SET);
-        String containingFragment = null;
-        for(String fragmentId: fragments){
-            if(_redisConnection.getRedisCommands().sismember(Constants.FRAGMENT_PREFIX + fragmentId, tupleId)){
-                containingFragment = fragmentId;
-                break;
+        try (var jedis = _redisConnection.getRedisCommands()) {
+            var fragments = jedis.smembers(Constants.FRAGMENT_SET);
+            String containingFragment = null;
+            for (String fragmentId : fragments) {
+                if (jedis.sismember(Constants.FRAGMENT_PREFIX + fragmentId, tupleId)) {
+                    containingFragment = fragmentId;
+                    break;
+                }
             }
+
+            return containingFragment;
         }
-        return containingFragment;
     }
 
     @Override
     public Set<String> runGetFragmentNodes(String fragmentId) {
-        var nodes = _redisConnection.getRedisCommands().smembers(Constants.NODES_SET);
-        Set<String> result = new HashSet<>();
-        for(String nodeId: nodes){
-            if(_redisConnection.getRedisCommands().sismember(Constants.NODE_PREFIX + nodeId, fragmentId)){
-                result.add(nodeId);
+        try (var jedis = _redisConnection.getRedisCommands()) {
+            var nodes = jedis.smembers(Constants.NODES_SET);
+            Set<String> result = new HashSet<>();
+            for (String nodeId : nodes) {
+                if (jedis.sismember(Constants.NODE_PREFIX + nodeId, fragmentId)) {
+                    result.add(nodeId);
+                }
             }
+            return result;
         }
-        return result;
     }
 
     @Override
     public Set<String> runGetNodeFragments(String nodeId) {
-        return _redisConnection.getRedisCommands().smembers(Constants.NODE_PREFIX + nodeId);
+        try (var jedis = _redisConnection.getRedisCommands()) {
+            return jedis.smembers(Constants.NODE_PREFIX + nodeId);
+        }
     }
 
     @Override
     public Set<String> runGetFragmentTuples(String fragmentId) throws ReadOperationException {
-        Boolean isInSet = _redisConnection.getRedisCommands().sismember(Constants.FRAGMENT_SET, fragmentId);
-        if(!isInSet){
-            throw new ReadOperationException(String.format("Fragment '%s' can't be found in %s",
-                    fragmentId, Constants.FRAGMENT_SET));
+        try (var jedis = _redisConnection.getRedisCommands()) {
+            Boolean isInSet = jedis.sismember(Constants.FRAGMENT_SET, fragmentId);
+            if (!isInSet) {
+                throw new ReadOperationException(String.format("Fragment '%s' can't be found in %s",
+                        fragmentId, Constants.FRAGMENT_SET));
+            }
+            final String fragmentSet = Constants.FRAGMENT_PREFIX + fragmentId;
+            if (!jedis.exists(fragmentSet)) {
+                throw new ReadOperationException(String.format("Fragment set '%s' does not exist",
+                        fragmentSet));
+            }
+            return jedis.smembers(fragmentSet);
         }
-        final String fragmentSet = Constants.FRAGMENT_PREFIX + fragmentId;
-        if(!_redisConnection.getRedisCommands().exists(fragmentSet)){
-            throw new ReadOperationException(String.format("Fragment set '%s' does not exist",
-                    fragmentSet));
-        }
-        return _redisConnection.getRedisCommands().smembers(fragmentSet);
     }
 
     @Override
@@ -127,38 +138,52 @@ public class ReadCommandHandlerRedis<T> extends ReadCommandHandler<T> {
 
     @Override
     public Set<String> runGetNodes() {
-        return _redisConnection.getRedisCommands().smembers(Constants.NODES_SET);
+        try (var jedis = _redisConnection.getRedisCommands()) {
+            return jedis.smembers(Constants.NODES_SET);
+        }
     }
 
     @Override
     public boolean runGetIsNodeExists(String nodeId) {
-        return _redisConnection.getRedisCommands().sismember(Constants.NODES_SET, nodeId);
+        try (var jedis = _redisConnection.getRedisCommands()) {
+            return jedis.sismember(Constants.NODES_SET, nodeId);
+        }
     }
 
     @Override
     public Set<String> runGetUnassignedTuples(String nodeId) {
-        return _redisConnection.getRedisCommands().smembers(Constants.NODE_HEAP + nodeId);
+        try (var jedis = _redisConnection.getRedisCommands()) {
+            return jedis.smembers(Constants.NODE_HEAP + nodeId);
+        }
     }
 
     @Override
     public Set<String> runGetAllFragmentIds() {
-        return _redisConnection.getRedisCommands().smembers(Constants.FRAGMENT_SET);
+        try (var jedis = _redisConnection.getRedisCommands()) {
+            return jedis.smembers(Constants.FRAGMENT_SET);
+        }
     }
 
     @Override
     public Boolean runGetIsTuplesUnassigned(String nodeId, Set<String> tupleIds) {
-        var p = _redisConnection.getPipeline();
-        Map<String,  Response<Boolean>> responses = new HashMap<>();
-        for(String tupleId: tupleIds){
-            responses.put(tupleId, p.sismember(Constants.NODE_HEAP + nodeId, tupleId));
+        Map<String, Response<Boolean>> responses = new HashMap<>();
+        try(var jedis = _redisConnection.getRedisCommands()) {
+            try (var p = jedis.pipelined()) {
+
+                for (String tupleId : tupleIds) {
+                    responses.put(tupleId, p.sismember(Constants.NODE_HEAP + nodeId, tupleId));
+                }
+                p.sync();
+            }
         }
-        p.sync();
 
         return responses.entrySet().stream().allMatch(x -> x.getValue().get());
     }
 
     @Override
     public Boolean runGetIsNodeContainsFragment(String nodeId, String fragmentId) {
-        return _redisConnection.getRedisCommands().sismember(Constants.NODE_PREFIX + nodeId, fragmentId);
+        try(var jedis = _redisConnection.getRedisCommands()) {
+            return jedis.sismember(Constants.NODE_PREFIX + nodeId, fragmentId);
+        }
     }
 }

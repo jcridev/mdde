@@ -31,6 +31,11 @@ public class RedisTests {
     public void testTupleLifecycle(){
         var testConfig = new ConfigRedis();
         var serializer = new ResponseSerializerPassThrough();
+
+        if(!RedisConnectionHelper.getInstance().getIsInitialized()){
+            RedisConnectionHelper.getInstance().initialize(testConfig);
+        }
+
         var redisReader = new ReadCommandHandlerRedis<Object>(serializer, testConfig);
         var redisWriter = new WriteCommandHandlerRedis<Object>(redisReader, serializer, testConfig);
 
@@ -43,7 +48,7 @@ public class RedisTests {
                 fail("Failed to create a random node in the catalog", e);
             }
 
-            var currentNodes = redisReader.runGetNodes();
+            var currentNodes = redisReader.getNodes();
             assertEquals(1, currentNodes.size());
 
             try {
@@ -52,7 +57,7 @@ public class RedisTests {
                 fail("Failed to add a tuple to catalog", e);
             }
 
-            var tupleNodes = redisReader.runGetTupleNodes(randTupleId);
+            var tupleNodes = redisReader.getTupleNodes(randTupleId);
             assertEquals(1, tupleNodes.size());
             assertEquals(randNodeId, tupleNodes.toArray()[0]);
 
@@ -87,11 +92,12 @@ public class RedisTests {
         }
         finally {
             // Cleanup
-            var redisConnectionHelper = new RedisConnectionHelper(testConfig);
-            var redisCommand = redisConnectionHelper.getRedisCommands();
-            redisCommand.del(Constants.NODES_SET);
-            redisCommand.del(Constants.NODE_PREFIX + randNodeId);
-            redisCommand.del(Constants.NODE_HEAP + randNodeId);
+            var redisConnectionHelper = RedisConnectionHelper.getInstance();
+            try(var redisCommand = redisConnectionHelper.getRedisCommands()) {
+                redisCommand.del(Constants.NODES_SET);
+                redisCommand.del(Constants.NODE_PREFIX + randNodeId);
+                redisCommand.del(Constants.NODE_HEAP + randNodeId);
+            }
         }
     }
 
@@ -99,6 +105,11 @@ public class RedisTests {
     public void testMultiTupleLifecycle(){
         var testConfig = new ConfigRedis();
         var serializer = new ResponseSerializerPassThrough();
+
+        if(!RedisConnectionHelper.getInstance().getIsInitialized()){
+            RedisConnectionHelper.getInstance().initialize(testConfig);
+        }
+
         var redisReader = new ReadCommandHandlerRedis<Object>(serializer, testConfig);
         var redisWriter = new WriteCommandHandlerRedis<Object>(redisReader, serializer, testConfig);
 
@@ -244,21 +255,23 @@ public class RedisTests {
              */
         } finally {
             // Cleanup
-            var redisConnectionHelper = new RedisConnectionHelper(testConfig);
-            var redisCommand = redisConnectionHelper.getRedisCommands();
-            redisCommand.del(Constants.NODES_SET);
-            var p = redisConnectionHelper.getPipeline();
-            // Fragments
-            p.del(Constants.FRAGMENT_SET);
-            for (Map.Entry<String, Set<String>> fragment: fragments.entrySet()){
-                p.del(Constants.FRAGMENT_PREFIX + fragment.getKey());
+            var redisConnectionHelper = RedisConnectionHelper.getInstance();
+            try(var jedis = redisConnectionHelper.getRedisCommands()) {
+                jedis.del(Constants.NODES_SET);
+                try (var p = jedis.pipelined()) {
+                    // Fragments
+                    p.del(Constants.FRAGMENT_SET);
+                    for (Map.Entry<String, Set<String>> fragment : fragments.entrySet()) {
+                        p.del(Constants.FRAGMENT_PREFIX + fragment.getKey());
+                    }
+                    // Nodes
+                    for (Map.Entry<String, Set<String>> node : nodes.entrySet()) {
+                        p.del(Constants.NODE_PREFIX + node.getKey());
+                        p.del(Constants.NODE_HEAP + node.getKey());
+                    }
+                    p.sync();
+                }
             }
-            // Nodes
-            for (Map.Entry<String, Set<String>> node: nodes.entrySet()){
-                p.del(Constants.NODE_PREFIX + node.getKey());
-                p.del(Constants.NODE_HEAP + node.getKey());
-            }
-            p.sync();
         }
     }
 }
