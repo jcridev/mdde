@@ -10,7 +10,7 @@ import static dev.jcri.mdde.registry.control.ExpectedCommandArgument.*;
 /**
  * Registry manipulation commands available
  */
-public enum WriteCommands {
+public enum WriteCommands implements ICommands {
     INSERT_TUPLE("INSERT", new ArrayList<>(){{add(ARG_TUPLE_ID); add(ARG_NODE_ID);}}),
     INSERT_TUPLE_BULK("INSERTMANY", new ArrayList<>(){{add(ARG_TUPLE_IDs); add(ARG_NODE_ID);}}),
     DELETE_TUPLE("DELTUPLE", new ArrayList<>(){{add(ARG_TUPLE_ID); }}),

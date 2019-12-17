@@ -1,9 +1,11 @@
 package dev.jcri.mdde.registry.control.sequetial;
 
+import dev.jcri.mdde.registry.control.CommandParser;
 import dev.jcri.mdde.registry.control.WriteCommands;
+import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.store.IWriteCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.*;
-import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 
 import java.util.List;
 import java.util.Objects;
@@ -11,7 +13,7 @@ import java.util.Set;
 
 import static dev.jcri.mdde.registry.control.ExpectedCommandArgument.*;
 
-public class SequentialWriteCommandParser<T> extends BaseSequentialCommandParser {
+public class SequentialWriteCommandParser<T> extends BaseSequentialCommandParser implements CommandParser<T, WriteCommands, List<Object>> {
     private final IWriteCommandHandler _writeCommandHandler;
     private final IResponseSerializer<T> _serializer;
 
@@ -26,31 +28,41 @@ public class SequentialWriteCommandParser<T> extends BaseSequentialCommandParser
      * @param writeCommand WriteCommandHandler.Commands
      * @param arguments Key-value pairs
      */
-    public final void runCommand(WriteCommands writeCommand, List<Object> arguments)
-            throws DuplicateEntityRecordException, UnknownEntityIdException,
-            ResponseSerializationException, IllegalRegistryActionException, WriteOperationException {
+    public final T runCommand(WriteCommands writeCommand, List<Object> arguments)
+            throws UnknownRegistryCommandExceptions, MddeRegistryException {
 
         switch (writeCommand) {
             case INSERT_TUPLE:
                 processInsertTupleCommand(arguments);
+                break;
             case INSERT_TUPLE_BULK:
                 processInsertTupleInBulkCommand(arguments);
+                break;
             case DELETE_TUPLE:
                 processDeleteTupleCommand(arguments);
+                break;
             case FORM_FRAGMENT:
                 processFormFragmentCommand(arguments);
+                break;
             case APPEND_TO_FRAGMENT:
                 processAppendToFragmentCommand(arguments);
+                break;
             case REPLICATE_FRAGMENT:
                 processReplicateFragmentCommand(arguments);
+                break;
             case DELETE_FRAGMENT:
                 processDeleteFragmentExemplar(arguments);
+                break;
             case DESTROY_FRAGMENT:
                 processDestroyFragment(arguments);
+                break;
             case POPULATE_NODES:
                 processPopulateNodes(arguments);
+                break;
+            default:
+                throw new UnknownRegistryCommandExceptions(writeCommand.toString());
         }
-
+        return _serializer.serialize("Done");
     }
 
     private void processInsertTupleCommand(final List<Object> arguments)

@@ -3,7 +3,6 @@ package dev.jcri.mdde.registry.store.impl.redis;
 import dev.jcri.mdde.registry.store.impl.ReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
-import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
 import redis.clients.jedis.Response;
 
 import java.util.*;

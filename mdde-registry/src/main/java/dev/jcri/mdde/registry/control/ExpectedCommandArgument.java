@@ -3,30 +3,36 @@ package dev.jcri.mdde.registry.control;
 /**
  * Class containing the description of an argument expected by a command
  */
-public class ExpectedCommandArgument{
-    public static final ExpectedCommandArgument ARG_TUPLE_ID = new ExpectedCommandArgument("Tuple ID", ExpectedCommandArgument.ArgumentType.string);
-    public static final ExpectedCommandArgument ARG_TUPLE_IDs = new ExpectedCommandArgument("Tuple IDs", ExpectedCommandArgument.ArgumentType.set_strings);
-    public static final ExpectedCommandArgument ARG_NODE_ID = new ExpectedCommandArgument("Node ID", ExpectedCommandArgument.ArgumentType.string);
-    public static final ExpectedCommandArgument ARG_NODE_IDs = new ExpectedCommandArgument("Node IDs", ExpectedCommandArgument.ArgumentType.set_strings);;
-    public static final ExpectedCommandArgument ARG_NODE_ID_B = new ExpectedCommandArgument("2nd Node ID", ExpectedCommandArgument.ArgumentType.string);
-    public static final ExpectedCommandArgument ARG_FRAGMENT_ID = new ExpectedCommandArgument("Fragment ID", ExpectedCommandArgument.ArgumentType.string);
+public enum ExpectedCommandArgument{
+    ARG_TUPLE_ID("Tuple ID", "tid", ExpectedCommandArgument.ArgumentType.string),
+    ARG_TUPLE_IDs("Tuple IDs", "tids", ExpectedCommandArgument.ArgumentType.set_strings),
+    ARG_NODE_ID("Node ID", "nid", ExpectedCommandArgument.ArgumentType.string),
+    ARG_NODE_IDs("Node IDs", "nids", ExpectedCommandArgument.ArgumentType.set_strings),
+    ARG_NODE_ID_B("2nd Node ID", "nidb", ExpectedCommandArgument.ArgumentType.string),
+    ARG_FRAGMENT_ID("Fragment ID", "fid", ExpectedCommandArgument.ArgumentType.string);
 
 
     private final String _title;
     private final ArgumentType _argumentType;
+    private final String _tag;
 
     /**
      * Constructor
      * @param title Argument title, should be unique
      * @param argumentType Argument type
+     * @param tag Tag
      */
-    private ExpectedCommandArgument(String title, ArgumentType argumentType) {
+    private ExpectedCommandArgument(String title, String tag, ArgumentType argumentType) {
         if(title == null || title.isEmpty()){
             throw new IllegalArgumentException("Argument title can't be null or empty");
+        }
+        if(tag == null || tag.isEmpty()){
+            throw new IllegalArgumentException("Argument tag can't be null or empty");
         }
 
         this._title = title;
         this._argumentType = argumentType;
+        this._tag = tag;
     }
 
     /**

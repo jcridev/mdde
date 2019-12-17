@@ -1,4 +1,4 @@
-package dev.jcri.mdde.registry.store.response.serialization;
+package dev.jcri.mdde.registry.control.serialization;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

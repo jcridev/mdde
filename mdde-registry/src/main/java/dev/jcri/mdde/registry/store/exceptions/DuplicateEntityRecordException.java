@@ -1,7 +1,6 @@
 package dev.jcri.mdde.registry.store.exceptions;
 
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Error thrown when a duplicate entity is encountered in the registry where it shouldn't
@@ -11,7 +10,7 @@ public class DuplicateEntityRecordException extends MddeRegistryException {
      * Custom message constructor
      * @param message Meaningful message
      */
-    public DuplicateEntityRecordException(@NotNull String message){
+    public DuplicateEntityRecordException(String message){
         super(message);
     }
 

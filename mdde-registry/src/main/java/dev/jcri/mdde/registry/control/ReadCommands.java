@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public enum ReadCommands {
+public enum ReadCommands implements ICommands{
     GET_REGISTRY("GETALL"),
     FIND_TUPLE("FINDTUPLE"),
     FIND_TUPLE_FRAGMENT("TUPLEFRAGMENT"),
@@ -29,6 +29,14 @@ public enum ReadCommands {
 
     @Override
     public String toString() {
+        return _command;
+    }
+
+    /**
+     * Get the command text
+     * @return
+     */
+    public String getCommand(){
         return _command;
     }
 

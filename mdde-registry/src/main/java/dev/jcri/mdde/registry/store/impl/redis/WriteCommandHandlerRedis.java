@@ -5,7 +5,6 @@ import dev.jcri.mdde.registry.store.impl.WriteCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.RegistryEntityType;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
 import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
-import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Response;
 

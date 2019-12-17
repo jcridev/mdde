@@ -1,18 +1,20 @@
 package dev.jcri.mdde.registry.control.sequetial;
 
+import dev.jcri.mdde.registry.control.CommandParser;
 import dev.jcri.mdde.registry.control.ReadCommands;
+import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
-import dev.jcri.mdde.registry.store.response.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 
 import java.util.List;
 import java.util.Objects;
 
 import static dev.jcri.mdde.registry.control.ExpectedCommandArgument.*;
 
-public class SequentialReadCommandParser<T> extends BaseSequentialCommandParser {
+public class SequentialReadCommandParser<T> extends BaseSequentialCommandParser implements CommandParser<T, ReadCommands, List<Object>> {
     private final IReadCommandHandler _readCommandHandler;
     private final IResponseSerializer<T> _serializer;
 
@@ -24,7 +26,7 @@ public class SequentialReadCommandParser<T> extends BaseSequentialCommandParser 
     }
 
     public T runCommand(ReadCommands readCommand, List<Object> arguments)
-            throws UnknownRegistryCommandExceptions, ResponseSerializationException, ReadOperationException {
+            throws UnknownRegistryCommandExceptions, MddeRegistryException {
         switch (readCommand)    {
             case GET_REGISTRY:
                 return processGetFullRegistryCommand();
