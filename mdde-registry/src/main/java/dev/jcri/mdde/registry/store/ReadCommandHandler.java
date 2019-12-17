@@ -48,11 +48,10 @@ public abstract class ReadCommandHandler<T> extends BaseCommandHandler {
     private T processFindTupleCommand(List<Object> arguments)
             throws ResponseSerializationException {
         final Commands thisCommand = Commands.FIND_TUPLE;
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                thisCommand.toString()));
+        validateNotNullArguments(arguments, thisCommand.toString());
 
-        var tupleId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
-                thisCommand.toString(), ARG_TUPLE_ID));
+        var tupleId = (String) Objects.requireNonNull(arguments.get(0),
+                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, 0));
 
         return _serializer.serialize(getTupleNodes(tupleId));
     }
@@ -60,11 +59,10 @@ public abstract class ReadCommandHandler<T> extends BaseCommandHandler {
     private T processFindTupleFragmentCommand(List<Object> arguments)
             throws ResponseSerializationException {
         final Commands thisCommand = Commands.FIND_TUPLE_FRAGMENT;
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                thisCommand.toString()));
+        validateNotNullArguments(arguments, thisCommand.toString());
 
-        var tupleId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
-                thisCommand.toString(), ARG_TUPLE_ID));
+        var tupleId = (String) Objects.requireNonNull(arguments.get(0),
+                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, 0));
 
         return _serializer.serialize(getTupleFragment(tupleId));
     }
@@ -72,11 +70,10 @@ public abstract class ReadCommandHandler<T> extends BaseCommandHandler {
     private T processFindFragmentNodesCommand(List<Object> arguments)
             throws ResponseSerializationException {
         final Commands thisCommand = Commands.FIND_FRAGMENT;
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                thisCommand.toString()));
+        validateNotNullArguments(arguments, thisCommand.toString());
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
-                thisCommand.toString(), ARG_FRAGMENT_ID));
+        var fragmentId = (String) Objects.requireNonNull(arguments.get(0),
+                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, 0));
 
         return _serializer.serialize(getFragmentNodes(fragmentId));
     }
@@ -84,11 +81,10 @@ public abstract class ReadCommandHandler<T> extends BaseCommandHandler {
     private T processGetFragmentTuplesCommand(List<Object> arguments)
             throws ResponseSerializationException, ReadOperationException {
         final Commands thisCommand = Commands.GET_FRAGMENT_TUPLES;
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                thisCommand.toString()));
+        validateNotNullArguments(arguments, thisCommand.toString());
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
-                thisCommand.toString(), ARG_FRAGMENT_ID));
+        var fragmentId = (String) Objects.requireNonNull(arguments.get(0),
+                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, 0));
 
         return _serializer.serialize(getFragmentTuples(fragmentId));
     }
@@ -96,11 +92,10 @@ public abstract class ReadCommandHandler<T> extends BaseCommandHandler {
     private T processCountFragmentsCommand(List<Object> arguments)
             throws ResponseSerializationException {
         final Commands thisCommand = Commands.COUNT_FRAGMENT;
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                thisCommand.toString()));
+        validateNotNullArguments(arguments, thisCommand.toString());
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
-                thisCommand.toString(), ARG_FRAGMENT_ID));
+        var fragmentId = (String) Objects.requireNonNull(arguments.get(0),
+                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, 0));
 
         return _serializer.serialize(getCountFragment(fragmentId));
     }
@@ -108,11 +103,10 @@ public abstract class ReadCommandHandler<T> extends BaseCommandHandler {
     private T processCountTuplesCommand(List<Object> arguments)
             throws ResponseSerializationException {
         final Commands thisCommand = Commands.COUNT_TUPLE;
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments",
-                thisCommand.toString()));
+        validateNotNullArguments(arguments, thisCommand.toString());
 
-        var tupleId = (String) Objects.requireNonNull(arguments.get(0), String.format("%s must be invoked with %s",
-                thisCommand.toString(), ARG_TUPLE_ID));
+        var tupleId = (String) Objects.requireNonNull(arguments.get(0),
+                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, 0));
 
         return _serializer.serialize(getCountTuple(tupleId));
     }

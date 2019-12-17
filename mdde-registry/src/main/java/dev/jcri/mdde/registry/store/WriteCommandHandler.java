@@ -71,27 +71,18 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
         }
     }
 //region Process query commands
-
-    private String getPositionalArgumentError(final Commands command, final ExpectedCommandArgument argument, final int position){
-        return String.format("%s must be invoked with %s at position %d", command.toString(), argument.toString(), position);
-    }
-
-    private void validateNotNullArguments(final List<Object> arguments, final Commands command){
-        Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments", command.toString()));
-    }
-
     private void processInsertTupleCommand(final List<Object> arguments)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
         final var thisCommand = Commands.INSERT_TUPLE;
-        validateNotNullArguments(arguments, thisCommand);
+        validateNotNullArguments(arguments, thisCommand.toString());
 
         final int tupleIdPosition = 0 ;
         var tupleId = (String) Objects.requireNonNull(arguments.get(tupleIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_TUPLE_ID, tupleIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, tupleIdPosition));
 
         final int nodeIdPosition = 1;
         var nodeId = (String) Objects.requireNonNull(arguments.get(nodeIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_NODE_ID, nodeIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_NODE_ID, nodeIdPosition));
 
         verifyAndRunInsertTuple(tupleId, nodeId);
     }
@@ -99,18 +90,18 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
     private void processInsertTupleInBulkCommand(final List<Object> arguments)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
         final var thisCommand = Commands.INSERT_TUPLE_BULK;
-        validateNotNullArguments(arguments, thisCommand);
+        validateNotNullArguments(arguments, thisCommand.toString());
 
         final int tupleIdPosition = 0;
         var tupleIdsArg = Objects.requireNonNull(arguments.get(tupleIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_TUPLE_IDs, tupleIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_IDs, tupleIdPosition));
         if(!(tupleIdsArg instanceof Set<?>)){
-            throw new IllegalArgumentException(getPositionalArgumentError(thisCommand, ARG_TUPLE_IDs, tupleIdPosition));
+            throw new IllegalArgumentException(getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_IDs, tupleIdPosition));
         }
 
         final int nodeIdPosition = 1;
         var nodeId = (String) Objects.requireNonNull(arguments.get(nodeIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_NODE_ID, nodeIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_NODE_ID, nodeIdPosition));
 
         verifyAndRunInsertTuple((Set<String>) tupleIdsArg, nodeId);
     }
@@ -118,11 +109,11 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
     private void processDeleteTupleCommand(final List<Object> arguments)
             throws ResponseSerializationException, UnknownEntityIdException, WriteOperationException {
         final var thisCommand = Commands.DELETE_TUPLE;
-        validateNotNullArguments(arguments, thisCommand);
+        validateNotNullArguments(arguments, thisCommand.toString());
 
         final int tupleIdPosition = 0;
         var tupleId = (String) Objects.requireNonNull(arguments.get(tupleIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_TUPLE_ID, tupleIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, tupleIdPosition));
 
         runCompleteTupleDeletion(tupleId); //TODO
     }
@@ -130,11 +121,11 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
     private T processFormFragmentCommand(final List<Object> arguments)
             throws ResponseSerializationException, WriteOperationException, IllegalRegistryActionException, UnknownEntityIdException, DuplicateEntityRecordException {
         final var thisCommand = Commands.FORM_FRAGMENT;
-        validateNotNullArguments(arguments, thisCommand);
+        validateNotNullArguments(arguments, thisCommand.toString());
 
         final int tupleIdPosition = 0;
         var tupleIdsArg = Objects.requireNonNull(arguments.get(tupleIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_TUPLE_IDs, tupleIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_IDs, tupleIdPosition));
         if(!(tupleIdsArg instanceof Set<?>)){
             throw new IllegalArgumentException(String.format("%s must be invoked with a collection %s ",
                     thisCommand.toString(), ARG_TUPLE_IDs));
@@ -142,11 +133,11 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
 
         final int fragmentIdPosition = 1;
         var fragmentId = (String) Objects.requireNonNull(arguments.get(fragmentIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_FRAGMENT_ID, fragmentIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, fragmentIdPosition));
 
         final int nodeIdPosition = 2;
         var nodeId = (String) Objects.requireNonNull(arguments.get(nodeIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_NODE_ID, nodeIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_NODE_ID, nodeIdPosition));
 
         return _serializer.serialize(verifyAndRunFormFragment((Set<String>) tupleIdsArg, fragmentId, nodeId));
     }
@@ -154,15 +145,15 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
     private void processAppendToFragmentCommand(final List<Object> arguments)
             throws WriteOperationException {
         final var thisCommand = Commands.APPEND_TO_FRAGMENT;
-        validateNotNullArguments(arguments, thisCommand);
+        validateNotNullArguments(arguments, thisCommand.toString());
 
         final int tupleIdPosition = 0;
         var tupleId = (String) Objects.requireNonNull(arguments.get(tupleIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_TUPLE_ID, tupleIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, tupleIdPosition));
 
         final int fragmentIdPosition = 1;
         var fragmentId = (String) Objects.requireNonNull(arguments.get(fragmentIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_FRAGMENT_ID, fragmentIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, fragmentIdPosition));
 
         runAppendTupleToFragment(tupleId, fragmentId);
     }
@@ -170,19 +161,19 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
     private void processReplicateFragmentCommand(final List<Object> arguments)
             throws WriteOperationException {
         final var thisCommand = Commands.REPLICATE_FRAGMENT;
-        validateNotNullArguments(arguments, thisCommand);
+        validateNotNullArguments(arguments, thisCommand.toString());
 
         final int fragmentIdPosition = 0;
         var fragmentId = (String) Objects.requireNonNull(arguments.get(fragmentIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_FRAGMENT_ID, fragmentIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, fragmentIdPosition));
 
         final int nodeAPosition = 1;
         var nodeIdA = (String) Objects.requireNonNull(arguments.get(nodeAPosition),
-                getPositionalArgumentError(thisCommand, ARG_NODE_ID, nodeAPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_NODE_ID, nodeAPosition));
 
         final int nodeBPosition = 2;
         var nodeIdB = (String) Objects.requireNonNull(arguments.get(nodeBPosition),
-                getPositionalArgumentError(thisCommand, ARG_NODE_ID_B, nodeBPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_NODE_ID_B, nodeBPosition));
 
         runReplicateFragment(fragmentId, nodeIdA, nodeIdB);
     }
@@ -190,15 +181,15 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
     private void processDeleteFragmentExemplar(final List<Object> arguments)
             throws WriteOperationException {
         final var thisCommand = Commands.DELETE_FRAGMENT;
-        validateNotNullArguments(arguments, thisCommand);
+        validateNotNullArguments(arguments, thisCommand.toString());
 
         final int fragmentIdPosition = 0;
         var fragmentId = (String) Objects.requireNonNull(arguments.get(fragmentIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_FRAGMENT_ID, fragmentIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, fragmentIdPosition));
 
         final int nodeAPosition = 1;
         var nodeIdA = (String) Objects.requireNonNull(arguments.get(nodeAPosition),
-                getPositionalArgumentError(thisCommand, ARG_NODE_ID, nodeAPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_NODE_ID, nodeAPosition));
 
         runDeleteFragmentExemplar(fragmentId, nodeIdA);
     }
@@ -206,11 +197,11 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
     private T processDestroyFragment(final List<Object> arguments)
             throws ResponseSerializationException {
         final var thisCommand = Commands.DESTROY_FRAGMENT;
-        validateNotNullArguments(arguments, thisCommand);
+        validateNotNullArguments(arguments, thisCommand.toString());
 
         final int fragmentIdPosition = 0;
         var fragmentId = (String) Objects.requireNonNull(arguments.get(fragmentIdPosition),
-                getPositionalArgumentError(thisCommand, ARG_FRAGMENT_ID, fragmentIdPosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, fragmentIdPosition));
 
         return _serializer.serialize(runCompleteFragmentDeletion(fragmentId));
     }
@@ -218,11 +209,11 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
     private T processPopulateNodes(final List<Object> arguments)
             throws IllegalRegistryActionException, ResponseSerializationException, WriteOperationException {
         final var thisCommand = Commands.POPULATE_NODES;
-        validateNotNullArguments(arguments, thisCommand);
+        validateNotNullArguments(arguments, thisCommand.toString());
 
         final int nodePosition = 0;
         var nodeIdsArg = Objects.requireNonNull(arguments.get(nodePosition),
-                getPositionalArgumentError(thisCommand, ARG_NODE_IDs, nodePosition));
+                getPositionalArgumentError(thisCommand.toString(), ARG_NODE_IDs, nodePosition));
 
         if(!(nodeIdsArg instanceof Set<?>)){
             throw new IllegalArgumentException(String.format("%s must be invoked with a set collection %s ",
@@ -557,6 +548,7 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
      */
     protected abstract boolean runPopulateNodes(final Set<String> nodeIds) throws WriteOperationException;
 //endregion
+
     /**
      * Registry manipulation commands available
      */
@@ -600,11 +592,27 @@ public abstract class WriteCommandHandler<T> extends BaseCommandHandler {
         }
 
         /**
+         * Get the command text
+         * @return
+         */
+        public String getCommand(){
+            return _command;
+        }
+
+        /**
          * Number of arguments that are expected by a specific command
          * @return
          */
         public int getNumberOfExpectedArguments(){
             return _numExpectedArguments;
+        }
+
+        /**
+         * Get a list of the arguments expected by the command
+         * @return
+         */
+        public List<ExpectedCommandArgument> getExpectedArguments(){
+            return Collections.unmodifiableList(_expectedArguments);
         }
 
         /**
