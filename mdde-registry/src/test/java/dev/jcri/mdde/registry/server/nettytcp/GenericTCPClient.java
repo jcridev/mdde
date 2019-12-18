@@ -1,8 +1,6 @@
 package dev.jcri.mdde.registry.server.nettytcp;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
 import java.util.Scanner;
@@ -20,14 +18,29 @@ public class GenericTCPClient {
                      final int port, List<String> lines, final int withDelay) throws Exception {
         try (var socket = new Socket(host, port)) {
             var in = new Scanner(socket.getInputStream());
-            var out = new PrintWriter(socket.getOutputStream(), true);
+            var out = socket.getOutputStream();
+
+            byte[] pingArr = "ping".getBytes();
+            out.write(pingArr, 0, pingArr.length);
+            out.flush();
+
+            System.out.println(in.nextLine());
+
             lines.stream().forEach(line -> {
                 try {
                     Thread.sleep(withDelay);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                out.println(line);
+                System.out.println(String.format("Send payload of length: %d", line.length()));
+                byte[] bArr = line.getBytes();
+                try {
+                    out.write(bArr, 0, bArr.length);
+                    out.flush();
+                    System.out.println(in.nextLine());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             });
         }
     }
