@@ -1,14 +1,20 @@
 package dev.jcri.mdde.registry.store.impl.redis;
 
+import dev.jcri.mdde.registry.server.nettytcp.Listener;
 import dev.jcri.mdde.registry.store.impl.ReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import redis.clients.jedis.Response;
 
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class ReadCommandHandlerRedis extends ReadCommandHandler {
+    private static final Logger logger = LogManager.getLogger(Listener.class);
+
     private RedisConnectionHelper _redisConnection;
 
     public ReadCommandHandlerRedis(){
@@ -54,6 +60,8 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
             }
         }
     }
+
+
 
     @Override
     public Set<String> runGetTupleNodes(String tupleId) {
@@ -157,6 +165,20 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
     public Set<String> runGetAllFragmentIds() {
         try (var jedis = _redisConnection.getRedisCommands()) {
             return jedis.smembers(Constants.FRAGMENT_SET);
+        }
+    }
+
+    @Override
+    protected String runGetGlobalFragmentMeta(String fragmentId, String metaName) {
+        try (var jedis = _redisConnection.getRedisCommands()) {
+            return jedis.hget(CommandHandlerRedisHelper.getInstance().genGlobalFragmentMetaFieldName(fragmentId), metaName);
+        }
+    }
+
+    @Override
+    protected String runGetExemplarFragmentMeta(String fragmentId, String nodeId, String metaName) {
+        try (var jedis = _redisConnection.getRedisCommands()) {
+            return jedis.hget(CommandHandlerRedisHelper.getInstance().genExemplarFragmentMetaFieldName(fragmentId, nodeId), metaName);
         }
     }
 

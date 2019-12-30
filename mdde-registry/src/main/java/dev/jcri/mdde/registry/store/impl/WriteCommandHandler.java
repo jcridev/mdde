@@ -175,6 +175,53 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             _commandExecutionLock.unlock();
         }
     }
+
+    public final void addMetaToFragmentGlobal(final String fragmentId, final String metaField, final String metaValue)
+            throws UnknownEntityIdException, WriteOperationException {
+        _commandExecutionLock.lock();
+        try {
+            if(fragmentId == null || fragmentId.isEmpty()){
+                throw new IllegalArgumentException("Fragment ID can't be null or empty");
+            }
+            if(metaField == null || metaField.isEmpty()){
+                throw new IllegalArgumentException("Meta field name can't be null or empty");
+            }
+
+            if(!readCommandHandler.getIsFragmentExists(fragmentId)){
+                throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
+            }
+
+            runAddMetaToFragmentGlobal(fragmentId, metaField, metaValue);
+        }
+        finally {
+            _commandExecutionLock.unlock();
+        }
+    }
+
+    public final void addMetaToFragmentExemplar(final String fragmentId, final String nodeId, final String metaField, final String metaValue)
+            throws UnknownEntityIdException, WriteOperationException {
+        _commandExecutionLock.lock();
+        try {
+            if(fragmentId == null || fragmentId.isEmpty()){
+                throw new IllegalArgumentException("Fragment ID can't be null or empty");
+            }
+            if(metaField == null || metaField.isEmpty()){
+                throw new IllegalArgumentException("Meta field name can't be null or empty");
+            }
+            if(nodeId == null || nodeId.isEmpty()){
+                throw new IllegalArgumentException("Meta field name can't be null or empty");
+            }
+
+            if(!readCommandHandler.getIsNodeContainsFragment(nodeId, fragmentId)){
+                throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
+            }
+
+            runAddMetaToFragmentExemplar(fragmentId, nodeId, metaField, metaValue);
+        }
+        finally {
+            _commandExecutionLock.unlock();
+        }
+    }
 //endregion
 //region Verify the correctness and validity of the invoked operation
     private void verifyAndRunInsertTuple(final String tupleId, final String nodeId)
@@ -353,6 +400,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * @return True - all of the nodes were added
      */
     protected abstract boolean runPopulateNodes(final Set<String> nodeIds) throws WriteOperationException;
+
+    protected abstract void runAddMetaToFragmentGlobal(final String fragmentId, final String metaField, final String metaValue) throws WriteOperationException;
+
+    protected abstract void runAddMetaToFragmentExemplar(final String fragmentId, final String nodeId, final String metaField, final String metaValue) throws WriteOperationException;
 //endregion
 
 }

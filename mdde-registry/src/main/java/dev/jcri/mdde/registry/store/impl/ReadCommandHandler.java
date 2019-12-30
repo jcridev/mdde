@@ -2,6 +2,8 @@ package dev.jcri.mdde.registry.store.impl;
 
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
+import dev.jcri.mdde.registry.store.exceptions.RegistryEntityType;
+import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
 
 import java.util.*;
@@ -182,13 +184,19 @@ public abstract class ReadCommandHandler implements IReadCommandHandler {
      * @param fragmentId Fragment ID
      * @return
      */
-    public Boolean getIsNodeContainsFragment(String nodeId, String fragmentId){
+    public Boolean getIsNodeContainsFragment(String nodeId, String fragmentId)
+            throws UnknownEntityIdException {
         if(fragmentId == null || fragmentId.isEmpty()){
             throw new IllegalArgumentException("Fragment ID can't be null or empty");
         }
         if(nodeId == null || nodeId.isEmpty()){
             throw new IllegalArgumentException("Node ID can't be null or empty");
         }
+
+        if(!getIsNodeExists(nodeId)){
+            throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
+        }
+
         return runGetIsNodeContainsFragment(nodeId, fragmentId);
     }
 
@@ -198,6 +206,31 @@ public abstract class ReadCommandHandler implements IReadCommandHandler {
      */
     public Set<String> getAllFragmentIds(){
         return runGetAllFragmentIds();
+    }
+
+    public String getFragmentGlobalMeta(String fragmentId, String metaName){
+        if(fragmentId == null || fragmentId.isEmpty()){
+            throw new IllegalArgumentException("Fragment ID can't be null or empty");
+        }
+        if(metaName == null || metaName.isEmpty()){
+            throw new IllegalArgumentException("Meta field name can't be null or empty");
+        }
+
+        return runGetGlobalFragmentMeta(fragmentId, metaName);
+    }
+
+    public String getFragmentExemplarMeta(String fragmentId, String nodeId, String metaName){
+        if(fragmentId == null || fragmentId.isEmpty()){
+            throw new IllegalArgumentException("Fragment ID can't be null or empty");
+        }
+        if(metaName == null || metaName.isEmpty()){
+            throw new IllegalArgumentException("Meta field name can't be null or empty");
+        }
+        if(nodeId == null || nodeId.isEmpty()){
+            throw new IllegalArgumentException("Node ID can't be null or empty");
+        }
+
+        return runGetExemplarFragmentMeta(fragmentId, nodeId, metaName);
     }
 //endregion
 //region Abstract methods
@@ -313,6 +346,9 @@ public abstract class ReadCommandHandler implements IReadCommandHandler {
      * @return All registered fragment IDs
      */
     protected abstract Set<String> runGetAllFragmentIds();
-//endregion
 
+    protected abstract String runGetGlobalFragmentMeta(String fragmentId, String metaName);
+
+    protected abstract String runGetExemplarFragmentMeta(String fragmentId, String nodeId, String metaName);
+//endregion
 }

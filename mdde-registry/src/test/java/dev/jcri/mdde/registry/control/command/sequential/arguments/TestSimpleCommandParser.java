@@ -1,4 +1,4 @@
-package dev.jcri.mdde.registry.control.sequetial.arguments;
+package dev.jcri.mdde.registry.control.command.sequential.arguments;
 
 import dev.jcri.mdde.registry.control.ReadCommands;
 import dev.jcri.mdde.registry.control.WriteCommands;

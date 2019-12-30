@@ -82,4 +82,22 @@ public interface IWriteCommandHandler {
      * @throws WriteOperationException
      */
     boolean populateNodes(final Set<String> nodeIds) throws IllegalRegistryActionException, WriteOperationException;
+
+    /**
+     * Add meta value to the fragment Globally, independent of nodes. Not the same as adding the same value to all fragment exemplars.
+     * These functions should be kept separated.
+     * @param fragmentId Fragment ID
+     * @param metaField Name of the meta field (while specific length constraints depend on your backend implementation, better keep it short)
+     * @param metaValue Vale of the meta serialized as string
+     */
+    void addMetaToFragmentGlobal(final String fragmentId, final String metaField, final String metaValue) throws UnknownEntityIdException, WriteOperationException;
+
+    /**
+     * Add meta value to the specific fragment exemplar
+     * @param fragmentId Fragment ID
+     * @param nodeId Node ID
+     * @param metaField Name of the meta field (while specific length constraints depend on your backend implementation, better keep it short)
+     * @param metaValue Vale of the meta serialized as string
+     */
+    void addMetaToFragmentExemplar(final String fragmentId, final String nodeId, final String metaField, final String metaValue) throws UnknownEntityIdException, WriteOperationException;
 }

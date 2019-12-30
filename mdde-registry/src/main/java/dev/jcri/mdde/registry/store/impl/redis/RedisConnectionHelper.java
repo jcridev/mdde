@@ -68,7 +68,7 @@ public final class RedisConnectionHelper {
         return getTransaction(jedis, watchKeysArray);
     }
 
-    public Transaction getTransaction(Jedis jedis, String[] watchKeys){
+    public Transaction getTransaction(Jedis jedis, String... watchKeys){
         if(watchKeys != null && watchKeys.length > 0) {
             jedis.watch(watchKeys);
         }

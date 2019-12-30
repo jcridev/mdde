@@ -1,6 +1,7 @@
 package dev.jcri.mdde.registry.store;
 
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
+import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
 
 import java.util.Set;
@@ -111,11 +112,28 @@ public interface IReadCommandHandler {
      * @param fragmentId Fragment ID
      * @return
      */
-    Boolean getIsNodeContainsFragment(String nodeId, String fragmentId);
+    Boolean getIsNodeContainsFragment(String nodeId, String fragmentId) throws UnknownEntityIdException;
 
     /**
      * Get all fragment IDs registered within the registry
      * @return
      */
     Set<String> getAllFragmentIds();
+
+    /**
+     * Get a global meta value for the fragment
+     * @param fragmentId Fragment Id
+     * @param metaName Meta field name
+     * @return Value or null if value is not set.
+     */
+    String getFragmentGlobalMeta(String fragmentId, String metaName);
+
+    /**
+     * Get a meta value specific for a fragment exemplar
+     * @param fragmentId Fragment ID
+     * @param nodeId Node ID
+     * @param metaName Meta field name
+     * @return Value or null if value is not set.
+     */
+    String getFragmentExemplarMeta(String fragmentId, String nodeId, String metaName);
 }

@@ -1,8 +1,8 @@
-package dev.jcri.mdde.registry.control.sequetial;
+package dev.jcri.mdde.registry.control.command.sequential;
 
 import dev.jcri.mdde.registry.control.ReadCommands;
-import dev.jcri.mdde.registry.control.sequetial.arguments.ISequenceParser;
-import dev.jcri.mdde.registry.control.sequetial.arguments.SimpleSequenceParser;
+import dev.jcri.mdde.registry.control.command.sequential.arguments.ISequenceParser;
+import dev.jcri.mdde.registry.control.command.sequential.arguments.SimpleSequenceParser;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;

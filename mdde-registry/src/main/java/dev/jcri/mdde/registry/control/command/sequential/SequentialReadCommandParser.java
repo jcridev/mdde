@@ -1,4 +1,4 @@
-package dev.jcri.mdde.registry.control.sequetial;
+package dev.jcri.mdde.registry.control.command.sequential;
 
 import dev.jcri.mdde.registry.control.CommandParser;
 import dev.jcri.mdde.registry.control.ReadCommands;

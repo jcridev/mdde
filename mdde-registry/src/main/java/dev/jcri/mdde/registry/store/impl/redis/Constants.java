@@ -21,6 +21,14 @@ public final class Constants {
      */
     public static final String FRAGMENT_PREFIX = "mdde/fragment/";
     /**
+     * Prefix for the key storing global meta data for the specific fragment
+     */
+    public static final String FRAGMENT_GLOBAL_META_PREFIX = "mdde/fragment/meta/";
+    /**
+     * Prefix for the key storing specific exemplar located on the specific node
+     */
+    public static final String FRAGMENT_EXEMPLAR_META_PREFIX = "mdde/fragment/node/meta/";
+    /**
      * Prefix for the specific key storing unassigned to any fragment tuples stored on a node
      */
     public static final String NODE_HEAP = "mdde/unassigned/";
