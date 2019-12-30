@@ -59,4 +59,12 @@ public enum ExpectedCommandArgument{
     public ArgumentType getArgumentType(){
         return _argumentType;
     }
+
+    /**
+     * Get argument tag used in serialization and deserialization
+     * @return
+     */
+    public String getTag(){
+        return _tag;
+    }
 }

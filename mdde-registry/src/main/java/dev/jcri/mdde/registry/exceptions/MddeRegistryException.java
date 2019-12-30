@@ -11,4 +11,8 @@ public abstract class MddeRegistryException extends Exception {
     public MddeRegistryException(Throwable cause){
         super(cause);
     }
+
+    public MddeRegistryException(String message, Throwable cause){
+        super(message, cause);
+    }
 }

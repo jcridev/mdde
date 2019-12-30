@@ -1,8 +1,9 @@
 package dev.jcri.mdde.registry.control.command.sequential.arguments;
 
-import dev.jcri.mdde.registry.control.ICommands;
-import dev.jcri.mdde.registry.control.ReadCommands;
-import dev.jcri.mdde.registry.control.WriteCommands;
+import dev.jcri.mdde.registry.control.ICommand;
+import dev.jcri.mdde.registry.control.ReadCommand;
+import dev.jcri.mdde.registry.control.WriteCommand;
+import dev.jcri.mdde.registry.control.command.CommandComponents;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 
 import java.util.ArrayList;
@@ -11,7 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 
 public class SimpleSequenceParser implements ISequenceParser {
-
     private String getCommandOpeningStatement(String command){
         var spaceIdx = command.indexOf(" ");
         if(spaceIdx == -1 ){
@@ -21,38 +21,46 @@ public class SimpleSequenceParser implements ISequenceParser {
         return command.substring(0, spaceIdx);
     }
 
-    public ReadCommands getIsReadCommandKeyword(String command) throws UnknownRegistryCommandExceptions{
-        return ReadCommands.getCommandTag(getCommandOpeningStatement(command));
+    @Override
+    public ReadCommand getIsReadCommandKeyword(String command) throws UnknownRegistryCommandExceptions{
+        return ReadCommand.getCommandTag(getCommandOpeningStatement(command));
     }
 
-    public ReadCommands tryGetIsReadCommandKeyword(String command){
+    @Override
+    public ReadCommand tryGetIsReadCommandKeyword(String command){
         try {
-            return ReadCommands.getCommandTag(getCommandOpeningStatement(command));
+            return ReadCommand.getCommandTag(getCommandOpeningStatement(command));
         } catch (UnknownRegistryCommandExceptions unknownRegistryCommandExceptions) {
             return null;
         }
     }
 
-
-    public WriteCommands getIsWriteCommandKeyword(String command) throws UnknownRegistryCommandExceptions{
-        return WriteCommands.getCommandTag(getCommandOpeningStatement(command));
+    @Override
+    public WriteCommand getIsWriteCommandKeyword(String command) throws UnknownRegistryCommandExceptions{
+        return WriteCommand.getCommandTag(getCommandOpeningStatement(command));
     }
 
-    public WriteCommands tryGetIsWriteCommandKeyword(String command){
+    @Override
+    public WriteCommand tryGetIsWriteCommandKeyword(String command){
         try {
-            return WriteCommands.getCommandTag(getCommandOpeningStatement(command));
+            return WriteCommand.getCommandTag(getCommandOpeningStatement(command));
         } catch (UnknownRegistryCommandExceptions unknownRegistryCommandExceptions) {
             return null;
         }
     }
 
-    public List<Object> parseLineArguments(ICommands readCommand, String arguments) throws UnknownRegistryCommandExceptions {
+    @Override
+    public CommandComponents<String> getArgumentsFromLine(String command) {
+        var keyword = getCommandOpeningStatement(command);
+        var arguments = command.substring(keyword.length()).trim();
+
+        return new CommandComponents<>(keyword, arguments);
+    }
+
+    @Override
+    public List<Object> parseLineArguments(ICommand thisCommand, String arguments) throws UnknownRegistryCommandExceptions {
         List<Object> parsedArguments = new ArrayList<>();
         String inProcessString = arguments.trim();
-        //  Clear command name
-        if(arguments.startsWith(readCommand.getCommand())){
-            inProcessString = arguments.substring(readCommand.getCommand().length()).trim();
-        }
         Character currentDelimiter = ' ';
         while(inProcessString.length() > 0){
             // Check for a set

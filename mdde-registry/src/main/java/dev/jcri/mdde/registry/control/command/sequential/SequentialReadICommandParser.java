@@ -1,7 +1,8 @@
 package dev.jcri.mdde.registry.control.command.sequential;
 
-import dev.jcri.mdde.registry.control.CommandParser;
-import dev.jcri.mdde.registry.control.ReadCommands;
+import dev.jcri.mdde.registry.control.ICommandParser;
+import dev.jcri.mdde.registry.control.ReadCommand;
+import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
@@ -14,18 +15,18 @@ import java.util.Objects;
 
 import static dev.jcri.mdde.registry.control.ExpectedCommandArgument.*;
 
-public class SequentialReadCommandParser<T> extends BaseSequentialCommandParser implements CommandParser<T, ReadCommands, List<Object>> {
+public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser implements ICommandParser<T, ReadCommand, List<Object>> {
     private final IReadCommandHandler _readCommandHandler;
     private final IResponseSerializer<T> _serializer;
 
-    public SequentialReadCommandParser(IReadCommandHandler readCommandHandler, IResponseSerializer<T> serializer){
+    public SequentialReadICommandParser(IReadCommandHandler readCommandHandler, IResponseSerializer<T> serializer){
         Objects.requireNonNull(readCommandHandler, "Read commands handlers can't be null");
         Objects.requireNonNull(serializer, "Serializer can't be null");
         _serializer = serializer;
         _readCommandHandler = readCommandHandler;
     }
 
-    public T runCommand(ReadCommands readCommand, List<Object> arguments)
+    public T runCommand(ReadCommand readCommand, List<Object> arguments)
             throws UnknownRegistryCommandExceptions, MddeRegistryException {
         switch (readCommand)    {
             case GET_REGISTRY:
@@ -54,68 +55,56 @@ public class SequentialReadCommandParser<T> extends BaseSequentialCommandParser 
     }
 
     private T processFindTupleCommand(List<Object> arguments)
-            throws ResponseSerializationException {
-        final ReadCommands thisCommand = ReadCommands.FIND_TUPLE;
+            throws ResponseSerializationException, IllegalCommandArgumentException {
+        final ReadCommand thisCommand = ReadCommand.FIND_TUPLE;
         validateNotNullArguments(arguments, thisCommand.toString());
 
-        var tupleId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, 0));
-
+        var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
         return _serializer.serialize(_readCommandHandler.getTupleNodes(tupleId));
     }
 
     private T processFindTupleFragmentCommand(List<Object> arguments)
-            throws ResponseSerializationException {
-        final ReadCommands thisCommand = ReadCommands.FIND_TUPLE_FRAGMENT;
+            throws ResponseSerializationException, IllegalCommandArgumentException {
+        final ReadCommand thisCommand = ReadCommand.FIND_TUPLE_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
-        var tupleId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, 0));
-
+        var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
         return _serializer.serialize(_readCommandHandler.getTupleFragment(tupleId));
     }
 
     private T processFindFragmentNodesCommand(List<Object> arguments)
-            throws ResponseSerializationException {
-        final ReadCommands thisCommand = ReadCommands.FIND_FRAGMENT;
+            throws ResponseSerializationException, IllegalCommandArgumentException {
+        final ReadCommand thisCommand = ReadCommand.FIND_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, 0));
-
+        var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
         return _serializer.serialize(_readCommandHandler.getFragmentNodes(fragmentId));
     }
 
     private T processGetFragmentTuplesCommand(List<Object> arguments)
-            throws ResponseSerializationException, ReadOperationException {
-        final ReadCommands thisCommand = ReadCommands.GET_FRAGMENT_TUPLES;
+            throws ResponseSerializationException, ReadOperationException, IllegalCommandArgumentException {
+        final ReadCommand thisCommand = ReadCommand.GET_FRAGMENT_TUPLES;
         validateNotNullArguments(arguments, thisCommand.toString());
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, 0));
-
+        var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
         return _serializer.serialize(_readCommandHandler.getFragmentTuples(fragmentId));
     }
 
     private T processCountFragmentsCommand(List<Object> arguments)
-            throws ResponseSerializationException {
-        final ReadCommands thisCommand = ReadCommands.COUNT_FRAGMENT;
+            throws ResponseSerializationException, IllegalCommandArgumentException {
+        final ReadCommand thisCommand = ReadCommand.COUNT_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
-        var fragmentId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_FRAGMENT_ID, 0));
-
+        var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
         return _serializer.serialize(_readCommandHandler.getCountFragment(fragmentId));
     }
 
     private T processCountTuplesCommand(List<Object> arguments)
-            throws ResponseSerializationException {
-        final ReadCommands thisCommand = ReadCommands.COUNT_TUPLE;
+            throws ResponseSerializationException, IllegalCommandArgumentException {
+        final ReadCommand thisCommand = ReadCommand.COUNT_TUPLE;
         validateNotNullArguments(arguments, thisCommand.toString());
 
-        var tupleId = (String) Objects.requireNonNull(arguments.get(0),
-                getPositionalArgumentError(thisCommand.toString(), ARG_TUPLE_ID, 0));
-
+        var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
         return _serializer.serialize(_readCommandHandler.getCountTuple(tupleId));
     }
 
