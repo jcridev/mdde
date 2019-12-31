@@ -16,17 +16,22 @@ public class TextSequentialWriteICommandParser<T>  implements ICommandParser<T, 
 {
     private final ISequenceParser _stringParser = new SimpleSequenceParser();
     private final SequentialWriteICommandParser<T> _writeSequentialCommandParser;
+    private final IResponseSerializer<T> _serializer;
 
     public TextSequentialWriteICommandParser(IWriteCommandHandler writeCommandHandler, IResponseSerializer<T> serializer) {
         _writeSequentialCommandParser = new SequentialWriteICommandParser<T>(writeCommandHandler, serializer);
+        _serializer = serializer;
     }
 
-    public T runCommand(EWriteCommand EWriteCommand, String arguments) throws UnknownRegistryCommandExceptions, MddeRegistryException {
-        if(arguments == null || arguments.isEmpty()){
-            return _writeSequentialCommandParser.runCommand(EWriteCommand, new ArrayList<>());
+    public T runCommand(EWriteCommand EWriteCommand, String arguments) {
+        try {
+            if (arguments == null || arguments.isEmpty()) {
+                return _writeSequentialCommandParser.runCommand(EWriteCommand, new ArrayList<>());
+            }
+            List<Object> parsedArguments = _stringParser.parseLineArguments(EWriteCommand, arguments);
+            return _writeSequentialCommandParser.runCommand(EWriteCommand, parsedArguments);
+        } catch (Exception ex){
+            return _serializer.serializeException(ex);
         }
-        List<Object> parsedArguments = _stringParser.parseLineArguments(EWriteCommand, arguments);
-
-        return _writeSequentialCommandParser.runCommand(EWriteCommand, parsedArguments);
     }
 }

@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.store.impl;
 
+import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.IWriteCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.*;
 
@@ -21,9 +22,9 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
     /**
      * Corresponding reader for the registry store
      */
-    protected final ReadCommandHandler readCommandHandler;
+    protected final IReadCommandHandler readCommandHandler;
 
-    public WriteCommandHandler(ReadCommandHandler readCommandHandler){
+    public WriteCommandHandler(IReadCommandHandler readCommandHandler){
         Objects.requireNonNull(readCommandHandler, "Handler for reads can't be null");
         this.readCommandHandler = readCommandHandler;
     }
@@ -163,7 +164,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             throws IllegalRegistryActionException, WriteOperationException {
         _commandExecutionLock.lock();
         try {
-            var currentNodes = readCommandHandler.runGetNodes();
+            var currentNodes = readCommandHandler.getNodes();
             if(currentNodes != null && !currentNodes.isEmpty()){
                 throw new IllegalRegistryActionException("Nodes population is now allowed in non-empty registry",
                         IllegalRegistryActionException.IllegalActions.AttemptToSeedNonEmptyRegistry);
@@ -226,10 +227,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
 //region Verify the correctness and validity of the invoked operation
     private void verifyAndRunInsertTuple(final String tupleId, final String nodeId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
-        if (readCommandHandler.runGetIsTupleExists(tupleId)) {
+        if (readCommandHandler.getIsTupleExists(tupleId)) {
             throw new DuplicateEntityRecordException(RegistryEntityType.Tuple, tupleId);
         }
-        if (!readCommandHandler.runGetIsNodeExists(nodeId)) {
+        if (!readCommandHandler.getIsNodeExists(nodeId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
         }
 
@@ -238,11 +239,11 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
 
     private String verifyAndRunFormFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
             throws WriteOperationException, DuplicateEntityRecordException, IllegalRegistryActionException {
-        if(!readCommandHandler.runGetIsTuplesUnassigned(nodeId, tupleIds)){
+        if(!readCommandHandler.getIsTuplesUnassigned(nodeId, tupleIds)){
             throw new IllegalRegistryActionException("Fragments can only be formed from colocated exiting tuples",
                     IllegalRegistryActionException.IllegalActions.FormingFragmentFromNonColocatedTuples);
         }
-        if (readCommandHandler.runGetIsFragmentExists(fragmentId)) {
+        if (readCommandHandler.getIsFragmentExists(fragmentId)) {
             throw new DuplicateEntityRecordException(RegistryEntityType.Fragment, fragmentId);
         }
 
@@ -253,11 +254,11 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
 
         for(String tupleId: tupleIds){
-            if (readCommandHandler.runGetIsTupleExists(tupleId)) {
+            if (readCommandHandler.getIsTupleExists(tupleId)) {
                 throw new DuplicateEntityRecordException(RegistryEntityType.Tuple, tupleId);
             }
         }
-        if (!readCommandHandler.runGetIsNodeExists(nodeId)) {
+        if (!readCommandHandler.getIsNodeExists(nodeId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
         }
 
@@ -266,10 +267,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
 
     private void verifyAndRunAppendTupleToFragment(final String tupleId, final String fragmentId)
             throws UnknownEntityIdException, WriteOperationException {
-        if (!readCommandHandler.runGetIsTupleExists(tupleId)) {
+        if (!readCommandHandler.getIsTupleExists(tupleId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Tuple, tupleId);
         }
-        if (!readCommandHandler.runGetIsFragmentExists(fragmentId)) {
+        if (!readCommandHandler.getIsFragmentExists(fragmentId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
         }
 
@@ -278,20 +279,20 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
 
     private void verifyAndRunReplicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
             throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException {
-        if (!readCommandHandler.runGetIsFragmentExists(fragmentId)) {
+        if (!readCommandHandler.getIsFragmentExists(fragmentId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
         }
-        if (!readCommandHandler.runGetIsNodeExists(sourceNodeId)) {
+        if (!readCommandHandler.getIsNodeExists(sourceNodeId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Node, sourceNodeId);
         }
-        if (!readCommandHandler.runGetIsNodeExists(destinationNodeId)) {
+        if (!readCommandHandler.getIsNodeExists(destinationNodeId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Node, destinationNodeId);
         }
         if(sourceNodeId.equals(destinationNodeId)){
             throw new IllegalRegistryActionException("Source and destination nodes can't be the same",
                     IllegalRegistryActionException.IllegalActions.LocalFragmentReplication);
         }
-        if(readCommandHandler.runGetIsNodeContainsFragment(destinationNodeId, fragmentId)){
+        if(readCommandHandler.getIsNodeContainsFragment(destinationNodeId, fragmentId)){
             throw new IllegalRegistryActionException(String.format("Destination node %s already contains fragment %s",
                     destinationNodeId, fragmentId), IllegalRegistryActionException.IllegalActions.DuplicateFragmentReplication);
         }
@@ -300,14 +301,14 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
 
     private void verifyAndRunDeleteFragmentExemplar(final String fragmentId, final String nodeId)
             throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException {
-        var fragmentCount = readCommandHandler.runGetCountFragment(fragmentId);
+        var fragmentCount = readCommandHandler.getCountFragment(fragmentId);
         if(fragmentCount == 0){
             throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
         } else if (fragmentCount == 1){
             throw new IllegalRegistryActionException(String.format("Attempted to remove a unique fragment %s", fragmentId),
                     IllegalRegistryActionException.IllegalActions.UniqueFragmentRemoval);
         }
-        if (!readCommandHandler.runGetIsNodeExists(nodeId)) {
+        if (!readCommandHandler.getIsNodeExists(nodeId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
         }
         runDeleteFragmentExemplar(fragmentId, nodeId);
@@ -315,7 +316,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
 
     private String verifyAndRunCompleteFragmentDeletion(final String fragmentId)
             throws UnknownEntityIdException {
-        if (!readCommandHandler.runGetIsFragmentExists(fragmentId)) {
+        if (!readCommandHandler.getIsFragmentExists(fragmentId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
         }
         return runCompleteFragmentDeletion(fragmentId);

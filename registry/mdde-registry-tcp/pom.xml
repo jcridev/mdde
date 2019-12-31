@@ -38,13 +38,6 @@
     </build>
 
     <dependencies>
-        <!-- JUnit 5 -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>[5.5,)</version>
-            <scope>test</scope>
-        </dependency>
         <!-- Netty (TCP server\client)-->
         <dependency>
             <groupId>io.netty</groupId>
@@ -67,12 +60,21 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.30</version>
         </dependency>
+
         <!-- MDDE -->
         <dependency>
             <groupId>dev.jcri.mdde.registry</groupId>
             <artifactId>mdde-registry-core</artifactId>
             <version>0.1-SNAPSHOT</version>
             <scope>compile</scope>
+        </dependency>
+
+        <!-- JUnit 5 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>[5.5,)</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

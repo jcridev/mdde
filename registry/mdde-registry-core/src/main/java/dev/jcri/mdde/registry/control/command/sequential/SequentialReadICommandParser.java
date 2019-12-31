@@ -26,28 +26,32 @@ public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser
         _readCommandHandler = readCommandHandler;
     }
 
-    public T runCommand(EReadCommand EReadCommand, List<Object> arguments)
-            throws UnknownRegistryCommandExceptions, MddeRegistryException {
-        switch (EReadCommand)    {
-            case GET_REGISTRY:
-                return processGetFullRegistryCommand();
-            case FIND_TUPLE:
-                return processFindTupleCommand(arguments);
-            case FIND_TUPLE_FRAGMENT:
-                return processFindTupleFragmentCommand(arguments);
-            case FIND_FRAGMENT:
-                return processFindFragmentNodesCommand(arguments);
-            case GET_FRAGMENT_TUPLES:
-                return processGetFragmentTuplesCommand(arguments);
-            case COUNT_FRAGMENT:
-                return processCountFragmentsCommand(arguments);
-            case COUNT_TUPLE:
-                return processCountTuplesCommand(arguments);
-            case GET_NODES:
-                return processGetNodesCommand();
+    public T runCommand(EReadCommand EReadCommand, List<Object> arguments) {
+        try {
+            switch (EReadCommand) {
+                case GET_REGISTRY:
+                    return _serializer.serialize(processGetFullRegistryCommand());
+                case FIND_TUPLE:
+                    return _serializer.serialize(processFindTupleCommand(arguments));
+                case FIND_TUPLE_FRAGMENT:
+                    return _serializer.serialize(processFindTupleFragmentCommand(arguments));
+                case FIND_FRAGMENT:
+                    return _serializer.serialize(processFindFragmentNodesCommand(arguments));
+                case GET_FRAGMENT_TUPLES:
+                    return _serializer.serialize(processGetFragmentTuplesCommand(arguments));
+                case COUNT_FRAGMENT:
+                    return _serializer.serialize(processCountFragmentsCommand(arguments));
+                case COUNT_TUPLE:
+                    return _serializer.serialize(processCountTuplesCommand(arguments));
+                case GET_NODES:
+                    return _serializer.serialize(processGetNodesCommand());
+                default:
+                    throw new UnknownRegistryCommandExceptions(EReadCommand.toString());
+            }
         }
-
-        throw new UnknownRegistryCommandExceptions(EReadCommand.toString());
+        catch (Exception ex){
+            return _serializer.serializeException(ex);
+        }
     }
 
     private T processGetFullRegistryCommand() throws ResponseSerializationException, ReadOperationException {

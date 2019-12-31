@@ -1,5 +1,7 @@
 package dev.jcri.mdde.registry.server.tcp;
 
+import dev.jcri.mdde.registry.control.command.CommandComponents;
+import dev.jcri.mdde.registry.server.CommandProcessor;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
@@ -9,8 +11,12 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.List;
+import java.util.Objects;
+
 public class Listener {
     private static final Logger logger = LogManager.getLogger(Listener.class);
+
     EventLoopGroup connectionGroup = new NioEventLoopGroup();
     EventLoopGroup workerGroup = new NioEventLoopGroup();
     void start(int port) throws InterruptedException {

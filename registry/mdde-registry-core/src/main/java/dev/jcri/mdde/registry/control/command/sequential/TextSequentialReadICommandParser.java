@@ -15,17 +15,23 @@ import java.util.List;
 public class TextSequentialReadICommandParser<T> implements ICommandParser<T, EReadCommand, String> {
     private final ISequenceParser _stringParser = new SimpleSequenceParser();
     private final SequentialReadICommandParser<T> _sequentialCommandParser;
+    private final IResponseSerializer<T> _serializer;
 
     public TextSequentialReadICommandParser(IReadCommandHandler readCommandHandler, IResponseSerializer<T> serializer) {
         _sequentialCommandParser = new SequentialReadICommandParser<>(readCommandHandler, serializer);
+        _serializer = serializer;
     }
 
-    public T runCommand(EReadCommand EReadCommand, String arguments) throws UnknownRegistryCommandExceptions, MddeRegistryException {
-        if(arguments == null || arguments.isEmpty()){
-            return _sequentialCommandParser.runCommand(EReadCommand, new ArrayList<>());
-        }
-        List<Object> parsedArguments = _stringParser.parseLineArguments(EReadCommand, arguments);
+    public T runCommand(EReadCommand EReadCommand, String arguments) {
+        try{
+            if(arguments == null || arguments.isEmpty()){
+                return _sequentialCommandParser.runCommand(EReadCommand, new ArrayList<>());
+            }
+            List<Object> parsedArguments = _stringParser.parseLineArguments(EReadCommand, arguments);
 
-        return _sequentialCommandParser.runCommand(EReadCommand, parsedArguments);
+            return _sequentialCommandParser.runCommand(EReadCommand, parsedArguments);
+        } catch (Exception ex){
+            return _serializer.serializeException(ex);
+        }
     }
 }

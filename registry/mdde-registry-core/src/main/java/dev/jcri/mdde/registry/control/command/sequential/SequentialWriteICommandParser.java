@@ -28,41 +28,43 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
      * @param EWriteCommand WriteCommandHandler.Commands
      * @param arguments Key-value pairs
      */
-    public final T runCommand(EWriteCommand EWriteCommand, List<Object> arguments)
-            throws UnknownRegistryCommandExceptions, MddeRegistryException {
-
-        switch (EWriteCommand) {
-            case INSERT_TUPLE:
-                processInsertTupleCommand(arguments);
-                break;
-            case INSERT_TUPLE_BULK:
-                processInsertTupleInBulkCommand(arguments);
-                break;
-            case DELETE_TUPLE:
-                processDeleteTupleCommand(arguments);
-                break;
-            case FORM_FRAGMENT:
-                processFormFragmentCommand(arguments);
-                break;
-            case APPEND_TO_FRAGMENT:
-                processAppendToFragmentCommand(arguments);
-                break;
-            case REPLICATE_FRAGMENT:
-                processReplicateFragmentCommand(arguments);
-                break;
-            case DELETE_FRAGMENT:
-                processDeleteFragmentExemplar(arguments);
-                break;
-            case DESTROY_FRAGMENT:
-                processDestroyFragment(arguments);
-                break;
-            case POPULATE_NODES:
-                processPopulateNodes(arguments);
-                break;
-            default:
-                throw new UnknownRegistryCommandExceptions(EWriteCommand.toString());
+    public final T runCommand(EWriteCommand EWriteCommand, List<Object> arguments) {
+        try {
+            switch (EWriteCommand) {
+                case INSERT_TUPLE:
+                    processInsertTupleCommand(arguments);
+                    break;
+                case INSERT_TUPLE_BULK:
+                    processInsertTupleInBulkCommand(arguments);
+                    break;
+                case DELETE_TUPLE:
+                    processDeleteTupleCommand(arguments);
+                    break;
+                case FORM_FRAGMENT:
+                    _serializer.serialize(processFormFragmentCommand(arguments));
+                    break;
+                case APPEND_TO_FRAGMENT:
+                    processAppendToFragmentCommand(arguments);
+                    break;
+                case REPLICATE_FRAGMENT:
+                    processReplicateFragmentCommand(arguments);
+                    break;
+                case DELETE_FRAGMENT:
+                    processDeleteFragmentExemplar(arguments);
+                    break;
+                case DESTROY_FRAGMENT:
+                    _serializer.serialize(processDestroyFragment(arguments));
+                    break;
+                case POPULATE_NODES:
+                    _serializer.serialize(processPopulateNodes(arguments));
+                    break;
+                default:
+                    throw new UnknownRegistryCommandExceptions(EWriteCommand.toString());
+            }
+            return _serializer.serialize("ok");
+        }catch (Exception ex){
+            return _serializer.serializeException(ex);
         }
-        return _serializer.serialize("Done");
     }
 
     private void processInsertTupleCommand(final List<Object> arguments)

@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.store.impl.redis;
 
+import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.impl.ReadCommandHandler;
 import dev.jcri.mdde.registry.store.impl.WriteCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.RegistryEntityType;
@@ -17,7 +18,7 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
 
     private RedisConnectionHelper _redisConnection;
 
-    public WriteCommandHandlerRedis(ReadCommandHandler readCommandHandler) {
+    public WriteCommandHandlerRedis(IReadCommandHandler readCommandHandler) {
         super(readCommandHandler);
         _redisConnection = RedisConnectionHelper.getInstance();
     }

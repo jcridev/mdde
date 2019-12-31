@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.server.tcp;
 
+import dev.jcri.mdde.registry.server.CommandProcessor;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;

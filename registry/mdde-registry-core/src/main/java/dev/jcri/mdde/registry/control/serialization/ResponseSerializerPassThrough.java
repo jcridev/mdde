@@ -34,4 +34,9 @@ public class ResponseSerializerPassThrough implements IResponseSerializer<Object
     public Object serialize(FullRegistry value) throws ResponseSerializationException {
         return value;
     }
+
+    @Override
+    public Object serializeException(Throwable cause) {
+        return cause;
+    }
 }
