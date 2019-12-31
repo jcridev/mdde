@@ -1,7 +1,7 @@
 package dev.jcri.mdde.registry.control.command.sequential;
 
+import dev.jcri.mdde.registry.control.EWriteCommand;
 import dev.jcri.mdde.registry.control.ICommandParser;
-import dev.jcri.mdde.registry.control.WriteCommand;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.store.IWriteCommandHandler;
@@ -13,7 +13,7 @@ import java.util.Objects;
 
 import static dev.jcri.mdde.registry.control.ExpectedCommandArgument.*;
 
-public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParser implements ICommandParser<T, WriteCommand, List<Object>> {
+public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParser implements ICommandParser<T, EWriteCommand, List<Object>> {
     private final IWriteCommandHandler _writeCommandHandler;
     private final IResponseSerializer<T> _serializer;
 
@@ -25,13 +25,13 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
     }
     /**
      * Execute the specified query-like command
-     * @param writeCommand WriteCommandHandler.Commands
+     * @param EWriteCommand WriteCommandHandler.Commands
      * @param arguments Key-value pairs
      */
-    public final T runCommand(WriteCommand writeCommand, List<Object> arguments)
+    public final T runCommand(EWriteCommand EWriteCommand, List<Object> arguments)
             throws UnknownRegistryCommandExceptions, MddeRegistryException {
 
-        switch (writeCommand) {
+        switch (EWriteCommand) {
             case INSERT_TUPLE:
                 processInsertTupleCommand(arguments);
                 break;
@@ -60,14 +60,14 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
                 processPopulateNodes(arguments);
                 break;
             default:
-                throw new UnknownRegistryCommandExceptions(writeCommand.toString());
+                throw new UnknownRegistryCommandExceptions(EWriteCommand.toString());
         }
         return _serializer.serialize("Done");
     }
 
     private void processInsertTupleCommand(final List<Object> arguments)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException {
-        final var thisCommand = WriteCommand.INSERT_TUPLE;
+        final var thisCommand = EWriteCommand.INSERT_TUPLE;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
@@ -77,7 +77,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
 
     private void processInsertTupleInBulkCommand(final List<Object> arguments)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException {
-        final var thisCommand = WriteCommand.INSERT_TUPLE_BULK;
+        final var thisCommand = EWriteCommand.INSERT_TUPLE_BULK;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var tupleIdsArg = getPositionalArgumentAsSet(arguments, thisCommand, ARG_TUPLE_IDs);
@@ -87,7 +87,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
 
     private void processDeleteTupleCommand(final List<Object> arguments)
             throws ResponseSerializationException, UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException {
-        final var thisCommand = WriteCommand.DELETE_TUPLE;
+        final var thisCommand = EWriteCommand.DELETE_TUPLE;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
@@ -96,7 +96,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
 
     private T processFormFragmentCommand(final List<Object> arguments)
             throws ResponseSerializationException, WriteOperationException, IllegalRegistryActionException, UnknownEntityIdException, DuplicateEntityRecordException, IllegalCommandArgumentException {
-        final var thisCommand = WriteCommand.FORM_FRAGMENT;
+        final var thisCommand = EWriteCommand.FORM_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
 
@@ -108,7 +108,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
 
     private void processAppendToFragmentCommand(final List<Object> arguments)
             throws WriteOperationException, DuplicateEntityRecordException, UnknownEntityIdException, IllegalCommandArgumentException {
-        final var thisCommand = WriteCommand.APPEND_TO_FRAGMENT;
+        final var thisCommand = EWriteCommand.APPEND_TO_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
@@ -118,7 +118,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
 
     private void processReplicateFragmentCommand(final List<Object> arguments)
             throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException {
-        final var thisCommand = WriteCommand.REPLICATE_FRAGMENT;
+        final var thisCommand = EWriteCommand.REPLICATE_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
@@ -129,7 +129,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
 
     private void processDeleteFragmentExemplar(final List<Object> arguments)
             throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException {
-        final var thisCommand = WriteCommand.DELETE_FRAGMENT;
+        final var thisCommand = EWriteCommand.DELETE_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
@@ -139,7 +139,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
 
     private T processDestroyFragment(final List<Object> arguments)
             throws ResponseSerializationException, UnknownEntityIdException, IllegalCommandArgumentException {
-        final var thisCommand = WriteCommand.DESTROY_FRAGMENT;
+        final var thisCommand = EWriteCommand.DESTROY_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
@@ -148,7 +148,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
 
     private T processPopulateNodes(final List<Object> arguments)
             throws IllegalRegistryActionException, ResponseSerializationException, WriteOperationException, IllegalCommandArgumentException {
-        final var thisCommand = WriteCommand.POPULATE_NODES;
+        final var thisCommand = EWriteCommand.POPULATE_NODES;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var nodeIdsArg = getPositionalArgumentAsSet(arguments, thisCommand, ARG_NODE_IDs);

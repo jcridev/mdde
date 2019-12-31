@@ -1,7 +1,7 @@
 package dev.jcri.mdde.registry.control.command.sequential;
 
+import dev.jcri.mdde.registry.control.EReadCommand;
 import dev.jcri.mdde.registry.control.ICommandParser;
-import dev.jcri.mdde.registry.control.ReadCommand;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
@@ -15,7 +15,7 @@ import java.util.Objects;
 
 import static dev.jcri.mdde.registry.control.ExpectedCommandArgument.*;
 
-public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser implements ICommandParser<T, ReadCommand, List<Object>> {
+public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser implements ICommandParser<T, EReadCommand, List<Object>> {
     private final IReadCommandHandler _readCommandHandler;
     private final IResponseSerializer<T> _serializer;
 
@@ -26,9 +26,9 @@ public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser
         _readCommandHandler = readCommandHandler;
     }
 
-    public T runCommand(ReadCommand readCommand, List<Object> arguments)
+    public T runCommand(EReadCommand EReadCommand, List<Object> arguments)
             throws UnknownRegistryCommandExceptions, MddeRegistryException {
-        switch (readCommand)    {
+        switch (EReadCommand)    {
             case GET_REGISTRY:
                 return processGetFullRegistryCommand();
             case FIND_TUPLE:
@@ -47,7 +47,7 @@ public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser
                 return processGetNodesCommand();
         }
 
-        throw new UnknownRegistryCommandExceptions(readCommand.toString());
+        throw new UnknownRegistryCommandExceptions(EReadCommand.toString());
     }
 
     private T processGetFullRegistryCommand() throws ResponseSerializationException, ReadOperationException {
@@ -56,7 +56,7 @@ public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser
 
     private T processFindTupleCommand(List<Object> arguments)
             throws ResponseSerializationException, IllegalCommandArgumentException {
-        final ReadCommand thisCommand = ReadCommand.FIND_TUPLE;
+        final EReadCommand thisCommand = EReadCommand.FIND_TUPLE;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
@@ -65,7 +65,7 @@ public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser
 
     private T processFindTupleFragmentCommand(List<Object> arguments)
             throws ResponseSerializationException, IllegalCommandArgumentException {
-        final ReadCommand thisCommand = ReadCommand.FIND_TUPLE_FRAGMENT;
+        final EReadCommand thisCommand = EReadCommand.FIND_TUPLE_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
@@ -74,7 +74,7 @@ public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser
 
     private T processFindFragmentNodesCommand(List<Object> arguments)
             throws ResponseSerializationException, IllegalCommandArgumentException {
-        final ReadCommand thisCommand = ReadCommand.FIND_FRAGMENT;
+        final EReadCommand thisCommand = EReadCommand.FIND_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
@@ -83,7 +83,7 @@ public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser
 
     private T processGetFragmentTuplesCommand(List<Object> arguments)
             throws ResponseSerializationException, ReadOperationException, IllegalCommandArgumentException {
-        final ReadCommand thisCommand = ReadCommand.GET_FRAGMENT_TUPLES;
+        final EReadCommand thisCommand = EReadCommand.GET_FRAGMENT_TUPLES;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
@@ -92,7 +92,7 @@ public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser
 
     private T processCountFragmentsCommand(List<Object> arguments)
             throws ResponseSerializationException, IllegalCommandArgumentException {
-        final ReadCommand thisCommand = ReadCommand.COUNT_FRAGMENT;
+        final EReadCommand thisCommand = EReadCommand.COUNT_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
@@ -101,7 +101,7 @@ public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser
 
     private T processCountTuplesCommand(List<Object> arguments)
             throws ResponseSerializationException, IllegalCommandArgumentException {
-        final ReadCommand thisCommand = ReadCommand.COUNT_TUPLE;
+        final EReadCommand thisCommand = EReadCommand.COUNT_TUPLE;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);

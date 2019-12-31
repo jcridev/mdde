@@ -29,13 +29,15 @@ public class TestTCPServer {
             public void run() {
                 var randStrings = new ArrayList<String>();
                 for(int i = 0; i < 10; i++){
-                    randStrings.add(genRandomString(500000, 100));
+                    randStrings.add(genRandomString(1000000, 0));
                 }
                 var gTcpClient = new GenericTCPClient();
-                try {
-                    gTcpClient.testLinesInSequence(testPort, randStrings, 1000);
-                } catch (Exception e) {
-                    fail("Failed server communication");
+                for(var randLine: randStrings){
+                    try {
+                        gTcpClient.testLinesInSequence(testPort, randLine, 1000);
+                    } catch (Exception e) {
+                        fail("Failed server communication");
+                    }
                 }
             }
         };

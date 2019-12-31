@@ -20,7 +20,7 @@ public class Listener {
             b.group(connectionGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new TCPChannelInitializer())
-                    .option(ChannelOption.SO_BACKLOG, 128)
+                    .option(ChannelOption.SO_BACKLOG, 256)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             ChannelFuture f = b.bind(port).sync();

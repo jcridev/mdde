@@ -1,5 +1,10 @@
 package dev.jcri.mdde.registry.control.command;
 
+import dev.jcri.mdde.registry.control.EReadCommand;
+import dev.jcri.mdde.registry.control.EWriteCommand;
+import dev.jcri.mdde.registry.control.ICommand;
+import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
+
 /**
  * Container class for the base components of the incoming command
  * @param <T>
@@ -18,7 +23,7 @@ public class CommandComponents<T> {
     }
 
     /**
-     * Get command keyword. Should correspond to one of the ICommand implementations (ReadCommand, WriteCommand)
+     * Get command keyword. Should correspond to one of the ICommand implementations (EReadCommand, EWriteCommand)
      * @return
      */
     public String getKeyword() {
@@ -39,5 +44,30 @@ public class CommandComponents<T> {
 
     public void setArgs(T args) {
         this._args = args;
+    }
+
+
+    public EReadCommand getIsReadCommandKeyword() throws UnknownRegistryCommandExceptions {
+        return EReadCommand.getCommandTag(getKeyword());
+    }
+
+    public EReadCommand tryGetIsReadCommandKeyword(){
+        try {
+            return EReadCommand.getCommandTag(getKeyword());
+        } catch (UnknownRegistryCommandExceptions unknownRegistryCommandExceptions) {
+            return null;
+        }
+    }
+
+    public EWriteCommand getIsWriteCommandKeyword() throws UnknownRegistryCommandExceptions{
+        return EWriteCommand.getCommandTag(getKeyword());
+    }
+
+    public EWriteCommand tryGetIsWriteCommandKeyword(){
+        try {
+            return EWriteCommand.getCommandTag(getKeyword());
+        } catch (UnknownRegistryCommandExceptions unknownRegistryCommandExceptions) {
+            return null;
+        }
     }
 }

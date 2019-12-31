@@ -7,24 +7,30 @@ import java.util.stream.Collectors;
 
 import static dev.jcri.mdde.registry.control.ExpectedCommandArgument.*;
 
-public enum ReadCommand implements ICommand {
-    GET_REGISTRY("GETALL", new ArrayList<>()),
-    FIND_TUPLE("FINDTUPLE", new ArrayList<>(){{add(ARG_TUPLE_ID);}}),
-    FIND_TUPLE_FRAGMENT("TUPLEFRAGMENT", new ArrayList<>(){{add(ARG_TUPLE_ID);}}),
-    FIND_FRAGMENT("FINDFRAGMENT", new ArrayList<>(){{add(ARG_FRAGMENT_ID);}}),
-    GET_FRAGMENT_TUPLES("GETFRAGTUPLES", new ArrayList<>(){{add(ARG_FRAGMENT_ID);}}),
-    COUNT_FRAGMENT("COUNTFRAGMENT", new ArrayList<>(){{add(ARG_FRAGMENT_ID);}}),
-    COUNT_TUPLE("COUNTTUPLE", new ArrayList<>(){{add(ARG_TUPLE_ID);}}),
-    GET_NODES("NODES", new ArrayList<>());
+/**
+ * Registry manipulation commands available
+ */
+public enum EWriteCommand implements ICommand {
+    INSERT_TUPLE("INSERT", new ArrayList<>(){{add(ARG_TUPLE_ID); add(ARG_NODE_ID);}}),
+    INSERT_TUPLE_BULK("INSERTMANY", new ArrayList<>(){{add(ARG_TUPLE_IDs); add(ARG_NODE_ID);}}),
+    DELETE_TUPLE("DELTUPLE", new ArrayList<>(){{add(ARG_TUPLE_ID); }}),
+    FORM_FRAGMENT("GROUP", new ArrayList<>(){{add(ARG_TUPLE_IDs); add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}}),
+    APPEND_TO_FRAGMENT("APPEND", new ArrayList<>(){{add(ARG_TUPLE_ID); add(ARG_FRAGMENT_ID);}}),
+    REPLICATE_FRAGMENT("REPLICATE", new ArrayList<>(){{add(ARG_FRAGMENT_ID); add(ARG_NODE_ID); add(ARG_NODE_ID_B);}}),
+    DELETE_FRAGMENT("DELFRAGCOPY", new ArrayList<>(){{add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}}),
+    DESTROY_FRAGMENT("ERASE", new ArrayList<>(){{add(ARG_FRAGMENT_ID);}}),
+    POPULATE_NODES("ADDNODES", new ArrayList<>(){{add(ARG_NODE_IDs);}});
 
     private final String _command;
     private final List<ExpectedCommandArgument> _expectedArguments;
     private final int _numExpectedArguments;
 
     /**
-     * @param command Command keyword for the processor
+     *
+     * @param command
+     * @param args List of expected arguments,in the order they should arrive
      */
-    ReadCommand(final String command, final List<ExpectedCommandArgument> args) {
+    EWriteCommand(final String command, final List<ExpectedCommandArgument> args) {
         this._command = command;
         _expectedArguments = args;
         if(_expectedArguments == null){
@@ -35,7 +41,8 @@ public enum ReadCommand implements ICommand {
         }
     }
 
-    private static Map<String, ReadCommand> _commandsMap = Arrays.stream(ReadCommand.values()).collect(Collectors.toMap(e -> e._command, e -> e));
+    private static Map<String, EWriteCommand> _commandsMap = Arrays.stream(EWriteCommand.values())
+            .collect(Collectors.toMap(e -> e._command, e -> e));
 
     @Override
     public String toString() {
@@ -66,7 +73,13 @@ public enum ReadCommand implements ICommand {
         return Collections.unmodifiableList(_expectedArguments);
     }
 
-    public static ReadCommand getCommandTag(String tag) throws UnknownRegistryCommandExceptions {
+    /**
+     * Get specific command by the text key tag
+     * @param tag Tag
+     * @return
+     * @throws UnknownRegistryCommandExceptions
+     */
+    public static EWriteCommand getCommandTag(String tag) throws UnknownRegistryCommandExceptions {
         if(tag == null || tag.isEmpty()){
             throw new IllegalArgumentException("tag can't be null or empty");
         }
