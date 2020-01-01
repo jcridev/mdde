@@ -35,6 +35,7 @@ public class TestConfigReaderYaml {
             fail(e);
 ;       }
         assertNotNull(stringYaml);
+        System.out.println(stringYaml);
 
         ConfigReaderYamlAllRedis configReader = new ConfigReaderYamlAllRedis();
         RegistryConfig<RegistryStoreConfigRedis, DataNodeConfigRedis> deserialized = null;

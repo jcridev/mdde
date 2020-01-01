@@ -1,5 +1,8 @@
 package dev.jcri.mdde.registry.server.tcp;
 
+import dev.jcri.mdde.registry.configuration.RegistryConfig;
+import dev.jcri.mdde.registry.configuration.reader.ConfigReaderYamlAllRedis;
+import dev.jcri.mdde.registry.configuration.redis.DataNodeConfigRedis;
 import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
 import dev.jcri.mdde.registry.control.EReadCommand;
 import dev.jcri.mdde.registry.control.EWriteCommand;
@@ -30,24 +33,65 @@ public class Main {
     private static final Logger logger = LogManager.getLogger(Main.class);
     private static Listener _listener;
 
-    public static void main(String args[]){
+    /**
+     * Main entry point
+     * @param args expects:
+     *             -p port on which this TCP server should be listening
+     *             -c path to the appropriate MDDE configuration YAML
+     */
+    public static void main(String[] args){
         AppParams parsedArgs = null;
         try {
             parsedArgs = parseArgs(args);
-        }catch (Exception ex){
+        }catch (Exception e){
+            logger.error(e);
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+        // Read the config file
+        ConfigReaderYamlAllRedis mddeAllRedisConfigReader = new ConfigReaderYamlAllRedis();
+        RegistryConfig<RegistryStoreConfigRedis, DataNodeConfigRedis> mddeConfig = null;
+        try {
+            mddeConfig = mddeAllRedisConfigReader.readConfig(parsedArgs.getPathToConfigFile());
+        } catch (Exception e) {
+            logger.error(e);
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+        // Configure CommandProcessorSingleton
+        configureCommandProcessing(mddeConfig.getRegistryStore());
+
+        // Hook attempting to properly shut down the TCP listener on shutdown
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                if(_listener != null){
+                    _listener.stop();
+                    logger.info("Stopped the listener.");
+                }
+            } catch (Exception ex) {
+                logger.error(ex);
+            }
+        }));
+
+        // Start the TCP listener
+        _listener = new Listener();
+        try {
+            _listener.start(parsedArgs.getTcpPort());
+        }
+        catch (Exception ex){
             logger.error(ex);
             System.err.println(ex.getMessage());
-            return;
+            System.exit(1);
         }
+    }
+
+    /**
+     * Configure CommandProcessorSingleton for working with redis registry store
+     * @param mddeStoreConfig Redis configuration for the registry records storage
+     */
+    private static void configureCommandProcessing(RegistryStoreConfigRedis mddeStoreConfig){
         // Configure redis registry store
-        var testConfig = new RegistryStoreConfigRedis(){
-            {setHost("localhost");}  // TODO: Read actual config
-            {setPort(6379);}
-            {setPassword(null);}
-        };
-
-        var redisConnection = new RedisConnectionHelper(testConfig);
-
+        var redisConnection = new RedisConnectionHelper(mddeStoreConfig);
         // Handle commands
         IReadCommandHandler readCommandHandler = new ReadCommandHandlerRedis(redisConnection);
         IWriteCommandHandler writeCommandHandler = new WriteCommandHandlerRedis(redisConnection, readCommandHandler);
@@ -59,28 +103,13 @@ public class Main {
         // Incoming statements processor
         var commandProcessor = new CommandProcessor<String, String, String>(commandPreProcessor, readCommandParser, writeCommandParser, responseSerializer);
         CommandProcessorSingleton.getDefaultInstance().initializeCommandProcessor(commandProcessor);
-        // TCP calls listener
-        _listener = new Listener();
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                if(_listener != null){
-                    _listener.stop();
-                    logger.info("Stopped the listener.");
-                }
-            } catch (Exception ex) {
-                logger.error(ex);
-            }
-        }));
-        try {
-            _listener.start(parsedArgs.tcpPort);
-        }
-        catch (Exception ex){
-            logger.error(ex);
-            System.err.println(ex.getMessage());
-        }
     }
 
+    /**
+     * Simple CLI arguments parser and verifier
+     * @param args Main(args[]) contents
+     * @return Parsed arguments object or Exception thrown
+     */
     private static AppParams parseArgs(String[] args){
         final String portTag = "-p";
         final String configPathTag = "-c";
@@ -107,9 +136,8 @@ public class Main {
         port = Integer.parseInt(portStr);
 
         var configPathString =getArgParam(argsMap, configPathTag);
-        configFilePath = Path.of(configPathString);
 
-        return new AppParams(configFilePath, port);
+        return new AppParams(configPathString, port);
     }
 
     private static String getArgParam(Map<String, String> argsMap, String tag){
@@ -120,23 +148,33 @@ public class Main {
         return value;
     }
 
-
+    /**
+     * Parsed CLI arguments container
+     */
     private static final class AppParams{
-        private final Path pathToConfigFile;
-        private final int tcpPort;
+        private final String _pathToConfigFile;
+        private final int _tcpPort;
 
-        private AppParams(Path pathToConfigFile, int tcpPort) {
+        private AppParams(String pathToConfigFile, int tcpPort) {
             Objects.requireNonNull(pathToConfigFile, "Path to MDDE Registry config can't be null");
-            this.pathToConfigFile = pathToConfigFile;
-            this.tcpPort = tcpPort;
+            this._pathToConfigFile = pathToConfigFile;
+            this._tcpPort = tcpPort;
         }
 
-        public Path getPathToConfigFile() {
-            return pathToConfigFile;
+        /**
+         * Path to the MDDE config YAML
+         * @return
+         */
+        public String getPathToConfigFile() {
+            return _pathToConfigFile;
         }
 
+        /**
+         * TCP port of this server
+         * @return
+         */
         public int getTcpPort() {
-            return tcpPort;
+            return _tcpPort;
         }
     }
 }

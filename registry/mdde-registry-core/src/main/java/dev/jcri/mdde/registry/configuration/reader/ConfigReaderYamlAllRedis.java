@@ -14,9 +14,8 @@ import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
 public class ConfigReaderYamlAllRedis implements IConfigReader<RegistryStoreConfigRedis, DataNodeConfigRedis> {
 
     @Override
-    public RegistryConfig readConfig(String fromString) throws Exception {
+    public RegistryConfig<RegistryStoreConfigRedis, DataNodeConfigRedis> readConfig(String fromString) throws Exception {
         var mapper = new ObjectMapper(new YAMLFactory());
-        RegistryConfig<RegistryStoreConfigRedis, DataNodeConfigRedis> result = mapper.readValue(fromString,  new TypeReference<RegistryConfig<RegistryStoreConfigRedis, DataNodeConfigRedis>>() {});
-        return result;
+        return mapper.readValue(fromString,  new TypeReference<RegistryConfig<RegistryStoreConfigRedis, DataNodeConfigRedis>>() {});
     }
 }

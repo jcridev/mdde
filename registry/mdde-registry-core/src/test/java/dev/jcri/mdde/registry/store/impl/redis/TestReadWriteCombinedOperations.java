@@ -17,7 +17,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
-public class TestReadWriteCommandHandlers {
+public class TestReadWriteCombinedOperations {
     private static ReadCommandHandlerRedis _readCommandHandler;
     private static WriteCommandHandlerRedis _writeCommandHandler;
     private static RedisConnectionHelper _testRedisConnectionHelper;
