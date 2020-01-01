@@ -15,8 +15,9 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
 
     private RedisConnectionHelper _redisConnection;
 
-    public ReadCommandHandlerRedis(){
-        _redisConnection = RedisConnectionHelper.getInstance();
+    public ReadCommandHandlerRedis(RedisConnectionHelper redisConnectionHelper){
+        Objects.requireNonNull(redisConnectionHelper, "Redis connection helper class can't be set tu null");
+        _redisConnection = redisConnectionHelper;
     }
 
     @Override

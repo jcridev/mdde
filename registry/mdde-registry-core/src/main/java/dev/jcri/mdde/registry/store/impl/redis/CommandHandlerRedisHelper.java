@@ -1,7 +1,5 @@
 package dev.jcri.mdde.registry.store.impl.redis;
 
-import java.text.MessageFormat;
-
 /**
  * Singleton (lazy) class containing common methods that are shared within various Redis operations
  */
@@ -33,6 +31,6 @@ public class CommandHandlerRedisHelper {
      * @return
      */
     public String genExemplarFragmentMetaFieldName(final String fragmentId, final String nodeId){
-        return MessageFormat.format("{}{}/{})", Constants.FRAGMENT_EXEMPLAR_META_PREFIX, fragmentId, nodeId);
+        return String.format("%s%s/%s", Constants.FRAGMENT_EXEMPLAR_META_PREFIX, fragmentId, nodeId);
     }
 }

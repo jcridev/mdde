@@ -18,9 +18,10 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
 
     private RedisConnectionHelper _redisConnection;
 
-    public WriteCommandHandlerRedis(IReadCommandHandler readCommandHandler) {
+    public WriteCommandHandlerRedis(RedisConnectionHelper redisConnectionHelper, IReadCommandHandler readCommandHandler) {
         super(readCommandHandler);
-        _redisConnection = RedisConnectionHelper.getInstance();
+        Objects.requireNonNull(redisConnectionHelper, "Redis connection helper class can't be set tu null");
+        _redisConnection = redisConnectionHelper;
     }
 
     @Override
@@ -158,7 +159,7 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
             Response<Long> addedMeta;
             try(var t = _redisConnection.getTransaction(jedis, key, metaKeySource)){
                 added = t.sadd(Constants.NODE_PREFIX + destinationNodeId, fragmentId);
-                if(sourceMeta != null){
+                if(sourceMeta != null && sourceMeta.size() > 0){
                     addedMeta = t.hset(metaKeyDest, sourceMeta);
                 }
                 t.exec();

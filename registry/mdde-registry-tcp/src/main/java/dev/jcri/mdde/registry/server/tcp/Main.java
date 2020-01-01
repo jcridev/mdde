@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.server.tcp;
 
+import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
 import dev.jcri.mdde.registry.control.EReadCommand;
 import dev.jcri.mdde.registry.control.EWriteCommand;
 import dev.jcri.mdde.registry.control.ICommandParser;
@@ -13,6 +14,7 @@ import dev.jcri.mdde.registry.server.CommandProcessor;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.IWriteCommandHandler;
 import dev.jcri.mdde.registry.store.impl.redis.ReadCommandHandlerRedis;
+import dev.jcri.mdde.registry.store.impl.redis.RedisConnectionHelper;
 import dev.jcri.mdde.registry.store.impl.redis.WriteCommandHandlerRedis;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,10 +39,18 @@ public class Main {
             System.err.println(ex.getMessage());
             return;
         }
+        // Configure redis registry store
+        var testConfig = new RegistryStoreConfigRedis(){
+            {setHost("localhost");}  // TODO: Read actual config
+            {setPort(6379);}
+            {setPassword(null);}
+        };
+
+        var redisConnection = new RedisConnectionHelper(testConfig);
 
         // Handle commands
-        IReadCommandHandler readCommandHandler = new ReadCommandHandlerRedis();
-        IWriteCommandHandler writeCommandHandler = new WriteCommandHandlerRedis(readCommandHandler);
+        IReadCommandHandler readCommandHandler = new ReadCommandHandlerRedis(redisConnection);
+        IWriteCommandHandler writeCommandHandler = new WriteCommandHandlerRedis(redisConnection, readCommandHandler);
         // Parse commands
         IResponseSerializer<String> responseSerializer = new ResponseSerializerJson();
         ICommandParser<String, EReadCommand, String> readCommandParser = new JsonReadCommandParser<>(readCommandHandler, responseSerializer);

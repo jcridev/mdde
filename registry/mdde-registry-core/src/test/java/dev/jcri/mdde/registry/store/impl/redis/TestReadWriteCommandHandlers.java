@@ -1,45 +1,62 @@
-package dev.jcri.mdde.registry.store;
+package dev.jcri.mdde.registry.store.impl.redis;
 
+import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
-import dev.jcri.mdde.registry.store.exceptions.*;
-import dev.jcri.mdde.registry.store.impl.redis.ConfigRedis;
-import dev.jcri.mdde.registry.store.impl.redis.ReadCommandHandlerRedis;
-
-import dev.jcri.mdde.registry.store.impl.redis.Constants;
-import dev.jcri.mdde.registry.store.impl.redis.RedisConnectionHelper;
-import dev.jcri.mdde.registry.store.impl.redis.WriteCommandHandlerRedis;
-
-import org.junit.jupiter.api.MethodOrderer;
+import dev.jcri.mdde.registry.store.exceptions.IllegalRegistryActionException;
+import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
+import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class RedisTests {
-    /**
-     * Creates a reader class that opens a connection in the constructor with the default localhost Redis instance
-     * (assuming Redis is running within the system is where this test is executed)
-     */
+@Testcontainers
+public class TestReadWriteCommandHandlers {
+    private static ReadCommandHandlerRedis _readCommandHandler;
+    private static WriteCommandHandlerRedis _writeCommandHandler;
+    private static RedisConnectionHelper _testRedisConnectionHelper;
+
+    @Container
+    public static GenericContainer redis = new GenericContainer<>("redis:5").withExposedPorts(6379);
+
+    @BeforeAll
+    public static void setUpRedis() {
+        String redisAddress = redis.getContainerIpAddress();
+        Integer redisPort = redis.getFirstMappedPort();
+
+        var testConfig = new RegistryStoreConfigRedis(){
+            {setHost(redisAddress);}
+            {setPort(redisPort);}
+            {setPassword(null);}
+        };
+
+        _testRedisConnectionHelper = new RedisConnectionHelper(testConfig);
+
+        _readCommandHandler = new ReadCommandHandlerRedis(_testRedisConnectionHelper);
+        _writeCommandHandler = new WriteCommandHandlerRedis(_testRedisConnectionHelper, _readCommandHandler);
+    }
     @Test
     @Order(0)
-    public void initializeRedisConnection(){
-        var testConfig = new ConfigRedis();
-        if(!RedisConnectionHelper.getInstance().getIsInitialized()){
-            RedisConnectionHelper.getInstance().initialize(testConfig);
+    public void testConnection() {
+        var connectionIsOk = _testRedisConnectionHelper.isConnectionOk();
+        if(!connectionIsOk){
+            System.out.println ("Unable to proceed, can't establish connection to the redis instance.");
+            System.exit(1);
         }
     }
+
 
     @Test
     @Order(1)
     public void testTupleLifecycle(){
-        initializeRedisConnection();
-
-        var redisReader = new ReadCommandHandlerRedis();
-        var redisWriter = new WriteCommandHandlerRedis(redisReader);
+        var redisReader = _readCommandHandler;
+        var redisWriter = _writeCommandHandler;
 
         final String randNodeId = UUID.randomUUID().toString();
         final String randTupleId = UUID.randomUUID().toString();
@@ -94,7 +111,7 @@ public class RedisTests {
         }
         finally {
             // Cleanup
-            var redisConnectionHelper = RedisConnectionHelper.getInstance();
+            var redisConnectionHelper = _testRedisConnectionHelper;
             try(var redisCommand = redisConnectionHelper.getRedisCommands()) {
                 redisCommand.del(Constants.NODES_SET);
                 redisCommand.del(Constants.NODE_PREFIX + randNodeId);
@@ -106,9 +123,8 @@ public class RedisTests {
     @Test
     @Order(2)
     public void testMultiTupleLifecycle(){
-        initializeRedisConnection();
-        var redisReader = new ReadCommandHandlerRedis();
-        var redisWriter = new WriteCommandHandlerRedis(redisReader);
+        var redisReader = _readCommandHandler;
+        var redisWriter = _writeCommandHandler;
 
         final int tuplesCountPerNode = 100;
         final int nodesCount = 10;
@@ -246,7 +262,6 @@ public class RedisTests {
             nlrFragmentNodesStored = redisReader.runGetFragmentNodes(nlrFragment);
             assertEquals(nlrFragmentNodesTest, nlrFragmentNodesStored);
 
-
             /*
             final int shuffleIterations = 100;
             Random rand = new Random();
@@ -259,11 +274,10 @@ public class RedisTests {
                 assertEquals(nodesToFragments.get(randomNodeA), nodeAFragmentsStored);
 
             }
-
-             */
+            */
         } finally {
             // Cleanup
-            var redisConnectionHelper = RedisConnectionHelper.getInstance();
+            var redisConnectionHelper = _testRedisConnectionHelper;
             try(var jedis = redisConnectionHelper.getRedisCommands()) {
                 try (var p = jedis.pipelined()) {
                     // Fragments

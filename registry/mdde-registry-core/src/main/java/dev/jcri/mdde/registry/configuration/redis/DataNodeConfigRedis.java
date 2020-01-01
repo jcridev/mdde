@@ -1,10 +1,12 @@
-package dev.jcri.mdde.registry.configuration;
+package dev.jcri.mdde.registry.configuration.redis;
 
+
+import dev.jcri.mdde.registry.configuration.IDataNode;
 
 /**
  * Redis powered node configuration
  */
-public class RedisNodeConfig implements IDataNode {
+public class DataNodeConfigRedis implements IDataNode {
     private String _nodeId = null;
 
     public String getNodeId() {
