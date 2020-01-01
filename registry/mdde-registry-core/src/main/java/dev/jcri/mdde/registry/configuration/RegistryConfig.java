@@ -1,20 +1,36 @@
 package dev.jcri.mdde.registry.configuration;
 
-import java.net.InetAddress;
+import java.util.List;
 
-public class RegistryConfig {
-    /**
-     * Interface (IP address) which the server will be listening to.
-     * Default value is null, meaning listening to all addresses.
-     */
-    private InetAddress _listenInterface = null;
-    /**
-     * Port on which the server is running
-     */
-    private int _listenPort=8942;
-
+/**
+ * Config structure for the registry
+ * @param <Tstore> storage medium for the registry (not the controlled DB)
+ * @param <Tdata> controlled DB nodes configuration
+ */
+public class RegistryConfig<Tstore, Tdata extends IDataNode> {
     /**
      * Configuration for the registry storage
      */
-    private RegistryDataStoreConfig _backStoreConfig;
+    private Tstore _registryStore;
+
+    /**
+     * Configuration of the controlled database nodes
+     */
+    private List<Tdata> _dataNodes;
+
+    public Tstore getRegistryStore() {
+        return _registryStore;
+    }
+
+    public void setRegistryStore(Tstore registryStore) {
+        this._registryStore = registryStore;
+    }
+
+    public List<Tdata> getDataNodes() {
+        return _dataNodes;
+    }
+
+    public void setDataNodes(List<Tdata> dataNodes) {
+        this._dataNodes = dataNodes;
+    }
 }

@@ -1,6 +1,12 @@
 package dev.jcri.mdde.registry.configuration;
 
+/**
+ *
+ */
 public class RegistryDataStoreConfig {
+    private String _redisHost;
+    private int _redisPort;
+
     public String getRedisHost() {
         return _redisHost;
     }
@@ -16,7 +22,4 @@ public class RegistryDataStoreConfig {
     public void setRedisPort(int redisPort) {
         this._redisPort = redisPort;
     }
-
-    private String _redisHost;
-    private int _redisPort;
 }
