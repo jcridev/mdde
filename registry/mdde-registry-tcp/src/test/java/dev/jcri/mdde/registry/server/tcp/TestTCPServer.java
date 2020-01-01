@@ -17,22 +17,21 @@ public class TestTCPServer {
 
     @Test
     public void startServerExchangeMessages() throws InterruptedException {
-        Listener tcpListener = new Listener();
+        TestListener tcpListener = new TestListener();
         final int testPort = 8095;
-        var numOfClients = 10;
-        var payloadSizePerClient = 1000000;
+        var numOfClients = 1;
+        var numOfMessagesPerClient = 1;
+        var payloadSizePerClient = 8000;
 
-        Runnable rServer = new Runnable() {
-            public void run() {
-                try {
-                    tcpListener.start(testPort);
-                } catch (InterruptedException e) {
-                    Assertions.fail("Failed to start the server", e);
-                }
+        Runnable rServer = () -> {
+            try {
+                tcpListener.startEcho(testPort);
+            } catch (InterruptedException e) {
+                Assertions.fail("Failed to start the server", e);
             }
         };
         var randStrings = new ArrayList<String>();
-        for(int i = 0; i < 10; i++){
+        for(int i = 0; i < numOfMessagesPerClient; i++){
             try {
                 randStrings.add(genRandomString(payloadSizePerClient, 0));
             } catch (InterruptedException e) {
@@ -41,15 +40,13 @@ public class TestTCPServer {
             }
         }
         System.out.println("Random strings generated");
-        Runnable rClient = new Runnable() {
-            public void run() {
-                var gTcpClient = new GenericTCPClient();
-                for(var randLine: randStrings){
-                    try {
-                        gTcpClient.testLinesInSequence(testPort, randLine, 1000);
-                    } catch (Exception e) {
-                        Assertions.fail("Failed server communication");
-                    }
+        Runnable rClient = () -> {
+            var gTcpClient = new GenericTCPClient();
+            for(var randLine: randStrings){
+                try {
+                    gTcpClient.testLinesInSequence(testPort, randLine, 1000);
+                } catch (Exception e) {
+                    Assertions.fail("Failed server communication");
                 }
             }
         };
@@ -68,6 +65,19 @@ public class TestTCPServer {
         finally {
             tcpListener.stop();
             serverThread.join();
+        }
+    }
+
+//region Test Listener
+    /**
+     * Echo server
+     */
+    private class TestListener extends Listener {
+        /**
+         * Start the Listener as echo
+         */
+        public void startEcho(int port) throws InterruptedException {
+            start(port, true);
         }
     }
 

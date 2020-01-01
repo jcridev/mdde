@@ -1,7 +1,5 @@
 package dev.jcri.mdde.registry.server.tcp;
 
-import dev.jcri.mdde.registry.control.command.CommandComponents;
-import dev.jcri.mdde.registry.server.CommandProcessor;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
@@ -11,20 +9,34 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.List;
-import java.util.Objects;
 
 public class Listener {
     private static final Logger logger = LogManager.getLogger(Listener.class);
 
     EventLoopGroup connectionGroup = new NioEventLoopGroup();
     EventLoopGroup workerGroup = new NioEventLoopGroup();
-    void start(int port) throws InterruptedException {
+
+    /**
+     * Start the server listener
+     * @param port TCP port to listen
+     * @throws InterruptedException
+     */
+    public void start(int port) throws InterruptedException {
+        start(port, false);
+    }
+
+    /**
+     * Start the server listener
+     * @param port TCP port to listen
+     * @param isEcho True - instead of processing the actual commands, received payload is echoed back to the client
+     * @throws InterruptedException
+     */
+    protected void start(int port, boolean isEcho) throws InterruptedException {
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(connectionGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .childHandler(new TCPPipelineInitializer())
+                    .childHandler(new TCPPipelineInitializer(isEcho))
                     .option(ChannelOption.SO_BACKLOG, 256)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
@@ -39,6 +51,9 @@ public class Listener {
         }
     }
 
+    /**
+     * Shut down the TCP server
+     */
     void stop(){
         workerGroup.shutdownGracefully();
         connectionGroup.shutdownGracefully();

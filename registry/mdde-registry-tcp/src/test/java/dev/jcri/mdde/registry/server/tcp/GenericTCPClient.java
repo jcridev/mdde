@@ -1,13 +1,14 @@
 package dev.jcri.mdde.registry.server.tcp;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * As simple as it gets TCP client defining generic interactions with the server for testing
@@ -21,19 +22,9 @@ public class GenericTCPClient {
     public void testLinesInSequence(final String host,
                      final int port, String line, final int withDelay) throws Exception {
         try (var socket = new Socket(host, port)) {
-            /*
-            try(OutputStreamWriter osw = new OutputStreamWriter(socket.getOutputStream(), "UTF-8")){
-                osw.write(line, 0, line.length());
-            }
-            */
-            var in = new Scanner(socket.getInputStream());
-            var outin = socket.getOutputStream();
-            DataOutputStream out=new DataOutputStream(outin);
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 
-            //byte[] pingArr = "ping".getBytes();
-            //out.write(pingArr, 0, pingArr.length);
-            //out.flush();
-            //System.out.println(in.nextLine());
             try {
                 Thread.sleep(withDelay);
             } catch (InterruptedException e) {
@@ -45,33 +36,50 @@ public class GenericTCPClient {
             byte[] bArr = new byte[4 + message.length];
             System.arraycopy(message, 0, bArr, 4, message.length);
             System.arraycopy(length, 0, bArr, 0, length.length);
-            //bArr[4] = 1;
 
-            try {
-                out.write(bArr, 0, bArr.length);
-                out.flush();
-                System.out.println(in.nextLine());
-            } catch (IOException e) {
-                e.printStackTrace();
+            out.write(bArr, 0, bArr.length);
+            out.flush();
+            int lenFieldLength = 4; // Length of the length part of the response frame
+            byte[] responseLength = new byte[lenFieldLength];
+            for(int i = 0; i < lenFieldLength; i++){
+                responseLength[i] = in.readByte();
             }
+            int parsedLength = byteArrayToInt(responseLength);
+            byte[] responsePayload = new byte[parsedLength];
+
+            boolean gotFullResponse = false;
+            int bytesRead = 0;
+            while(!gotFullResponse){
+                bytesRead += in.read(responsePayload);
+                if (bytesRead == parsedLength)
+                {
+                    gotFullResponse = true;
+                }
+            }
+            var result = new String(responsePayload, StandardCharsets.UTF_8);
+            assertEquals(line, result);
         }
     }
 
-    public static int byteArrayToInt(byte[] b)
+    private int byteArrayToInt(byte[] bytes)
     {
-        return   b[3] & 0xFF |
-                (b[2] & 0xFF) << 8 |
-                (b[1] & 0xFF) << 16 |
-                (b[0] & 0xFF) << 24;
+        if(bytes.length != 4){
+            throw new IllegalArgumentException(String.format("Expected a byte array of length 4 but received: %d", bytes.length));
+        }
+
+        return bytes[3] & 0xFF |
+                (bytes[2] & 0xFF) << 8 |
+                (bytes[1] & 0xFF) << 16 |
+                (bytes[0] & 0xFF) << 24;
     }
 
-    public static byte[] intToByteArray(int a)
+    private byte[] intToByteArray(int number)
     {
         return new byte[] {
-                (byte) ((a >> 24) & 0xFF),
-                (byte) ((a >> 16) & 0xFF),
-                (byte) ((a >> 8) & 0xFF),
-                (byte) (a & 0xFF)
+                (byte) ((number >> 24) & 0xFF),
+                (byte) ((number >> 16) & 0xFF),
+                (byte) ((number >> 8) & 0xFF),
+                (byte) ( number & 0xFF)
         };
     }
 }
