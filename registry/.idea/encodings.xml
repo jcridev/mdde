@@ -5,6 +5,10 @@
     <file url="file://$PROJECT_DIR$/build-configurations/mdde-registry-server-tcp/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mdde-registry-core/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mdde-registry-core/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mdde-registry-shared/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mdde-registry-shared/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mdde-registry-tcp-shared/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/mdde-registry-tcp-shared/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mdde-registry-tcp/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/mdde-registry-tcp/src/main/resources" charset="UTF-8" />
   </component>

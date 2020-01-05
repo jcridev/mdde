@@ -7,13 +7,17 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="mdde-registry-core" />
+        <module name="mdde-registry-shared" />
         <module name="mdde-registry-tcp" />
+        <module name="mdde-registry-tcp-shared" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="mdde-registry-core" target="11" />
       <module name="mdde-registry-server-tcp" target="11" />
+      <module name="mdde-registry-shared" target="1.8" />
       <module name="mdde-registry-tcp" target="11" />
+      <module name="mdde-registry-tcp-shared" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

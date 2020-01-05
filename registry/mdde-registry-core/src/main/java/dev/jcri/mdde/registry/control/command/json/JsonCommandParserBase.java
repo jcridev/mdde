@@ -3,9 +3,9 @@ package dev.jcri.mdde.registry.control.command.json;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.jcri.mdde.registry.control.ExpectedCommandArgument;
-import dev.jcri.mdde.registry.control.ICommand;
 import dev.jcri.mdde.registry.control.exceptions.MalformedCommandStatementException;
+import dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument;
+import dev.jcri.mdde.registry.shared.commands.ICommand;
 
 import java.util.ArrayList;
 import java.util.HashSet;

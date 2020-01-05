@@ -1,12 +1,10 @@
 package dev.jcri.mdde.registry.control.command.json;
 
-import dev.jcri.mdde.registry.control.EReadCommand;
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.command.sequential.SequentialReadICommandParser;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
-import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
+import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
-import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 
 public class JsonReadCommandParser<T> extends JsonCommandParserBase implements ICommandParser<T, EReadCommand, String> {
 

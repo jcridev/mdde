@@ -1,7 +1,6 @@
 package dev.jcri.mdde.registry.control;
 
-import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
-import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
+import dev.jcri.mdde.registry.shared.commands.ICommand;
 
 /**
  *

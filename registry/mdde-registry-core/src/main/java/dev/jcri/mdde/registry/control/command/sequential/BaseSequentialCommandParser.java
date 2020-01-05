@@ -1,8 +1,8 @@
 package dev.jcri.mdde.registry.control.command.sequential;
 
-import dev.jcri.mdde.registry.control.ExpectedCommandArgument;
-import dev.jcri.mdde.registry.control.ICommand;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
+import dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument;
+import dev.jcri.mdde.registry.shared.commands.ICommand;
 
 import java.util.List;
 import java.util.Objects;

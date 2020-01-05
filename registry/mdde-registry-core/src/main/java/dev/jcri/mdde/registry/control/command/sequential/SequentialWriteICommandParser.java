@@ -1,9 +1,8 @@
 package dev.jcri.mdde.registry.control.command.sequential;
 
-import dev.jcri.mdde.registry.control.EWriteCommand;
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
-import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
+import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.IWriteCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.*;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
@@ -11,7 +10,8 @@ import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 import java.util.List;
 import java.util.Objects;
 
-import static dev.jcri.mdde.registry.control.ExpectedCommandArgument.*;
+import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
+
 
 public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParser implements ICommandParser<T, EWriteCommand, List<Object>> {
     private final IWriteCommandHandler _writeCommandHandler;

@@ -1,7 +1,6 @@
 package dev.jcri.mdde.registry.control.command.json;
 
-import com.fasterxml.jackson.annotation.JsonRawValue;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -9,6 +8,7 @@ import dev.jcri.mdde.registry.control.ICommandPreProcessor;
 import dev.jcri.mdde.registry.control.command.CommandComponents;
 import dev.jcri.mdde.registry.control.command.json.extensions.JacksonKeepAsStringDeserializer;
 import dev.jcri.mdde.registry.control.exceptions.MalformedCommandStatementException;
+import dev.jcri.mdde.registry.shared.commands.Constants;
 
 public class JsonCommandPreProcessor implements ICommandPreProcessor<String, String> {
     @Override
@@ -33,6 +33,7 @@ public class JsonCommandPreProcessor implements ICommandPreProcessor<String, Str
         /**
          * Keyword
          */
+        @JsonProperty(Constants.CommandFiled)
         private String cmd;
 
         /**
@@ -41,20 +42,21 @@ public class JsonCommandPreProcessor implements ICommandPreProcessor<String, Str
         @JsonRawValue
         @JsonDeserialize(using = JacksonKeepAsStringDeserializer.class)
         @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+        @JsonProperty(Constants.ArgumentsField)
         private String args;
-
+        @JsonGetter(Constants.CommandFiled)
         public String getCmd() {
             return cmd;
         }
-
+        @JsonSetter(Constants.CommandFiled)
         public void setCmd(String cmd) {
             this.cmd = cmd;
         }
-
+        @JsonGetter(Constants.ArgumentsField)
         public String getArgs() {
             return args;
         }
-
+        @JsonSetter(Constants.ArgumentsField)
         public void setArgs(String arguments) {
             this.args = arguments;
         }

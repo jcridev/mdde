@@ -4,8 +4,6 @@ import dev.jcri.mdde.registry.configuration.RegistryConfig;
 import dev.jcri.mdde.registry.configuration.reader.ConfigReaderYamlAllRedis;
 import dev.jcri.mdde.registry.configuration.redis.DataNodeConfigRedis;
 import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
-import dev.jcri.mdde.registry.control.EReadCommand;
-import dev.jcri.mdde.registry.control.EWriteCommand;
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.ICommandPreProcessor;
 import dev.jcri.mdde.registry.control.command.json.JsonCommandPreProcessor;
@@ -14,6 +12,8 @@ import dev.jcri.mdde.registry.control.command.json.JsonWriteCommandParser;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerJson;
 import dev.jcri.mdde.registry.server.CommandProcessor;
+import dev.jcri.mdde.registry.shared.commands.EReadCommand;
+import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.IWriteCommandHandler;
 import dev.jcri.mdde.registry.store.impl.redis.ReadCommandHandlerRedis;
@@ -76,7 +76,7 @@ public class Main {
         // Start the TCP listener
         _listener = new Listener();
         try {
-            _listener.start(parsedArgs.getTcpPort());
+            _listener.start(parsedArgs.getTcpPort(), parsedArgs.getTcpBenchmarkPort());
         }
         catch (Exception ex){
             logger.error(ex);
@@ -113,14 +113,18 @@ public class Main {
     private static AppParams parseArgs(String[] args){
         final String portTag = "-p";
         final String configPathTag = "-c";
+        final String portBenchmarkTag = "-pb";
 
-        if(args.length < 4){
+        if(args.length < 6){
             throw new IllegalArgumentException(
-                    MessageFormat.format("Port number parameter {} and path to config {} are required.",
-                            portTag, configPathTag)
+                    MessageFormat.format("Required parameters: control port {}, " +
+                                    "benchmark port {} " +
+                                    "and path to config {}.",
+                                    portTag, portBenchmarkTag, configPathTag)
             );
         }
         int port = -1;
+        int portBenchmark = -1;
         Path configFilePath = null;
         Map<String, String> argsMap = new HashMap<>();
         for(int i = 0; i < args.length; i = i+2){
@@ -131,13 +135,16 @@ public class Main {
             var val = args[i+1];
             argsMap.put(tag, val);
         }
-
+        // Get command port
         var portStr = getArgParam(argsMap, portTag);
         port = Integer.parseInt(portStr);
-
+        // Get benchmark port
+        var portBenchmarkStr = getArgParam(argsMap, portBenchmarkTag);
+        portBenchmark = Integer.parseInt(portBenchmarkStr);
+        // Get path to the config
         var configPathString =getArgParam(argsMap, configPathTag);
 
-        return new AppParams(configPathString, port);
+        return new AppParams(configPathString, port, portBenchmark);
     }
 
     private static String getArgParam(Map<String, String> argsMap, String tag){
@@ -154,11 +161,23 @@ public class Main {
     private static final class AppParams{
         private final String _pathToConfigFile;
         private final int _tcpPort;
+        private final int tcpBenchmarkPort;
 
-        private AppParams(String pathToConfigFile, int tcpPort) {
+        private AppParams(String pathToConfigFile, int tcpPort, int tcpBenchmarkPort) {
             Objects.requireNonNull(pathToConfigFile, "Path to MDDE Registry config can't be null");
+            if(tcpBenchmarkPort < 1){
+                throw new IllegalArgumentException(String.format("Illegal benchmark handler TCP port: %d", tcpBenchmarkPort));
+            }
+            if(tcpPort < 1){
+                throw new IllegalArgumentException(String.format("Illegal control handler TCP port: %d", tcpPort));
+            }
+            if(tcpBenchmarkPort == tcpPort){
+                throw new IllegalArgumentException("Benchmark and command handlers can't run on the same port");
+            }
+
             this._pathToConfigFile = pathToConfigFile;
             this._tcpPort = tcpPort;
+            this.tcpBenchmarkPort = tcpBenchmarkPort;
         }
 
         /**
@@ -171,10 +190,18 @@ public class Main {
 
         /**
          * TCP port of this server
-         * @return
+         * @return Port number
          */
         public int getTcpPort() {
             return _tcpPort;
+        }
+
+        /**
+         * TCP port of the benchmark endpoint
+         * @return Port number
+         */
+        public int getTcpBenchmarkPort() {
+            return tcpBenchmarkPort;
         }
     }
 }

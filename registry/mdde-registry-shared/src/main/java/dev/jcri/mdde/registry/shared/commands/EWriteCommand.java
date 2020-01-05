@@ -1,33 +1,32 @@
-package dev.jcri.mdde.registry.control;
+package dev.jcri.mdde.registry.shared.commands;
 
-import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static dev.jcri.mdde.registry.control.ExpectedCommandArgument.*;
+import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
 /**
  * Registry manipulation commands available
  */
 public enum EWriteCommand implements ICommand {
-    INSERT_TUPLE("INSERT", new ArrayList<>(){{add(ARG_TUPLE_ID); add(ARG_NODE_ID);}}),
-    INSERT_TUPLE_BULK("INSERTMANY", new ArrayList<>(){{add(ARG_TUPLE_IDs); add(ARG_NODE_ID);}}),
-    DELETE_TUPLE("DELTUPLE", new ArrayList<>(){{add(ARG_TUPLE_ID); }}),
-    FORM_FRAGMENT("GROUP", new ArrayList<>(){{add(ARG_TUPLE_IDs); add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}}),
-    APPEND_TO_FRAGMENT("APPEND", new ArrayList<>(){{add(ARG_TUPLE_ID); add(ARG_FRAGMENT_ID);}}),
-    REPLICATE_FRAGMENT("REPLICATE", new ArrayList<>(){{add(ARG_FRAGMENT_ID); add(ARG_NODE_ID); add(ARG_NODE_ID_B);}}),
-    DELETE_FRAGMENT("DELFRAGCOPY", new ArrayList<>(){{add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}}),
-    DESTROY_FRAGMENT("ERASE", new ArrayList<>(){{add(ARG_FRAGMENT_ID);}}),
-    POPULATE_NODES("ADDNODES", new ArrayList<>(){{add(ARG_NODE_IDs);}});
+    INSERT_TUPLE("INSERT", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID); add(ARG_NODE_ID);}}),
+    INSERT_TUPLE_BULK("INSERTMANY", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_IDs); add(ARG_NODE_ID);}}),
+    DELETE_TUPLE("DELTUPLE", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID); }}),
+    FORM_FRAGMENT("GROUP", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_IDs); add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}}),
+    APPEND_TO_FRAGMENT("APPEND", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID); add(ARG_FRAGMENT_ID);}}),
+    REPLICATE_FRAGMENT("REPLICATE", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID); add(ARG_NODE_ID); add(ARG_NODE_ID_B);}}),
+    DELETE_FRAGMENT("DELFRAGCOPY", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}}),
+    DESTROY_FRAGMENT("ERASE", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID);}}),
+    POPULATE_NODES("ADDNODES", new ArrayList<ExpectedCommandArgument>(){{add(ARG_NODE_IDs);}});
 
     private final String _command;
     private final List<ExpectedCommandArgument> _expectedArguments;
     private final int _numExpectedArguments;
 
     /**
-     *
-     * @param command
+     * Constructor
+     * @param command Command tag
      * @param args List of expected arguments,in the order they should arrive
      */
     EWriteCommand(final String command, final List<ExpectedCommandArgument> args) {
@@ -77,15 +76,15 @@ public enum EWriteCommand implements ICommand {
      * Get specific command by the text key tag
      * @param tag Tag
      * @return
-     * @throws UnknownRegistryCommandExceptions
+     * @throws NoSuchElementException
      */
-    public static EWriteCommand getCommandTag(String tag) throws UnknownRegistryCommandExceptions {
+    public static EWriteCommand getCommandTag(String tag) throws NoSuchElementException {
         if(tag == null || tag.isEmpty()){
             throw new IllegalArgumentException("tag can't be null or empty");
         }
-        var command = _commandsMap.get(tag);
+        EWriteCommand command = _commandsMap.get(tag);
         if(command == null){
-            throw new UnknownRegistryCommandExceptions(tag);
+            throw new NoSuchElementException(tag);
         }
         return command;
     }

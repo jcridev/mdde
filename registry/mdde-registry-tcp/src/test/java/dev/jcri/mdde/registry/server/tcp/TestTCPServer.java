@@ -1,35 +1,61 @@
 package dev.jcri.mdde.registry.server.tcp;
 
 
+import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkOperationCodes;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class TestTCPServer {
 
-    @Test
-    public void startServerExchangeMessages() throws InterruptedException {
-        TestListener tcpListener = new TestListener();
-        final int testPort = 8095;
-        var numOfClients = 1;
-        var numOfMessagesPerClient = 1;
-        var payloadSizePerClient = 8000;
+    private static TestListener tcpListener = null;
+    private static Thread serverThread = null;
+    private static final int testPort = 8095;
+    private static final int benchPort = 8096;
 
+    @BeforeAll
+    static void startServer(){
+        tcpListener = new TestListener();
         Runnable rServer = () -> {
             try {
-                tcpListener.startEcho(testPort);
+                tcpListener.startEcho(testPort, benchPort);
             } catch (InterruptedException e) {
                 Assertions.fail("Failed to start the server", e);
             }
         };
+        serverThread = new Thread(rServer);
+        serverThread.start();
+    }
+
+    @AfterAll
+    static void serverStop(){
+        tcpListener.stop();
+        try {
+            serverThread.join();
+        } catch (InterruptedException e) {
+            fail(e);
+        }
+    }
+
+    @Test
+    public void commandServerTestRandomPayloadEcho() throws InterruptedException {
+        var numOfClients = 1;
+        var numOfMessagesPerClient = 1;
+        var payloadSizePerClient = 8000;
+
         var randStrings = new ArrayList<String>();
         for(int i = 0; i < numOfMessagesPerClient; i++){
             try {
@@ -50,37 +76,78 @@ public class TestTCPServer {
                 }
             }
         };
-        var serverThread = new Thread(rServer);
-        try {
-            serverThread.start();
-            List<Thread> threads = new ArrayList<>();
-            for(int i = 0; i < numOfClients; i ++){
-                var clientThread = new Thread(rClient);
-                clientThread.start();
-                threads.add(clientThread);
-            }
 
-            for (Thread thread : threads) thread.join();
+        List<Thread> threads = new ArrayList<>();
+        for(int i = 0; i < numOfClients; i ++){
+            var clientThread = new Thread(rClient);
+            clientThread.start();
+            threads.add(clientThread);
         }
-        finally {
-            tcpListener.stop();
-            serverThread.join();
+
+        for (Thread thread : threads) thread.join();
+    }
+
+    @Test
+    public void benchmarkServerEchoTest() throws InterruptedException {
+        var numOfClients = 1;
+        var numOfMessagesPerClient = 1;
+        var payloadSizePerClient = 128;
+
+        var randStrings = new ArrayList<String>();
+        for(int i = 0; i < numOfMessagesPerClient; i++){
+            try {
+                randStrings.add(genRandomString(payloadSizePerClient, 0));
+            } catch (InterruptedException e) {
+                fail(e);
+                return;
+            }
         }
+
+        List<Throwable> clientErrors = new LinkedList<>();
+        Runnable rClient = () -> {
+            var gTcpClient = new GenericTCPClient();
+            for(var randLine: randStrings){
+                try {
+                    gTcpClient.testBenchmarkSequence(benchPort, BenchmarkOperationCodes.LOCATETUPLE.value(), randLine);
+
+                } catch (Exception e) {
+                    clientErrors.add(e);
+                }
+            }
+        };
+
+        List<Thread> threads = new ArrayList<>();
+        for(int i = 0; i < numOfClients; i ++){
+            var clientThread = new Thread(rClient);
+            clientThread.start();
+            threads.add(clientThread);
+        }
+
+        for (Thread thread : threads)
+            thread.join();
+
+        if(clientErrors.size() > 0){
+            for(var error : clientErrors){
+                System.err.println(error.getMessage() + "\n" + Arrays.toString(error.getStackTrace()));
+            }
+        }
+
+        assertEquals(0, clientErrors.size());
     }
 
 //region Test Listener
     /**
      * Echo server
      */
-    private class TestListener extends Listener {
+    private static class TestListener extends Listener {
         /**
          * Start the Listener as echo
          */
-        public void startEcho(int port) throws InterruptedException {
-            start(port, true);
+        public void startEcho(int port, int benchPort) throws InterruptedException {
+            start(port, benchPort,true);
         }
     }
-
+//endregion
 
 //region Generate test payload
     static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\\+-=\")(_][";

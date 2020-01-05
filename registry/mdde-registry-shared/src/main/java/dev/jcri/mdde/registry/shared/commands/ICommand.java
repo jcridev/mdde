@@ -1,4 +1,4 @@
-package dev.jcri.mdde.registry.control;
+package dev.jcri.mdde.registry.shared.commands;
 
 import java.util.List;
 

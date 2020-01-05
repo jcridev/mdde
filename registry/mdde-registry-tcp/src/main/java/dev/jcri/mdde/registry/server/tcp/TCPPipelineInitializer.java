@@ -26,6 +26,7 @@ public class TCPPipelineInitializer extends ChannelInitializer<SocketChannel> {
 
     protected void initChannel(SocketChannel socketChannel) throws Exception {
         // Protocol:
+        // Symmetric
         //------------------
         // [4 bytes] n - size of the payload in bytes
         //------------------

@@ -12,7 +12,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="mdde-registry-core" />
-    <orderEntry type="library" name="Maven: redis.clients:jedis:3.1.0" level="project" />
+    <orderEntry type="module" module-name="mdde-registry-shared" />
+    <orderEntry type="library" name="Maven: redis.clients:jedis:3.2.0" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-pool2:2.6.2" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.10.1" level="project" />
@@ -25,5 +26,6 @@
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-simple:1.7.30" level="project" />
     <orderEntry type="module" module-name="mdde-registry-tcp" />
     <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.43.Final" level="project" />
+    <orderEntry type="module" module-name="mdde-registry-tcp-shared" />
   </component>
 </module>

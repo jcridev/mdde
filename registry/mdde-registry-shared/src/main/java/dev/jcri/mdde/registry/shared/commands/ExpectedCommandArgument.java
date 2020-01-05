@@ -1,15 +1,15 @@
-package dev.jcri.mdde.registry.control;
+package dev.jcri.mdde.registry.shared.commands;
 
 /**
  * Class containing the description of an argument expected by a command
  */
 public enum ExpectedCommandArgument{
-    ARG_TUPLE_ID("Tuple ID", "tid", ExpectedCommandArgument.ArgumentType.string),
-    ARG_TUPLE_IDs("Tuple IDs", "tids", ExpectedCommandArgument.ArgumentType.set_strings),
-    ARG_NODE_ID("Node ID", "nid", ExpectedCommandArgument.ArgumentType.string),
-    ARG_NODE_IDs("Node IDs", "nids", ExpectedCommandArgument.ArgumentType.set_strings),
-    ARG_NODE_ID_B("2nd Node ID", "nidb", ExpectedCommandArgument.ArgumentType.string),
-    ARG_FRAGMENT_ID("Fragment ID", "fid", ExpectedCommandArgument.ArgumentType.string);
+    ARG_TUPLE_ID("Tuple ID", Constants.ArgTupleIdField, ExpectedCommandArgument.ArgumentType.string),
+    ARG_TUPLE_IDs("Tuple IDs", Constants.ArgTupleIdsField, ExpectedCommandArgument.ArgumentType.set_strings),
+    ARG_NODE_ID("Node ID", Constants.ArgNodeIdField, ExpectedCommandArgument.ArgumentType.string),
+    ARG_NODE_IDs("Node IDs", Constants.ArgNodeIdsField, ExpectedCommandArgument.ArgumentType.set_strings),
+    ARG_NODE_ID_B("2nd Node ID", Constants.ArgSecondNodeIdFiled, ExpectedCommandArgument.ArgumentType.string),
+    ARG_FRAGMENT_ID("Fragment ID", Constants.ArgFragmentIdField, ExpectedCommandArgument.ArgumentType.string);
 
 
     private final String _title;

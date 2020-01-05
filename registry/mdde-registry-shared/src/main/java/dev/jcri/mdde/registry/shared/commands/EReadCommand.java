@@ -1,20 +1,21 @@
-package dev.jcri.mdde.registry.control;
-
-import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
+package dev.jcri.mdde.registry.shared.commands;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static dev.jcri.mdde.registry.control.ExpectedCommandArgument.*;
+import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
+/**
+ * Enum of the available READ commands
+ */
 public enum EReadCommand implements ICommand {
-    GET_REGISTRY("GETALL", new ArrayList<>()),
-    FIND_TUPLE("FINDTUPLE", new ArrayList<>(){{add(ARG_TUPLE_ID);}}),
-    FIND_TUPLE_FRAGMENT("TUPLEFRAGMENT", new ArrayList<>(){{add(ARG_TUPLE_ID);}}),
-    FIND_FRAGMENT("FINDFRAGMENT", new ArrayList<>(){{add(ARG_FRAGMENT_ID);}}),
-    GET_FRAGMENT_TUPLES("GETFRAGTUPLES", new ArrayList<>(){{add(ARG_FRAGMENT_ID);}}),
-    COUNT_FRAGMENT("COUNTFRAGMENT", new ArrayList<>(){{add(ARG_FRAGMENT_ID);}}),
-    COUNT_TUPLE("COUNTTUPLE", new ArrayList<>(){{add(ARG_TUPLE_ID);}}),
+    GET_REGISTRY("GETALL", new ArrayList<ExpectedCommandArgument>()),
+    FIND_TUPLE("FINDTUPLE", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID);}}),
+    FIND_TUPLE_FRAGMENT("TUPLEFRAGMENT", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID);}}),
+    FIND_FRAGMENT("FINDFRAGMENT", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID);}}),
+    GET_FRAGMENT_TUPLES("GETFRAGTUPLES", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID);}}),
+    COUNT_FRAGMENT("COUNTFRAGMENT", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID);}}),
+    COUNT_TUPLE("COUNTTUPLE", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID);}}),
     GET_NODES("NODES", new ArrayList<>());
 
     private final String _command;
@@ -66,13 +67,19 @@ public enum EReadCommand implements ICommand {
         return Collections.unmodifiableList(_expectedArguments);
     }
 
-    public static EReadCommand getCommandTag(String tag) throws UnknownRegistryCommandExceptions {
+    /**
+     * Get command by its textual tag
+     * @param tag Command tag (ex. 'GETALL')
+     * @return
+     * @throws NoSuchElementException
+     */
+    public static EReadCommand getCommandTag(String tag) throws NoSuchElementException {
         if(tag == null || tag.isEmpty()){
             throw new IllegalArgumentException("tag can't be null or empty");
         }
-        var command = _commandsMap.get(tag);
+        EReadCommand command = _commandsMap.get(tag);
         if(command == null){
-            throw new UnknownRegistryCommandExceptions(tag);
+            throw new NoSuchElementException(tag);
         }
         return command;
     }

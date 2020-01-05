@@ -5,6 +5,8 @@ import dev.jcri.mdde.registry.control.command.CommandComponents;
 import dev.jcri.mdde.registry.control.exceptions.MalformedCommandStatementException;
 import dev.jcri.mdde.registry.control.serialization.IResponseExceptionSerializer;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
+import dev.jcri.mdde.registry.shared.commands.EReadCommand;
+import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

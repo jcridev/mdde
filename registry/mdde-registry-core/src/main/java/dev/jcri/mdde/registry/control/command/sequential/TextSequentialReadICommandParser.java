@@ -1,13 +1,11 @@
 package dev.jcri.mdde.registry.control.command.sequential;
 
-import dev.jcri.mdde.registry.control.EReadCommand;
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.command.sequential.arguments.ISequenceParser;
 import dev.jcri.mdde.registry.control.command.sequential.arguments.SimpleSequenceParser;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
-import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
+import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
-import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 
 import java.util.ArrayList;
 import java.util.List;

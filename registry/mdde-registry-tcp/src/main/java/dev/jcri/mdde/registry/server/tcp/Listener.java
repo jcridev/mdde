@@ -12,42 +12,92 @@ import org.apache.logging.log4j.Logger;
 
 public class Listener {
     private static final Logger logger = LogManager.getLogger(Listener.class);
+    private ChannelFuture _controlChannelFuture = null;
+    private EventLoopGroup _cncConnectionGroup = new NioEventLoopGroup();
+    private EventLoopGroup _cncWorkerGroup = new NioEventLoopGroup();
 
-    EventLoopGroup connectionGroup = new NioEventLoopGroup();
-    EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private ChannelFuture _benchmarkChannelFuture;
+    private EventLoopGroup _benchmarkConnectionGroup = new NioEventLoopGroup();
+    private EventLoopGroup _benchmarkWorkerGroup = new NioEventLoopGroup();
 
     /**
      * Start the server listener
-     * @param port TCP port to listen
+     * @param commandPort TCP port to listen incoming registry manipulation commands
+     * @param benchmarkPort TCP port to handle benchmark
      * @throws InterruptedException
      */
-    public void start(int port) throws InterruptedException {
-        start(port, false);
+    public void start(int commandPort, int benchmarkPort) throws InterruptedException {
+        start(commandPort,benchmarkPort, false);
     }
-
     /**
-     * Start the server listener
+     * Start the query and registry control server listener
      * @param port TCP port to listen
      * @param isEcho True - instead of processing the actual commands, received payload is echoed back to the client
      * @throws InterruptedException
      */
-    protected void start(int port, boolean isEcho) throws InterruptedException {
-        try {
-            ServerBootstrap b = new ServerBootstrap();
-            b.group(connectionGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .childHandler(new TCPPipelineInitializer(isEcho))
-                    .option(ChannelOption.SO_BACKLOG, 256)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true);
+    private ChannelFuture startControlServer(int port, boolean isEcho) throws InterruptedException{
+        ServerBootstrap b = new ServerBootstrap();
+        b.group(_cncConnectionGroup, _cncWorkerGroup)
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new TCPPipelineInitializer(isEcho))
+                .option(ChannelOption.SO_BACKLOG, 256)
+                .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-            ChannelFuture f = b.bind(port).sync();
-            if(f.isSuccess()){
-                logger.info("TCP Server listens on port {}", port);
+        ChannelFuture f = b.bind(port).sync();
+        if(f.isSuccess()){
+            logger.info("TCP Server listens on port {}", port);
+        }
+        return f;
+    }
+
+    /**
+     * Start the benchmark interface
+     * @param port
+     * @return
+     * @throws InterruptedException
+     */
+    private ChannelFuture startBenchmarkServer(int port, boolean isEcho) throws InterruptedException{
+        ServerBootstrap b = new ServerBootstrap();
+        b.group(_benchmarkConnectionGroup, _benchmarkWorkerGroup)
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new TCPBenchmarkPipelineInitializer(isEcho))
+                .option(ChannelOption.SO_BACKLOG, 256)
+                .childOption(ChannelOption.SO_KEEPALIVE, true);
+
+        ChannelFuture f = b.bind(port).sync();
+        return f;
+    }
+
+
+    protected void start(int portControl, int portBenchmark, boolean isEcho) throws InterruptedException {
+        try {
+            _controlChannelFuture = startControlServer(portControl, isEcho);
+            if(_controlChannelFuture.isSuccess()){
+                logger.info("TCP Control Server listens on port {}", portControl);
             }
-            f.channel().closeFuture().sync();
+            else{
+                throw new InterruptedException("Unable to start control TCP handler: "
+                        + _controlChannelFuture.cause().getMessage());
+            }
+
+            _benchmarkChannelFuture = startBenchmarkServer(portBenchmark, isEcho);
+            if(_benchmarkChannelFuture.isSuccess()){
+                logger.info("TCP Benchmark Server listens on port {}", portBenchmark);
+            }
+            else{
+                throw new InterruptedException("Unable to start benchmark TCP handler: "
+                        + _benchmarkChannelFuture.cause().getMessage());
+            }
+
+            // TODO: Proper handling of the close future
+            _controlChannelFuture.channel().closeFuture().sync();
+            _benchmarkChannelFuture.channel().closeFuture().sync();
         } finally {
-            workerGroup.shutdownGracefully();
-            connectionGroup.shutdownGracefully();
+            _cncWorkerGroup.shutdownGracefully();
+            _cncConnectionGroup.shutdownGracefully();
+
+            _benchmarkWorkerGroup.shutdownGracefully();
+            _benchmarkConnectionGroup.shutdownGracefully();
         }
     }
 
@@ -55,7 +105,11 @@ public class Listener {
      * Shut down the TCP server
      */
     void stop(){
-        workerGroup.shutdownGracefully();
-        connectionGroup.shutdownGracefully();
+        if(_controlChannelFuture != null){
+            _controlChannelFuture.channel().close();
+        }
+        if(_benchmarkChannelFuture != null){
+            _benchmarkChannelFuture.channel().close();
+        }
     }
 }

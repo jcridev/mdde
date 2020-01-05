@@ -9,6 +9,8 @@
         <option value="$PROJECT_DIR$/mdde-registry/pom.xml" />
         <option value="$PROJECT_DIR$/mdde-registry-tcp/pom.xml" />
         <option value="$PROJECT_DIR$/build-configurations/mdde-registry-server-tcp/pom.xml" />
+        <option value="$PROJECT_DIR$/mdde-registry-shared/pom.xml" />
+        <option value="$PROJECT_DIR$/mdde-registry-tcp-shared/pom.xml" />
       </list>
     </option>
   </component>

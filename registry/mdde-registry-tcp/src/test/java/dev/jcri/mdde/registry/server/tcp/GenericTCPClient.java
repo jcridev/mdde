@@ -1,12 +1,11 @@
 package dev.jcri.mdde.registry.server.tcp;
 
+import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkResultCodes;
+
 import java.io.*;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -16,11 +15,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class GenericTCPClient {
 
     public void testLinesInSequence(final int port, final String line, final int withDelay) throws Exception {
-        testLinesInSequence("localhost", port, line, withDelay);
+        testCommandLinesInSequence("localhost", port, line, withDelay);
     }
 
-    public void testLinesInSequence(final String host,
-                     final int port, String line, final int withDelay) throws Exception {
+    public void testCommandLinesInSequence(final String host,
+                                           final int port,
+                                           String line,
+                                           final int withDelay) throws Exception {
         try (var socket = new Socket(host, port)) {
             DataInputStream in = new DataInputStream(socket.getInputStream());
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -61,10 +62,77 @@ public class GenericTCPClient {
         }
     }
 
+    public void testBenchmarkSequence(final int port, byte commandTag, String payload) throws Exception {
+        testBenchmarkSequence("localhost", port, commandTag, payload);
+    }
+
+    public void testBenchmarkSequence(final String host,
+                                        final int port,
+                                        byte commandTag,
+                                        String payload) throws Exception {
+
+        try (var socket = new Socket(host, port)) {
+            DataInputStream in = new DataInputStream(socket.getInputStream());
+            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+
+            byte[] message = payload.getBytes(StandardCharsets.UTF_8);
+            byte[] length = shortToByteArray((short) (message.length + 1));
+            byte[] bArr = new byte[3 + message.length];
+
+            System.arraycopy(length, 0, bArr, 0, length.length);
+            bArr[3] = commandTag;
+            System.arraycopy(message, 0, bArr, 3, message.length);
+
+            out.write(bArr, 0, bArr.length);
+            out.flush();
+
+            int lenFieldLength = 2; // Length of the length part of the response frame
+            byte[] responseLength = new byte[lenFieldLength];
+            for(int i = 0; i < lenFieldLength; i++){
+                responseLength[i] = in.readByte();
+            }
+            short parsedLength = byteArrayToShort(responseLength);
+            byte[] responseBytes = new byte[parsedLength];
+
+            boolean gotFullResponse = false;
+            int bytesRead = 0;
+            while(!gotFullResponse){
+                bytesRead += in.read(responseBytes);
+                if (bytesRead == parsedLength)
+                {
+                    gotFullResponse = true;
+                }
+            }
+
+            var resultCode = responseBytes[0];
+            var resultPayload = Arrays.copyOfRange(responseBytes, 1, responseBytes.length);
+
+            var resultPayloadString = new String(resultPayload, StandardCharsets.UTF_8);
+            assertEquals(BenchmarkResultCodes.OK.value(), resultCode);
+            assertEquals(payload, resultPayloadString);
+        }
+    }
+
+    private short byteArrayToShort(byte[] bytes)
+    {
+        if(bytes.length != 2){
+            throw new IllegalArgumentException(String.format("Expected a byte array of length 2 but received: %d",
+                    bytes.length));
+        }
+
+        return (short) (bytes[1] & 0xFF | ((bytes[0] & 0xFF) << 8));
+    }
+
+    private byte[] shortToByteArray(short number)
+    {
+        return new byte[] {(byte) ((number >> 8) & 0xFF), (byte) ( number & 0xFF)};
+    }
+
     private int byteArrayToInt(byte[] bytes)
     {
         if(bytes.length != 4){
-            throw new IllegalArgumentException(String.format("Expected a byte array of length 4 but received: %d", bytes.length));
+            throw new IllegalArgumentException(String.format("Expected a byte array of length 4 but received: %d",
+                    bytes.length));
         }
 
         return bytes[3] & 0xFF |

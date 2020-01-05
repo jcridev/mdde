@@ -1,9 +1,10 @@
 package dev.jcri.mdde.registry.control.command;
 
-import dev.jcri.mdde.registry.control.EReadCommand;
-import dev.jcri.mdde.registry.control.EWriteCommand;
-import dev.jcri.mdde.registry.control.ICommand;
+import dev.jcri.mdde.registry.shared.commands.EReadCommand;
+import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
+
+import java.util.NoSuchElementException;
 
 /**
  * Container class for the base components of the incoming command
@@ -54,7 +55,7 @@ public class CommandComponents<T> {
     public EReadCommand tryGetIsReadCommandKeyword(){
         try {
             return EReadCommand.getCommandTag(getKeyword());
-        } catch (UnknownRegistryCommandExceptions unknownRegistryCommandExceptions) {
+        } catch (NoSuchElementException unknownRegistryCommandExceptions) {
             return null;
         }
     }
@@ -66,7 +67,7 @@ public class CommandComponents<T> {
     public EWriteCommand tryGetIsWriteCommandKeyword(){
         try {
             return EWriteCommand.getCommandTag(getKeyword());
-        } catch (UnknownRegistryCommandExceptions unknownRegistryCommandExceptions) {
+        } catch (NoSuchElementException unknownRegistryCommandExceptions) {
             return null;
         }
     }

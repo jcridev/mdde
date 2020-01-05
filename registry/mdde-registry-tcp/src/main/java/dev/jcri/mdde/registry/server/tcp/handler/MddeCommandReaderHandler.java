@@ -13,7 +13,6 @@ public class MddeCommandReaderHandler extends ChannelInboundHandlerAdapter {
     protected static final Logger logger = LogManager.getLogger(MddeCommandReaderHandler.class);
 
     private String _lastReceivedMessage = null;
-    private boolean _isEcho;
     public MddeCommandReaderHandler(){
         super();
     }
