@@ -108,7 +108,7 @@ public class TestTCPServer {
             var gTcpClient = new GenericTCPClient();
             for(var randLine: randStrings){
                 try {
-                    gTcpClient.testBenchmarkSequence(benchPort, BenchmarkOperationCodes.LOCATETUPLE.value(), randLine);
+                    gTcpClient.testBenchmarkSequence(benchPort, BenchmarkOperationCodes.LOCATE_TUPLE.value(), randLine);
 
                 } catch (Exception e) {
                     clientErrors.add(e);

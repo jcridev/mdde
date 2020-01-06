@@ -4,6 +4,7 @@
       <w>jcri</w>
       <w>jedis</w>
       <w>mdde</w>
+      <w>ycsb</w>
     </words>
   </dictionary>
 </component>

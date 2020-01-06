@@ -9,7 +9,9 @@ import java.util.stream.Collectors;
  * Possible benchmark operations
  */
 public enum BenchmarkOperationCodes {
-    LOCATETUPLE((byte)0);
+    RELEASE_CAPACITY((byte)0),
+    LOCATE_TUPLE((byte)1);
+
 
     private final byte _code;
 

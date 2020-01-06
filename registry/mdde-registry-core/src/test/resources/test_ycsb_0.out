@@ -1,0 +1,15 @@
+Example from: https://github.com/brianfrankcooper/YCSB/wiki/Running-a-Workload
+[OVERALL],RunTime(ms), 10110
+[OVERALL],Throughput(ops/sec), 98.91196834817013
+[UPDATE], Operations, 491
+[UPDATE], AverageLatency(ms), 0.054989816700611
+[UPDATE], MinLatency(ms), 0
+[UPDATE], MaxLatency(ms), 1
+[UPDATE], 95thPercentileLatency(ms), 1
+[UPDATE], 99thPercentileLatency(ms), 1
+[UPDATE], Return=0, 491
+[UPDATE], 0, 464
+[UPDATE], 1, 27
+[UPDATE], 2, 0
+[UPDATE], 3, 0
+[UPDATE], 4, 0
