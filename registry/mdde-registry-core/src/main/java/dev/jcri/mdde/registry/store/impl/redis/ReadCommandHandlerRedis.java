@@ -3,6 +3,7 @@ package dev.jcri.mdde.registry.store.impl.redis;
 import dev.jcri.mdde.registry.store.impl.ReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
+import dev.jcri.mdde.registry.store.response.TupleCatalog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import redis.clients.jedis.Response;
@@ -39,6 +40,19 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
             temp.put(nodeId, nodeMap);
         }
         return new FullRegistry(temp);
+    }
+
+    @Override
+    public Set<String> runGetAllNodeTuples(String nodeId) throws ReadOperationException {
+        var unassignedTuples = runGetUnassignedTuples(nodeId);
+        // Unassigned tuples
+        var result = new HashSet<>(unassignedTuples);
+        // Tuples assigned to fragments
+        var nodeFragments = runGetNodeFragments(nodeId);
+        for(String fragmentId: nodeFragments){
+            result.addAll(runGetFragmentTuples(fragmentId));
+        }
+        return result;
     }
 
     private Set<String> getUnassignedTupleNodes(String tupleId){

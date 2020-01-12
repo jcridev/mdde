@@ -5,6 +5,7 @@ import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.RegistryEntityType;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
+import dev.jcri.mdde.registry.store.response.TupleCatalog;
 
 import java.util.*;
 
@@ -18,6 +19,22 @@ public abstract class ReadCommandHandler implements IReadCommandHandler {
      */
     public FullRegistry getFullRegistry() throws ReadOperationException{
         return runGetFullRegistry();
+    }
+
+    @Override
+    public TupleCatalog getTupleCatalog() throws ReadOperationException {
+        var nodeAndContent = new HashMap<String, Set<String>>();
+
+        var nodes = runGetNodes();
+        for(String nodeId: nodes){
+            var nodeTuples = runGetAllNodeTuples(nodeId);
+            nodeAndContent.put(nodeId, nodeTuples);
+        }
+        try {
+            return new TupleCatalog(nodeAndContent);
+        } catch (InterruptedException e) {
+            throw new ReadOperationException(e);
+        }
     }
 
     /**
@@ -342,10 +359,16 @@ public abstract class ReadCommandHandler implements IReadCommandHandler {
     protected abstract Boolean runGetIsNodeContainsFragment(String nodeId, String fragmentId);
 
     /**
-     * Get the set of all fragments IDs
+     * Get a set of all fragments IDs
      * @return All registered fragment IDs
      */
     protected abstract Set<String> runGetAllFragmentIds();
+
+    /**
+     * Get a set of all tuple IDs that assigned to this Node
+     * @return All tuples located on the node, both assigned to fragments and not.
+     */
+    protected abstract Set<String> runGetAllNodeTuples(String nodeId) throws ReadOperationException;
 
     protected abstract String runGetGlobalFragmentMeta(String fragmentId, String metaName);
 

@@ -3,6 +3,7 @@ package dev.jcri.mdde.registry.store;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
 import dev.jcri.mdde.registry.store.response.FullRegistry;
+import dev.jcri.mdde.registry.store.response.TupleCatalog;
 
 import java.util.Set;
 
@@ -13,6 +14,13 @@ public interface IReadCommandHandler {
      * @throws ReadOperationException
      */
     FullRegistry getFullRegistry() throws ReadOperationException;
+
+    /**
+     * Get full catalog of the tuples mapped to the nodes
+     * @return
+     * @throws ReadOperationException
+     */
+    TupleCatalog getTupleCatalog() throws ReadOperationException;
 
     /**
      * Get node IDs where the tuple is located
