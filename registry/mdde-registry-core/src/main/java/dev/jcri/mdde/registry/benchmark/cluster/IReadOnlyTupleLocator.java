@@ -1,9 +1,12 @@
-package dev.jcri.mdde.registry.benchmark;
+package dev.jcri.mdde.registry.benchmark.cluster;
 
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
+import dev.jcri.mdde.registry.store.response.TupleCatalog;
 
-public interface IReadOnlyDataLocator {
+import java.io.Closeable;
+
+public interface IReadOnlyTupleLocator extends Closeable {
     /**
      * Get Node Id which is most suitable for reading a tuple from. Even if tuple is replicated on multiple nodes, we
      * should return only one, which is mose suitable. This is point where the mock cluster logic is implemented.
@@ -24,7 +27,7 @@ public interface IReadOnlyDataLocator {
      * write) within the same event loop, meaning sequentially. While for benchmark we want a data structure that can be
      * queried concurrently.
      *
-     * @param registryStoreReader
+     * @param tupleCatalog
      */
-    void initializeDataLocator(IReadCommandHandler registryStoreReader) throws MddeRegistryException;
+    void initializeDataLocator(TupleCatalog tupleCatalog) throws MddeRegistryException;
 }

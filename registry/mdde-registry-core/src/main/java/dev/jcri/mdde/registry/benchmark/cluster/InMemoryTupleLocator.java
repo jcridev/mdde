@@ -1,9 +1,9 @@
-package dev.jcri.mdde.registry.benchmark;
+package dev.jcri.mdde.registry.benchmark.cluster;
 
-import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
-import dev.jcri.mdde.registry.store.IReadCommandHandler;
+import dev.jcri.mdde.registry.store.response.TupleCatalog;
 import dev.jcri.mdde.registry.utility.MapTools;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -13,7 +13,7 @@ import java.util.*;
  * performed with O(1) complexity even if it's not always the fastest retrieval.
  * We want to eliminate the possibility of the specifics of the registry implementation in benchmark metrics.
  */
-public class InMemoryDataLocator implements IReadOnlyDataLocator {
+public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
 
     /**
      * Simple binary array storing the state of the registry
@@ -56,19 +56,16 @@ public class InMemoryDataLocator implements IReadOnlyDataLocator {
 
     /**
      * Initialize the instance of this data locator
-     * @param registryStoreReader MDDE registry reader instance currently in use
-     * @throws MddeRegistryException
+     * @param tupleCatalog Current tuple distribution
      */
     @Override
-    public void initializeDataLocator(IReadCommandHandler registryStoreReader)
-            throws MddeRegistryException {
-        Objects.requireNonNull(registryStoreReader);
+    public void initializeDataLocator(TupleCatalog tupleCatalog) {
+        Objects.requireNonNull(tupleCatalog);
 
-        var registryState = registryStoreReader.getTupleCatalog();
 
-        _registrySnapshot = new boolean[registryState.getNodes().size()][registryState.getTuples().size()];
-        _nodes = registryState.getNodes();
-        _tuples = MapTools.invert(registryState.getTuples());
+        _registrySnapshot = new boolean[tupleCatalog.getNodes().size()][tupleCatalog.getTuples().size()];
+        _nodes = tupleCatalog.getNodes();
+        _tuples = MapTools.invert(tupleCatalog.getTuples());
     }
 
     /**
@@ -85,5 +82,18 @@ public class InMemoryDataLocator implements IReadOnlyDataLocator {
             }
         }
         return result;
+    }
+
+    /**
+     * Not really necessary in this implementation
+     * @throws IOException
+     */
+    @Override
+    public void close() throws IOException {
+        // It's pointless in this implementation but Closable is part of the base interface for possible future
+        // implementations
+        _registrySnapshot = null; // Makes the runner "deinitialized"
+        _nodes = null;
+        _tuples = null;
     }
 }

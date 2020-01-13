@@ -3,6 +3,8 @@ package dev.jcri.mdde.registry.shared.benchmark.ycsb;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
+import dev.jcri.mdde.registry.shared.configuration.MDDERegistryNetworkConfiguration;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,62 +13,45 @@ import java.util.List;
  * Generic configuration for MDDE access through network
  */
 public class MDDEClientConfiguration {
-    private List<DBNetworkNodesConfiguration> redisMDDEClientNodes;
-    private String mddeRegistryHost;
-    private int mddeRegistryPort;
+    public final static String NODES_FIELD = "nodes";
+    public final static String REGISTRY_NETWORK_FIELD = "mddePort";
+
+    private List<DBNetworkNodesConfiguration> MDDEClientNetworkNodes;
+    private MDDERegistryNetworkConfiguration registryNetworkConnection;
 
     /**
      * Get Redis Instances.
      * @return Redis data nodes configurations.
      */
-    @JsonGetter("nodes")
+    @JsonGetter(NODES_FIELD)
     public List<DBNetworkNodesConfiguration> getNodes() {
-        return redisMDDEClientNodes;
+        return MDDEClientNetworkNodes;
     }
-
     /**
      * Set Redis Instances.
      * @param redisNodes List of the known Nodes configurations.
      */
-    @JsonSetter("nodes")
+    @JsonSetter(NODES_FIELD)
     public void setNodes(List<DBNetworkNodesConfiguration> redisNodes) {
-        redisMDDEClientNodes = redisNodes;
+        MDDEClientNetworkNodes = redisNodes;
     }
 
     /**
-     * Get host where MDDE registry is running.
-     * @return domain / ip
+     * Get settings for connecting to MDDE Registry through network
+     * @return null if the network connection interface is not specified for the registry connectiojn
      */
-    @JsonGetter("mddeHost")
-    public String getMddeRegistryHost() {
-        return mddeRegistryHost;
+    @JsonGetter(REGISTRY_NETWORK_FIELD)
+    public MDDERegistryNetworkConfiguration getRegistryNetworkConnection() {
+        return registryNetworkConnection;
     }
 
     /**
-     * Set host where MDDE registry is running.
-     * @param host domain / ip
+     * Set settings for connecting to MDDE Registry through network
+     * @param registryNetworkConnection Host / Port parameters
      */
-    @JsonSetter("mddeHost")
-    public void setMddeRegistryHost(String host) {
-        this.mddeRegistryHost = host;
-    }
-
-    /**
-     * Get port where MDDE registry is listening on the specified host.
-     * @return Port number.
-     */
-    @JsonGetter("mddePort")
-    public int getMddeRegistryPort() {
-        return mddeRegistryPort;
-    }
-
-    /**
-     * Set port where MDDE registry is listening on the specified host.
-     * @param port Port number.
-     */
-    @JsonSetter("mddePort")
-    public void setMddeRegistryPort(int port) {
-        this.mddeRegistryPort = port;
+    @JsonSetter(REGISTRY_NETWORK_FIELD)
+    public void setRegistryNetworkConnection(MDDERegistryNetworkConfiguration registryNetworkConnection) {
+        this.registryNetworkConnection = registryNetworkConnection;
     }
 
     @Override
