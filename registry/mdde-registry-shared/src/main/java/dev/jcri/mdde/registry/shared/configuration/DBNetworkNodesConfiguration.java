@@ -13,7 +13,8 @@ import com.fasterxml.jackson.annotation.JsonSetter;
         DBNetworkNodesConfiguration.PORT_FIELD,
         DBNetworkNodesConfiguration.USERNAME_FIELD,
         DBNetworkNodesConfiguration.PASSWORD_FIELD,
-        DBNetworkNodesConfiguration.DIRECTORY_FIELD
+        DBNetworkNodesConfiguration.DIRECTORY_FIELD,
+        DBNetworkNodesConfiguration.DEFAULT_NODE_FIELD
 })
 public class DBNetworkNodesConfiguration {
     public static final String ID_FIELD = "id";
@@ -22,6 +23,7 @@ public class DBNetworkNodesConfiguration {
     public static final String USERNAME_FIELD = "username";
     public static final String HOST_FIELD = "host";
     public static final String DIRECTORY_FIELD = "dir";
+    public static final String DEFAULT_NODE_FIELD = "default";
 
     /**
      * MDDE ID for the node (must be unique)
@@ -47,6 +49,10 @@ public class DBNetworkNodesConfiguration {
      * Database directory (ex. specific database within an SQL Server instance) if needed
      */
     private String directory = null;
+    /**
+     * Default nodes are pre-populated upon registry creation
+     */
+    private Boolean defaultNode = true;
 
     /**
      * Get ID of the node.
@@ -139,7 +145,7 @@ public class DBNetworkNodesConfiguration {
     }
 
     /**
-     * Get the directory in the database
+     * Get the directory in the database.
      * @return
      */
     @JsonSetter(DIRECTORY_FIELD)
@@ -148,11 +154,31 @@ public class DBNetworkNodesConfiguration {
     }
 
     /**
-     * Set the directory in the database if required
+     * Set the directory in the database if required.
      * @param directory
      */
     @JsonSetter(DIRECTORY_FIELD)
     public void setDirectory(String directory) {
         this.directory = directory;
+    }
+
+    /**
+     * True - the node should be populated in the Registry store upon its initialization.
+     * False - node is configured but not used initially (future scalability testing).
+     * @return
+     */
+    @JsonSetter(DEFAULT_NODE_FIELD)
+    public Boolean getDefaultNode() {
+        return defaultNode;
+    }
+
+    /**
+     * True - the node should be populated in the Registry store upon its initialization.
+     * False - node is configured but not used initially (future scalability testing).
+     * @param defaultNode
+     */
+    @JsonSetter(DEFAULT_NODE_FIELD)
+    public void setDefaultNode(Boolean defaultNode) {
+        this.defaultNode = defaultNode;
     }
 }

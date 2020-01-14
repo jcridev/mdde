@@ -1,8 +1,7 @@
 package dev.jcri.mdde.registry.benchmark.cluster;
 
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
-import dev.jcri.mdde.registry.store.IReadCommandHandler;
-import dev.jcri.mdde.registry.store.response.TupleCatalog;
+import dev.jcri.mdde.registry.shared.store.response.TupleCatalog;
 
 import java.io.Closeable;
 

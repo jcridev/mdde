@@ -2,7 +2,6 @@ package dev.jcri.mdde.registry.server.tcp;
 
 import dev.jcri.mdde.registry.configuration.RegistryConfig;
 import dev.jcri.mdde.registry.configuration.reader.ConfigReaderYamlAllRedis;
-import dev.jcri.mdde.registry.configuration.redis.DataNodeConfigRedis;
 import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.ICommandPreProcessor;
@@ -22,7 +21,10 @@ import dev.jcri.mdde.registry.store.impl.redis.WriteCommandHandlerRedis;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,9 +52,11 @@ public class Main {
         }
         // Read the config file
         ConfigReaderYamlAllRedis mddeAllRedisConfigReader = new ConfigReaderYamlAllRedis();
-        RegistryConfig<RegistryStoreConfigRedis, DataNodeConfigRedis> mddeConfig = null;
+        RegistryConfig<RegistryStoreConfigRedis> mddeConfig = null;
         try {
-            mddeConfig = mddeAllRedisConfigReader.readConfig(parsedArgs.getPathToConfigFile());
+            byte[] configBytes = Files.readAllBytes(Paths.get(parsedArgs.getPathToConfigFile()));
+            String configString = new String(configBytes, StandardCharsets.UTF_8);
+            mddeConfig = mddeAllRedisConfigReader.readConfig(configString);
         } catch (Exception e) {
             logger.error(e);
             System.err.println(e.getMessage());
@@ -60,6 +64,15 @@ public class Main {
         }
         // Configure CommandProcessorSingleton
         configureCommandProcessing(mddeConfig.getRegistryStore());
+        // Populate nodes
+        try {
+            CommandProcessorSingleton.getDefaultInstance().initializeDefaultNodes(mddeConfig.getDataNodes());
+        }
+        catch (Exception ex){
+            logger.error(ex);
+            System.err.println(ex.getMessage());
+            System.exit(1);
+        }
 
         // Hook attempting to properly shut down the TCP listener on shutdown
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -97,11 +110,16 @@ public class Main {
         IWriteCommandHandler writeCommandHandler = new WriteCommandHandlerRedis(redisConnection, readCommandHandler);
         // Parse commands
         IResponseSerializer<String> responseSerializer = new ResponseSerializerJson();
-        ICommandParser<String, EReadCommand, String> readCommandParser = new JsonReadCommandParser<>(readCommandHandler, responseSerializer);
-        ICommandParser<String, EWriteCommand, String> writeCommandParser = new JsonWriteCommandParser<>(writeCommandHandler, responseSerializer);
+        ICommandParser<String, EReadCommand, String> readCommandParser =
+                new JsonReadCommandParser<>(readCommandHandler, responseSerializer);
+        ICommandParser<String, EWriteCommand, String> writeCommandParser =
+                new JsonWriteCommandParser<>(writeCommandHandler, responseSerializer);
         ICommandPreProcessor<String, String> commandPreProcessor = new JsonCommandPreProcessor();
         // Incoming statements processor
-        var commandProcessor = new CommandProcessor<String, String, String>(commandPreProcessor, readCommandParser, writeCommandParser, responseSerializer);
+        var commandProcessor = new CommandProcessor<String, String, String>(commandPreProcessor,
+                                                                            readCommandParser,
+                                                                            writeCommandParser,
+                                                                            responseSerializer);
         CommandProcessorSingleton.getDefaultInstance().initializeCommandProcessor(commandProcessor);
     }
 
@@ -150,7 +168,7 @@ public class Main {
     private static String getArgParam(Map<String, String> argsMap, String tag){
         var value = argsMap.get(tag);
         if(value == null || value.isBlank()){
-            throw new IllegalArgumentException(MessageFormat.format("Parameter {} passed without a value", tag));
+            throw new IllegalArgumentException(MessageFormat.format("Parameter {0} passed without a value", tag));
         }
         return value;
     }

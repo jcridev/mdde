@@ -1,6 +1,7 @@
 package dev.jcri.mdde.registry.control.command.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.jcri.mdde.registry.control.exceptions.MalformedCommandStatementException;
@@ -33,7 +34,8 @@ public abstract class JsonCommandParserBase {
                     result.add(parent.get(arg.getTag()).asText());
                 }
                 else if(arg.getArgumentType() == ExpectedCommandArgument.ArgumentType.set_strings){
-                    var content = mapper.convertValue(parent.get(arg.getTag()), HashSet.class);
+                    var jsonNode = parent.get(arg.getTag());
+                    var content = mapper.convertValue(jsonNode, new TypeReference<HashSet<String>>() { });
                     result.add(content);
                 }
             }

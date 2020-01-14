@@ -2,8 +2,7 @@ package dev.jcri.mdde.registry.store.impl.redis;
 
 import dev.jcri.mdde.registry.store.impl.ReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
-import dev.jcri.mdde.registry.store.response.FullRegistry;
-import dev.jcri.mdde.registry.store.response.TupleCatalog;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import redis.clients.jedis.Response;

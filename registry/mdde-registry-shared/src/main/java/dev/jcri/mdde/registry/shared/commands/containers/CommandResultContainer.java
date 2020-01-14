@@ -2,7 +2,9 @@ package dev.jcri.mdde.registry.shared.commands.containers;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import dev.jcri.mdde.registry.shared.commands.Constants;
+import dev.jcri.mdde.registry.shared.commands.containers.utility.JacksonBase64ToStringSerializer;
 
 public class CommandResultContainer<T> {
     private T _result;

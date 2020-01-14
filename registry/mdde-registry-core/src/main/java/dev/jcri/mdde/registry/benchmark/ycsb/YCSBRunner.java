@@ -1,7 +1,7 @@
 package dev.jcri.mdde.registry.benchmark.ycsb;
 
-import dev.jcri.mdde.registry.benchmark.ycsb.out.YCSBOutput;
-import dev.jcri.mdde.registry.benchmark.ycsb.out.YCSBOutputParser;
+import dev.jcri.mdde.registry.benchmark.ycsb.cli.YCSBOutput;
+import dev.jcri.mdde.registry.benchmark.ycsb.cli.YCSBOutputParser;
 import dev.jcri.mdde.registry.configuration.benchmark.YCSBConfig;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfiguration;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfigurationWriter;

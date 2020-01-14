@@ -1,7 +1,7 @@
 package dev.jcri.mdde.registry.control.serialization;
 
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
-import dev.jcri.mdde.registry.store.response.FullRegistry;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 
 import java.util.List;
 

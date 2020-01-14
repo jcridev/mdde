@@ -49,11 +49,7 @@ public class CommandProcessor<Tin, Targs, Tout> {
 
             // Split the statement (get keyword separately from the arguments)
             CommandComponents<Targs> components = null;
-            try {
-                components = _commandPreProcessor.splitIncoming(statement);
-            } catch (MalformedCommandStatementException e) {
-                e.printStackTrace();
-            }
+            components = _commandPreProcessor.splitIncoming(statement);
 
             // Determine type of the command
             EReadCommand readCommand = null;
@@ -72,10 +68,7 @@ public class CommandProcessor<Tin, Targs, Tout> {
             }
 
             return result;
-        }catch (MddeRegistryException e) {
-            return _errorSerializer.serializeException(e);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return _errorSerializer.serializeException(e);
         }
     }

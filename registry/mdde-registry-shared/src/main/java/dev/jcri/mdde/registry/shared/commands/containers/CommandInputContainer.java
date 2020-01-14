@@ -3,12 +3,14 @@ package dev.jcri.mdde.registry.shared.commands.containers;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import dev.jcri.mdde.registry.shared.commands.Constants;
+import dev.jcri.mdde.registry.shared.commands.containers.utility.JacksonBase64ToStringSerializer;
 
 /**
  * Expected structure of the command container (JSON, XML, etc).
  */
-public class CommandInputContainer {
+public class CommandInputContainer<TArgs> {
     /**
      * Command tag (ex. 'GETALL')
      */
@@ -19,7 +21,7 @@ public class CommandInputContainer {
      * expected in the de-serializer (ICommandPreProcessor and ICommandParser)
      */
     @JsonProperty(Constants.ArgumentsField)
-    private String args;
+    private TArgs args;
 
     @JsonGetter(Constants.CommandFiled)
     public String getCmd() {
@@ -29,12 +31,13 @@ public class CommandInputContainer {
     public void setCmd(String cmd) {
         this.cmd = cmd;
     }
+
     @JsonGetter(Constants.ArgumentsField)
-    public String getArgs() {
+    public TArgs getArgs() {
         return args;
     }
     @JsonSetter(Constants.ArgumentsField)
-    public void setArgs(String arguments) {
+    public void setArgs(TArgs arguments) {
         this.args = arguments;
     }
 }

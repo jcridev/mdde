@@ -53,11 +53,9 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
                     processDeleteFragmentExemplar(arguments);
                     break;
                 case DESTROY_FRAGMENT:
-                    _serializer.serialize(processDestroyFragment(arguments));
-                    break;
+                    return _serializer.serialize(processDestroyFragment(arguments));
                 case POPULATE_NODES:
-                    _serializer.serialize(processPopulateNodes(arguments));
-                    break;
+                    return _serializer.serialize(processPopulateNodes(arguments));
                 default:
                     throw new UnknownRegistryCommandExceptions(EWriteCommand.toString());
             }

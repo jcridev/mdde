@@ -1,8 +1,19 @@
 package dev.jcri.mdde.registry.server.tcp;
 
 import dev.jcri.mdde.registry.server.CommandProcessor;
+import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
+import dev.jcri.mdde.registry.shared.commands.containers.CommandInputContainer;
+import dev.jcri.mdde.registry.shared.commands.containers.CommandSerializationHelper;
+import dev.jcri.mdde.registry.shared.commands.containers.args.WriteArgsPopulateNodesContainer;
+import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * A singleton wrapper around a CommandProcessor to simplify access within the TCP server operations.
@@ -10,6 +21,7 @@ import java.util.Objects;
  * and the same backend registry.
  */
 public class CommandProcessorSingleton {
+    private static final Logger logger = LogManager.getLogger(CommandProcessorSingleton.class);
     private static class LazyHolder {
         private static CommandProcessorSingleton _instance = new CommandProcessorSingleton();
     }
@@ -35,6 +47,36 @@ public class CommandProcessorSingleton {
             throw new IllegalStateException("CommandProcessorSingleton was already initialized and can't be re-initialized");
         }
         _commandProcessor = processor;
+    }
+
+    /**
+     * Pre-populate default nodes in the registry
+     * @param networkDBNodes
+     */
+    public synchronized void initializeDefaultNodes(List<DBNetworkNodesConfiguration> networkDBNodes)
+        throws IOException {
+        if(_commandProcessor == null){
+            throw new IllegalStateException("CommandProcessorSingleton is not initialized");
+        }
+        var defaultNodesParam = new HashSet<String>();
+        for(var node: networkDBNodes){
+            if(!node.getDefaultNode()){
+                continue;
+            }
+            if(!defaultNodesParam.add(node.getNodeId())){
+                throw new IllegalArgumentException(String.format("Duplicate node id: %s", node.getNodeId()));
+            }
+        }
+
+        if(defaultNodesParam.size() == 0){
+            return;
+        }
+
+        WriteArgsPopulateNodesContainer newNodesArg = new WriteArgsPopulateNodesContainer();
+        newNodesArg.setNodes(defaultNodesParam);
+        String populateCommand = CommandSerializationHelper.serializeJson(EWriteCommand.POPULATE_NODES, newNodesArg);
+        var populateNodesResponse = _commandProcessor.processIncomingStatement(populateCommand);
+        logger.info(populateNodesResponse);
     }
 
     /**

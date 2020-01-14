@@ -4,8 +4,8 @@ import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.RegistryEntityType;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
-import dev.jcri.mdde.registry.store.response.FullRegistry;
-import dev.jcri.mdde.registry.store.response.TupleCatalog;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
+import dev.jcri.mdde.registry.shared.store.response.TupleCatalog;
 
 import java.util.*;
 

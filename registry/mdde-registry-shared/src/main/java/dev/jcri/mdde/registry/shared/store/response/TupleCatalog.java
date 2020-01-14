@@ -1,4 +1,4 @@
-package dev.jcri.mdde.registry.store.response;
+package dev.jcri.mdde.registry.shared.store.response;
 
 import dev.jcri.mdde.registry.utility.MapTools;
 
@@ -17,21 +17,21 @@ public class TupleCatalog {
         Objects.requireNonNull(nodesWithContents);
         // Collect unique tupleIds
         _tuples = new HashMap<>();
-        var uniqueTupleIds = new HashSet<>(nodesWithContents.values().iterator().next());
-        var tId = 0;
-        for(var uTupleId: uniqueTupleIds){
+        Set<String> uniqueTupleIds = new HashSet<>(nodesWithContents.values().iterator().next());
+        int tId = 0;
+        for(String uTupleId: uniqueTupleIds){
             _tuples.put(tId ++, uTupleId);
         }
-        var tmpTuplesToId = MapTools.invert(_tuples);
+        Map<String, Integer> tmpTuplesToId = MapTools.invert(_tuples);
 
         // Fill out nodes
         _nodes = new HashMap<>();
         _nodeContent = new HashMap<>();
         ExecutorService nodesFillerExecutor = Executors.newCachedThreadPool();
         int nId = 0;
-        for(var uNodeId: nodesWithContents.keySet()){
+        for(String uNodeId: nodesWithContents.keySet()){
             _tuples.put(nId, uNodeId);
-            var convertedIds =  new ArrayList<Integer>();
+            List<Integer> convertedIds =  new ArrayList<Integer>();
             _nodeContent.put(nId++, convertedIds);
             nodesFillerExecutor.execute(
                     new NodeContentFiller(nodesWithContents.get(uNodeId), convertedIds, tmpTuplesToId));
@@ -84,7 +84,7 @@ public class TupleCatalog {
 
         public void run()
         {
-            for(var tupleId: _tupleIdsInTheNode){
+            for(String tupleId: _tupleIdsInTheNode){
                 _localIds.add(_tupleCatalog.get(tupleId));
             }
         }

@@ -1,6 +1,6 @@
 package dev.jcri.mdde.registry.benchmark.cluster;
 
-import dev.jcri.mdde.registry.store.response.TupleCatalog;
+import dev.jcri.mdde.registry.shared.store.response.TupleCatalog;
 import dev.jcri.mdde.registry.utility.MapTools;
 
 import java.io.IOException;
