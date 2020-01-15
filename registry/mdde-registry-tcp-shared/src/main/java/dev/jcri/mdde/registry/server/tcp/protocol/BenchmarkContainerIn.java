@@ -1,22 +1,53 @@
 package dev.jcri.mdde.registry.server.tcp.protocol;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 public class BenchmarkContainerIn {
     private BenchmarkOperationCodes _operation;
-    private String _parameter;
+    private List<byte[]> _parameter;
 
-    public BenchmarkContainerIn(BenchmarkOperationCodes operation, String parameter) {
+    /**
+     * Benchmark command container
+     * @param operation Byte operation code
+     * @param parameter (Optional) String encoded arguments. Max argument size can't 127 symbols
+     */
+    public BenchmarkContainerIn(BenchmarkOperationCodes operation, List<byte[]> parameter) {
         Objects.requireNonNull(operation, "Supply a valid operation code");
+        if(parameter != null && parameter.size() > Byte.MAX_VALUE - 3){
+            throw new IllegalArgumentException(
+                    String.format("Maximum number of parameters cant exceed %d", Byte.MAX_VALUE - 3));
+        }
         this._operation = operation;
-        this._parameter = parameter;
+        if(parameter != null){
+            _parameter = Collections.unmodifiableList(parameter);
+        }
+        else{
+            this._parameter = null;
+        }
     }
 
+    /**
+     * Get operation code
+     * @return BenchmarkOperationCodes (Byte enum)
+     */
     public BenchmarkOperationCodes getOperation() {
         return _operation;
     }
 
-    public String getParameter() {
+    /**
+     * (optional) String encoded arguments
+     * @return String encoded arguments or null if none supplied
+     */
+    public List<byte[]> getParameter() {
         return _parameter;
+    }
+
+    public byte numberOfArguments(){
+        if(_parameter == null){
+            return 0;
+        }
+        return (byte) _parameter.size();
     }
 }

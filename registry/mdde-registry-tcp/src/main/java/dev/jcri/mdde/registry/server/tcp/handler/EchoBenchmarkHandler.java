@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class EchoBenchmarkHandler extends ChannelInboundHandlerAdapter {
-    protected static final Logger logger = LogManager.getLogger(MddeCommandReaderHandler.class);
+    protected static final Logger logger = LogManager.getLogger(EchoBenchmarkHandler.class);
 
     private BenchmarkContainerIn _lastReceivedMessage = null;
 
@@ -27,8 +27,10 @@ public class EchoBenchmarkHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         try {
-            ctx.write(processCommand(_lastReceivedMessage));
-            ctx.flush();
+            if(_lastReceivedMessage != null){
+                ctx.write(processCommand(_lastReceivedMessage));
+                ctx.flush();
+            }
         }
         catch (Exception ex){
             logger.error(ex);
@@ -41,6 +43,10 @@ public class EchoBenchmarkHandler extends ChannelInboundHandlerAdapter {
 
     protected BenchmarkContainerOut processCommand(BenchmarkContainerIn command){
         // TODO: Benchmark processing
+        if(command.getParameter() != null && command.getParameter().size() > 0){
+            logger.trace(String.format("Got command arg: %s", new String(command.getParameter().get(0))));
+        }
+
         return new BenchmarkContainerOut(BenchmarkResultCodes.OK, command.getParameter());
     }
 

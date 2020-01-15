@@ -62,10 +62,17 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
     public void initializeDataLocator(TupleCatalog tupleCatalog) {
         Objects.requireNonNull(tupleCatalog);
 
-
         _registrySnapshot = new boolean[tupleCatalog.getNodes().size()][tupleCatalog.getTuples().size()];
         _nodes = tupleCatalog.getNodes();
         _tuples = MapTools.invert(tupleCatalog.getTuples());
+
+        for(Map.Entry<Integer, List<Integer>> entry: tupleCatalog.getNodeContents().entrySet()){
+            var nodeIdx = entry.getKey();
+            for (var tupleIdx: entry.getValue()){
+                _registrySnapshot[nodeIdx][tupleIdx] = true;
+            }
+        }
+
     }
 
     /**

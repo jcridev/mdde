@@ -1,5 +1,7 @@
 package dev.jcri.mdde.registry.server.tcp.handler;
 
+import dev.jcri.mdde.registry.clinet.tcp.benchmark.commands.CommandArgsConverter;
+import dev.jcri.mdde.registry.server.tcp.BenchmarkRunnerSingleton;
 import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkContainerIn;
 import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkContainerOut;
 import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkResultCodes;
@@ -11,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 
 
 public class MddeBenchmarkHandler extends ChannelInboundHandlerAdapter {
-    protected static final Logger logger = LogManager.getLogger(MddeCommandReaderHandler.class);
+    protected static final Logger logger = LogManager.getLogger(MddeBenchmarkHandler.class);
 
     private BenchmarkContainerIn _lastReceivedMessage = null;
 
@@ -41,8 +43,26 @@ public class MddeBenchmarkHandler extends ChannelInboundHandlerAdapter {
     }
 
     protected BenchmarkContainerOut processCommand(BenchmarkContainerIn command){
-        // TODO: Benchmark processing
-        return new BenchmarkContainerOut(BenchmarkResultCodes.OK, command.getParameter());
+        var commandTag = command.getOperation();
+        try {
+            switch (commandTag) {
+                case LOCATE_TUPLE:
+                    var runner = BenchmarkRunnerSingleton.getDefaultInstance().getRunner();
+                    var runnerArg = CommandArgsConverter.unmarshalLocateTuple(command);
+                    var result = runner.getTupleLocation(runnerArg);
+                    return CommandArgsConverter.marshalResponse(BenchmarkResultCodes.OK, result);
+                case RELEASE_CAPACITY:
+                default:
+                    throw new IllegalArgumentException(
+                            String.format("Unhandled benchmark command command '%s'",
+                                    command.getOperation().toString()));
+            }
+
+        }
+        catch (Exception e){
+            logger.error(e);
+            return new BenchmarkContainerOut(BenchmarkResultCodes.ERROR, null);
+        }
     }
 
     @Override

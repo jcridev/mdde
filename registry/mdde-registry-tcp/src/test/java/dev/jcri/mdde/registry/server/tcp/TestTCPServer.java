@@ -1,7 +1,9 @@
 package dev.jcri.mdde.registry.server.tcp;
 
 
+import dev.jcri.mdde.registry.clinet.tcp.benchmark.BenchmarkClient;
 import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkOperationCodes;
+import dev.jcri.mdde.registry.shared.benchmark.commands.LocateTuple;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -133,6 +135,28 @@ public class TestTCPServer {
         }
 
         assertEquals(0, clientErrors.size());
+    }
+
+    @Test
+    public void testNettyBenchmarkClient(){
+        try {
+            try(var client = new BenchmarkClient("localhost", benchPort)){
+                client.openConnection();
+                var param = new LocateTuple("test 0");
+                var result = client.locateTuple(param);
+                assertEquals(param.getTupleId(), result.getNodeId());
+
+                param = new LocateTuple("test 1");
+                result = client.locateTuple(param);
+                assertEquals(param.getTupleId(), result.getNodeId());
+
+                param = new LocateTuple("test 2");
+                result = client.locateTuple(param);
+                assertEquals(param.getTupleId(), result.getNodeId());
+            }
+        } catch (Exception e) {
+            fail(e);
+        }
     }
 
 //region Test Listener

@@ -1,5 +1,7 @@
 package dev.jcri.mdde.registry.server.tcp;
 
+import dev.jcri.mdde.registry.benchmark.BenchmarkRunner;
+import dev.jcri.mdde.registry.benchmark.cluster.InMemoryTupleLocatorFactory;
 import dev.jcri.mdde.registry.configuration.RegistryConfig;
 import dev.jcri.mdde.registry.configuration.reader.ConfigReaderYamlAllRedis;
 import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
@@ -10,6 +12,7 @@ import dev.jcri.mdde.registry.control.command.json.JsonReadCommandParser;
 import dev.jcri.mdde.registry.control.command.json.JsonWriteCommandParser;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerJson;
+import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.server.CommandProcessor;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
@@ -121,6 +124,17 @@ public class Main {
                                                                             writeCommandParser,
                                                                             responseSerializer);
         CommandProcessorSingleton.getDefaultInstance().initializeCommandProcessor(commandProcessor);
+
+        // Initialize benchmark service
+        InMemoryTupleLocatorFactory tupleLocatorFactory = new InMemoryTupleLocatorFactory();
+        BenchmarkRunner benchmarkRunner = new BenchmarkRunner(tupleLocatorFactory, readCommandHandler);
+        BenchmarkRunnerSingleton.getDefaultInstance().initializeBenchmarkRunner(benchmarkRunner);
+        // TODO: Remove (add preparation of the environment by command)
+        try {
+            BenchmarkRunnerSingleton.getDefaultInstance().getRunner().prepareBenchmarkEnvironment();
+        } catch (MddeRegistryException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

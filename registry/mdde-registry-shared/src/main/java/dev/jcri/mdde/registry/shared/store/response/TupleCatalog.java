@@ -17,7 +17,11 @@ public class TupleCatalog {
         Objects.requireNonNull(nodesWithContents);
         // Collect unique tupleIds
         _tuples = new HashMap<>();
-        Set<String> uniqueTupleIds = new HashSet<>(nodesWithContents.values().iterator().next());
+        Iterator<Set<String>> it = nodesWithContents.values().iterator();
+        Set<String> uniqueTupleIds = new HashSet<>(it.next());
+        while(it.hasNext()) {
+            uniqueTupleIds.addAll(it.next());
+        }
         int tId = 0;
         for(String uTupleId: uniqueTupleIds){
             _tuples.put(tId ++, uTupleId);
@@ -30,7 +34,7 @@ public class TupleCatalog {
         ExecutorService nodesFillerExecutor = Executors.newCachedThreadPool();
         int nId = 0;
         for(String uNodeId: nodesWithContents.keySet()){
-            _tuples.put(nId, uNodeId);
+            _nodes.put(nId, uNodeId);
             List<Integer> convertedIds =  new ArrayList<Integer>();
             _nodeContent.put(nId++, convertedIds);
             nodesFillerExecutor.execute(

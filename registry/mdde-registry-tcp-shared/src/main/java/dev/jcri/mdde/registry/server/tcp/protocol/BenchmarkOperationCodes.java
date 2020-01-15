@@ -9,14 +9,15 @@ import java.util.stream.Collectors;
  * Possible benchmark operations
  */
 public enum BenchmarkOperationCodes {
-    RELEASE_CAPACITY((byte)0),
-    LOCATE_TUPLE((byte)1);
-
+    LOCATE_TUPLE((byte)0, "Locate tuple"),
+    RELEASE_CAPACITY((byte)1, "Release capacity");
 
     private final byte _code;
+    private final String _description;
 
-    private BenchmarkOperationCodes(byte code){
+    private BenchmarkOperationCodes(byte code, String description){
         _code = code;
+        _description = description;
     }
 
     public byte value(){
@@ -32,5 +33,11 @@ public enum BenchmarkOperationCodes {
             throw new NoSuchElementException(Byte.toString(code));
         }
         return command;
+    }
+
+
+    @Override
+    public String toString() {
+        return _description;
     }
 }
