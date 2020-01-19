@@ -26,14 +26,10 @@ public enum EReadCommand implements ICommand {
      * @param command Command keyword for the processor
      */
     EReadCommand(final String command, final List<ExpectedCommandArgument> args) {
+        Objects.requireNonNull(args);
         this._command = command;
         _expectedArguments = args;
-        if(_expectedArguments == null){
-            _numExpectedArguments = 0;
-        }
-        else {
-            _numExpectedArguments = _expectedArguments.size();
-        }
+        _numExpectedArguments = _expectedArguments.size();
     }
 
     private static Map<String, EReadCommand> _commandsMap = Arrays.stream(EReadCommand.values()).collect(Collectors.toMap(e -> e._command, e -> e));

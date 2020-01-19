@@ -30,10 +30,10 @@ public abstract class JsonCommandParserBase {
         try {
             parent = mapper.readTree(arguments);
             for(var arg: command.getExpectedArguments()){
-                if(arg.getArgumentType() == ExpectedCommandArgument.ArgumentType.string){
+                if(arg.getArgumentType() == ExpectedCommandArgument.ArgumentType.STRING){
                     result.add(parent.get(arg.getTag()).asText());
                 }
-                else if(arg.getArgumentType() == ExpectedCommandArgument.ArgumentType.set_strings){
+                else if(arg.getArgumentType() == ExpectedCommandArgument.ArgumentType.SET_STRINGS){
                     var jsonNode = parent.get(arg.getTag());
                     var content = mapper.convertValue(jsonNode, new TypeReference<HashSet<String>>() { });
                     result.add(content);

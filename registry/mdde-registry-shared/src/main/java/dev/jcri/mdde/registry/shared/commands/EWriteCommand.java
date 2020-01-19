@@ -30,14 +30,10 @@ public enum EWriteCommand implements ICommand {
      * @param args List of expected arguments,in the order they should arrive
      */
     EWriteCommand(final String command, final List<ExpectedCommandArgument> args) {
+        Objects.requireNonNull(args);
         this._command = command;
         _expectedArguments = args;
-        if(_expectedArguments == null){
-            _numExpectedArguments = 0;
-        }
-        else {
-            _numExpectedArguments = _expectedArguments.size();
-        }
+        _numExpectedArguments = _expectedArguments.size();
     }
 
     private static Map<String, EWriteCommand> _commandsMap = Arrays.stream(EWriteCommand.values())

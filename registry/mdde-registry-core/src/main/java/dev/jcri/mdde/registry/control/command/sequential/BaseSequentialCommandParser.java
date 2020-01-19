@@ -62,7 +62,7 @@ public abstract class BaseSequentialCommandParser {
      */
     protected Set<String> getPositionalArgumentAsSet(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
             throws IllegalCommandArgumentException {
-        if(argument.getArgumentType() != ExpectedCommandArgument.ArgumentType.set_strings){
+        if(argument.getArgumentType() != ExpectedCommandArgument.ArgumentType.SET_STRINGS){
             throw new IllegalArgumentException(String.format("Argument %s is not a set of strings", argument.toString()));
         }
 
