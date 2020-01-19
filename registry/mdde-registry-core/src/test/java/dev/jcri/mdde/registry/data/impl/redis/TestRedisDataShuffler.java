@@ -278,6 +278,196 @@ public class TestRedisDataShuffler {
         assertCopyResultsString(testStringItems, destinationNode);
     }
 
+    /**
+     * Test Redis shuffler STRING,LIST,HASH,SET copies with missing keys
+     */
+    @Test
+    public void testCopyMixedTuplesWithMissingKeys(){
+        final int numberOfTestStringKeys = 100;
+        final int numberOfTestListKeys = 100;
+        final int numberOfItemsPerList = 20;
+        final int numberOfTestSetKeys = 100;
+        final int numberOfItemsPerSet = 20;
+        final int numberOfTestHashKeys = 100;
+        final int numberOfItemsPerHash = 20;
+
+        final int numberOfMissingKeysString = 5;
+        final int numberOfMissingKeysList = 15;
+        final int numberOfMissingKeysSet = 25;
+        final int numberOfMissingKeysHash = 35;
+
+        Map<String, Map<String, String>> testHashItems = generateTestDataHash(numberOfTestHashKeys, numberOfItemsPerHash);
+        Map<String, Set<String>> testSetItems = generateTestDataSet(numberOfTestSetKeys, numberOfItemsPerSet);
+        Map<String, List<String>> testListItems = generateTestDataList(numberOfTestListKeys, numberOfItemsPerList);
+        Map<String, String> testStringItems = generateTestDataString(numberOfTestStringKeys);
+
+        // Populate node
+        var connectionKeys = redisConnections.keySet().toArray(new String[0]);
+        var sourceNodeKey = connectionKeys[0];
+        var destinationNodeKey = connectionKeys[1];
+        var sourceNode = redisConnections.get(sourceNodeKey);
+        var destinationNode = redisConnections.get(destinationNodeKey);
+
+        populateRedisWithTestDataHash(testHashItems, sourceNode);
+        populateRedisWithTestDataSet(testSetItems, sourceNode);
+        populateRedisWithTestDataList(testListItems, sourceNode);
+        populateRedisWithTestDataString(testStringItems, sourceNode);
+
+        // Add non-existing keys to the copy query
+        Set<String> keysWithMissingKeysHash = new HashSet<>(testHashItems.keySet());
+        for(int i = 0; i < numberOfMissingKeysHash; i++){
+            var randomKey = UUID.randomUUID().toString().replace("-", "");
+            keysWithMissingKeysHash.add(randomKey);
+        }
+
+        Set<String> keysWithMissingKeysSet = new HashSet<>(testSetItems.keySet());
+        for(int i = 0; i < numberOfMissingKeysSet; i++){
+            var randomKey = UUID.randomUUID().toString().replace("-", "");
+            keysWithMissingKeysSet.add(randomKey);
+        }
+
+        Set<String> keysWithMissingKeysList = new HashSet<>(testListItems.keySet());
+        for(int i = 0; i < numberOfMissingKeysList; i++){
+            var randomKey = UUID.randomUUID().toString().replace("-", "");
+            keysWithMissingKeysList.add(randomKey);
+        }
+
+        Set<String> keysWithMissingKeysString = new HashSet<>(testStringItems.keySet());
+        for(int i = 0; i < numberOfMissingKeysString; i++){
+            var randomKey = UUID.randomUUID().toString().replace("-", "");
+            keysWithMissingKeysString.add(randomKey);
+        }
+
+        Set<String> allKeys = new HashSet<>();
+        allKeys.addAll(keysWithMissingKeysHash);
+        allKeys.addAll(keysWithMissingKeysSet);
+        allKeys.addAll(keysWithMissingKeysList);
+        allKeys.addAll(keysWithMissingKeysString);
+
+
+        // Test shuffler
+        IDataShuffler shuffler = new RedisDataShuffler(testRedisNodes);
+        var copyResult = shuffler.copyTuples(sourceNodeKey, destinationNodeKey, allKeys);
+
+        Set<String> allExistingKeys = new HashSet<>();
+        allExistingKeys.addAll(testHashItems.keySet());
+        allExistingKeys.addAll(testSetItems.keySet());
+        allExistingKeys.addAll(testListItems.keySet());
+        allExistingKeys.addAll(testStringItems.keySet());
+
+        Set<String> allMissingKeys = new HashSet<>(allKeys);
+        allMissingKeys.removeAll(testHashItems.keySet());
+        allMissingKeys.removeAll(testSetItems.keySet());
+        allMissingKeys.removeAll(testListItems.keySet());
+        allMissingKeys.removeAll(testStringItems.keySet());
+
+        assertEquals(allExistingKeys, copyResult.getProcessedKeys());
+        assertEquals(allMissingKeys, copyResult.getFailedKeys());
+
+        Set<String> destinationResKeys;
+        try(Jedis jedis = destinationNode.getResource()){
+            destinationResKeys = jedis.keys("*");
+        }
+        assertEquals(allExistingKeys, destinationResKeys);
+
+        assertCopyResultsHash(testHashItems, destinationNode);
+        assertCopyResultsSet(testSetItems, destinationNode);
+        assertCopyResultsList(testListItems, destinationNode);
+        assertCopyResultsString(testStringItems, destinationNode);
+    }
+
+    /**
+     * Test Redis shuffler STRING,LIST,HASH,SET copies with missing keys
+     */
+    @Test
+    public void testDeleteMixedTuplesWithMissingKeys(){
+        final int numberOfTestStringKeys = 100;
+        final int numberOfTestListKeys = 100;
+        final int numberOfItemsPerList = 20;
+        final int numberOfTestSetKeys = 100;
+        final int numberOfItemsPerSet = 20;
+        final int numberOfTestHashKeys = 100;
+        final int numberOfItemsPerHash = 20;
+
+        final int numberOfMissingKeysString = 5;
+        final int numberOfMissingKeysList = 15;
+        final int numberOfMissingKeysSet = 25;
+        final int numberOfMissingKeysHash = 35;
+
+        Map<String, Map<String, String>> testHashItems = generateTestDataHash(numberOfTestHashKeys, numberOfItemsPerHash);
+        Map<String, Set<String>> testSetItems = generateTestDataSet(numberOfTestSetKeys, numberOfItemsPerSet);
+        Map<String, List<String>> testListItems = generateTestDataList(numberOfTestListKeys, numberOfItemsPerList);
+        Map<String, String> testStringItems = generateTestDataString(numberOfTestStringKeys);
+
+        // Populate node
+        var connectionKeys = redisConnections.keySet().toArray(new String[0]);
+        var nodeKey = connectionKeys[0];
+        var node = redisConnections.get(nodeKey);
+
+        populateRedisWithTestDataHash(testHashItems, node);
+        populateRedisWithTestDataSet(testSetItems, node);
+        populateRedisWithTestDataList(testListItems, node);
+        populateRedisWithTestDataString(testStringItems, node);
+
+        // Add non-existing keys to the copy query
+        Set<String> keysWithMissingKeysHash = new HashSet<>(testHashItems.keySet());
+        for(int i = 0; i < numberOfMissingKeysHash; i++){
+            var randomKey = UUID.randomUUID().toString().replace("-", "");
+            keysWithMissingKeysHash.add(randomKey);
+        }
+
+        Set<String> keysWithMissingKeysSet = new HashSet<>(testSetItems.keySet());
+        for(int i = 0; i < numberOfMissingKeysSet; i++){
+            var randomKey = UUID.randomUUID().toString().replace("-", "");
+            keysWithMissingKeysSet.add(randomKey);
+        }
+
+        Set<String> keysWithMissingKeysList = new HashSet<>(testListItems.keySet());
+        for(int i = 0; i < numberOfMissingKeysList; i++){
+            var randomKey = UUID.randomUUID().toString().replace("-", "");
+            keysWithMissingKeysList.add(randomKey);
+        }
+
+        Set<String> keysWithMissingKeysString = new HashSet<>(testStringItems.keySet());
+        for(int i = 0; i < numberOfMissingKeysString; i++){
+            var randomKey = UUID.randomUUID().toString().replace("-", "");
+            keysWithMissingKeysString.add(randomKey);
+        }
+
+        Set<String> allKeys = new HashSet<>();
+        allKeys.addAll(keysWithMissingKeysHash);
+        allKeys.addAll(keysWithMissingKeysSet);
+        allKeys.addAll(keysWithMissingKeysList);
+        allKeys.addAll(keysWithMissingKeysString);
+
+        // Test shuffler
+        IDataShuffler shuffler = new RedisDataShuffler(testRedisNodes);
+        var deleteResult = shuffler.deleteTuples(nodeKey, allKeys);
+
+        Set<String> allExistingKeys = new HashSet<>();
+        allExistingKeys.addAll(testHashItems.keySet());
+        allExistingKeys.addAll(testSetItems.keySet());
+        allExistingKeys.addAll(testListItems.keySet());
+        allExistingKeys.addAll(testStringItems.keySet());
+
+        Set<String> allMissingKeys = new HashSet<>(allKeys);
+        allMissingKeys.removeAll(testHashItems.keySet());
+        allMissingKeys.removeAll(testSetItems.keySet());
+        allMissingKeys.removeAll(testListItems.keySet());
+        allMissingKeys.removeAll(testStringItems.keySet());
+
+        assertEquals(allExistingKeys, deleteResult.getProcessedKeys());
+        assertEquals(allMissingKeys, deleteResult.getFailedKeys());
+
+        Set<String> retrievedKeys;
+        try(Jedis jedis = node.getResource()){
+            retrievedKeys = jedis.keys("*");
+        }
+
+        Set<String> emptySet = new HashSet<>();
+        assertEquals(emptySet, retrievedKeys);
+    }
+
 //region Common assertions
     private void assertCopyResultsHash(Map<String, Map<String, String>> testItems, JedisPool node) {
         for (Map.Entry<String, Map<String, String>> testItem : testItems.entrySet()) {
@@ -319,7 +509,7 @@ public class TestRedisDataShuffler {
         }
     }
 //endregion
-    
+
 //region Test data generation methods
     private void populateRedisWithTestDataHash(Map<String, Map<String, String>> testItems, JedisPool sourceNode) {
         try(Jedis jedis = sourceNode.getResource()){

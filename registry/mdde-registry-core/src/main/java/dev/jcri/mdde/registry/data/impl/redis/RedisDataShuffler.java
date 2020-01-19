@@ -88,10 +88,11 @@ public class RedisDataShuffler implements IDataShuffler {
                                         new IOException("Unable to retrieve key types."));
         }
 
-
+        Set<String> processedKeys = new HashSet<>();
         // Process STRING keys
         var stringKeys = getKeysOfType(keyTypes, redisKeyTypes.string);
         if(stringKeys.size() > 0){
+            processedKeys.addAll(stringKeys);
             var stringKeysArray = stringKeys.toArray(new String[0]);
             List<String> results;
             try(Jedis jedis = sourcePool.getResource()){
@@ -113,6 +114,7 @@ public class RedisDataShuffler implements IDataShuffler {
         // Process SET keys
         var setKeys = getKeysOfType(keyTypes, redisKeyTypes.set);
         if(setKeys.size() > 0){
+            processedKeys.addAll(setKeys);
             // Done sequentially because Redis SET size can be arbitrary, so we don't want to risk running out of RAM
             for(var setKey: setKeys){
                 Set<String> sourceSetMembers;
@@ -130,6 +132,7 @@ public class RedisDataShuffler implements IDataShuffler {
         // Process LIST keys
         var listKeys = getKeysOfType(keyTypes, redisKeyTypes.list);
         if(listKeys.size() > 0){
+            processedKeys.addAll(listKeys);
             for(var listKey: listKeys){
                 List<String> listItems;
                 try(Jedis jedis = sourcePool.getResource()){
@@ -145,6 +148,7 @@ public class RedisDataShuffler implements IDataShuffler {
         // Process HASH keys
         var hashKeys = getKeysOfType(keyTypes, redisKeyTypes.hash);
         if(hashKeys.size() > 0){
+            processedKeys.addAll(hashKeys);
             for(var hashKey: hashKeys){
                 Map<String, String> hashValues;
                 try(Jedis jedis = sourcePool.getResource()){
@@ -156,7 +160,7 @@ public class RedisDataShuffler implements IDataShuffler {
                 }
             }
         }
-        return new ShuffleKeysResult(tupleIds, nullKeys, null);
+        return new ShuffleKeysResult(processedKeys, nullKeys, null);
     }
 
     @Override
@@ -182,11 +186,11 @@ public class RedisDataShuffler implements IDataShuffler {
 
         Set<String> missedKeys = keyResults.entrySet()
                 .stream()
-                .filter(entry -> entry.getValue().get() > 0)
+                .filter(entry -> entry.getValue().get() == 0)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
 
-        if(missedKeys.size() > 0){
+        if(missedKeys.size() == 0){
             return new ShuffleKeysResult(tupleIds);
         }
         else{
