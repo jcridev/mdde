@@ -1,8 +1,5 @@
 package dev.jcri.mdde.registry.data;
 
-import dev.jcri.mdde.registry.data.exceptions.KeyNotFoundException;
-
-import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -28,4 +25,10 @@ public interface IDataShuffler {
      */
     ShuffleKeysResult deleteTuples(String nodeId,
                                    Set<String> tupleIds);
+
+    /**
+     * Remove all data from the data nodes
+     * @return True - data was removed
+     */
+    boolean flushData();
 }

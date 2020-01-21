@@ -1,12 +1,16 @@
 package dev.jcri.mdde.registry.server;
 
+import dev.jcri.mdde.registry.benchmark.BenchmarkRunner;
+import dev.jcri.mdde.registry.benchmark.cluster.ITupleLocatorFactory;
 import dev.jcri.mdde.registry.control.*;
 import dev.jcri.mdde.registry.control.command.CommandComponents;
 import dev.jcri.mdde.registry.control.exceptions.MalformedCommandStatementException;
 import dev.jcri.mdde.registry.control.serialization.IResponseExceptionSerializer;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
+import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
+import dev.jcri.mdde.registry.store.RegistryStateCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,25 +23,29 @@ import java.util.Objects;
  * @param <Targs> Type of the arguments object
  * @param <Tout> Type of the returned processing values
  */
-public class CommandProcessor<Tin, Targs, Tout> {
+public final class CommandProcessor<Tin, Targs, Tout> {
     private static final Logger logger = LogManager.getLogger(CommandProcessor.class);
 
     private final ICommandPreProcessor<Targs, Tin> _commandPreProcessor;
+    private final ICommandParser<Tout, EStateControlCommand, Targs> _controlCommandParser;
     private final ICommandParser<Tout, EReadCommand, Targs> _readCommandParser;
     private final ICommandParser<Tout, EWriteCommand, Targs> _writeCommandParser;
     private final IResponseExceptionSerializer<Tout> _errorSerializer;
 
     public CommandProcessor(ICommandPreProcessor<Targs, Tin> commandPreProcessor,
+                            ICommandParser<Tout, EStateControlCommand, Targs> controlCommandParser,
                             ICommandParser<Tout, EReadCommand, Targs> readCommandParser,
                             ICommandParser<Tout, EWriteCommand, Targs> writeCommandParser,
                             IResponseExceptionSerializer<Tout> errorSerializer)
     {
         Objects.requireNonNull(commandPreProcessor, "commandPreProcessor can't be null");
+        Objects.requireNonNull(controlCommandParser, "controlCommandParser can't be null");
         Objects.requireNonNull(readCommandParser, "readCommandParser can't be null");
         Objects.requireNonNull(writeCommandParser, "writeCommandParser can't be null");
         Objects.requireNonNull(errorSerializer, "errorSerializer can't be null");
 
         _commandPreProcessor = commandPreProcessor;
+        _controlCommandParser = controlCommandParser;
         _readCommandParser = readCommandParser;
         _writeCommandParser = writeCommandParser;
         _errorSerializer = errorSerializer;
@@ -52,6 +60,7 @@ public class CommandProcessor<Tin, Targs, Tout> {
             components = _commandPreProcessor.splitIncoming(statement);
 
             // Determine type of the command
+            EStateControlCommand stateCommand = null;
             EReadCommand readCommand = null;
             EWriteCommand writeCommand = null;
             Tout result = null;

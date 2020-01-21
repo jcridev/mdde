@@ -191,7 +191,6 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             if(!readCommandHandler.getIsFragmentExists(fragmentId)){
                 throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
             }
-
             runAddMetaToFragmentGlobal(fragmentId, metaField, metaValue);
         }
         finally {
@@ -216,13 +215,41 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             if(!readCommandHandler.getIsNodeContainsFragment(nodeId, fragmentId)){
                 throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
             }
-
             runAddMetaToFragmentExemplar(fragmentId, nodeId, metaField, metaValue);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
+
+    /**
+     * Remove all meta values for all fragments
+     */
+    @Override
+    public final void resetFragmentsMeta(){
+        _commandExecutionLock.lock();
+        try {
+            runResetFragmentsMeta();
+        }
+        finally {
+            _commandExecutionLock.unlock();
+        }
+    }
+
+    /**
+     * Clear the registry
+     */
+    @Override
+    public final void reset() throws WriteOperationException {
+        _commandExecutionLock.lock();
+        try {
+            runFlush();
+        }
+        finally {
+            _commandExecutionLock.unlock();
+        }
+    }
+
 //endregion
 //region Verify the correctness and validity of the invoked operation
     private void verifyAndRunInsertTuple(final String tupleId, final String nodeId)
@@ -402,9 +429,21 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      */
     protected abstract boolean runPopulateNodes(final Set<String> nodeIds) throws WriteOperationException;
 
-    protected abstract void runAddMetaToFragmentGlobal(final String fragmentId, final String metaField, final String metaValue) throws WriteOperationException;
+    protected abstract void runAddMetaToFragmentGlobal(final String fragmentId,
+                                                       final String metaField,
+                                                       final String metaValue)
+            throws WriteOperationException;
 
-    protected abstract void runAddMetaToFragmentExemplar(final String fragmentId, final String nodeId, final String metaField, final String metaValue) throws WriteOperationException;
+    protected abstract void runAddMetaToFragmentExemplar(final String fragmentId,
+                                                         final String nodeId,
+                                                         final String metaField,
+                                                         final String metaValue)
+            throws WriteOperationException;
+
+
+    protected abstract void runResetFragmentsMeta();
+
+    protected abstract void runFlush();
 //endregion
 
 }

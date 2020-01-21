@@ -205,6 +205,20 @@ public class RedisDataShuffler implements IDataShuffler {
         }
     }
 
+    @Override
+    public boolean flushData() {
+        if(_redisConnections == null || _redisConnections.size() == 0){
+            return false; // No connections, nothing to remove
+        }
+
+        for(var connectionPool: _redisConnections.values()){
+            try(Jedis jedis = connectionPool.getResource()){
+                jedis.flushAll();
+            }
+        }
+        return true;
+    }
+
     /**
      * Get type of the key
      * @param connection Jedis connection instance

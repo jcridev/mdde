@@ -6,7 +6,6 @@ import dev.jcri.mdde.registry.configuration.benchmark.YCSBConfig;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfiguration;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfigurationWriter;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
-import dev.jcri.mdde.registry.shared.configuration.MDDERegistryNetworkConfiguration;
 import dev.jcri.mdde.registry.utility.ResourcesTools;
 
 import java.io.*;
@@ -14,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -49,32 +49,33 @@ public class YCSBRunner implements Closeable {
      */
     private final YCSBOutputParser _ycsbParser = new YCSBOutputParser();
 
-    private final MDDEClientConfiguration _mddeClientConfig;
-
+    private final EYCSBClients _defaultClient;
     /**
      * Path to the *folder* where YCSB is located
      * @param ycsbConfig Configuration for YCSB
-     * @param tempFolder Path to folder where temporary files should be stored
      * @param nodes Configuration of the data nodes (database instances)
-     * @param registryNetworkInterfaces Network connectivity settings used by YCSB to interact with the Registry
+     * @param connectionProperties Network connectivity settings used by YCSB to interact with the Registry
      */
     public YCSBRunner(YCSBConfig ycsbConfig,
-                      String tempFolder,
                       List<DBNetworkNodesConfiguration> nodes,
-                      MDDERegistryNetworkConfiguration registryNetworkInterfaces)
+                      Map<String, String> connectionProperties)
     throws IOException{
         Objects.requireNonNull(ycsbConfig.getYcsbBin(), "Working folder for YCSB is not specified");
 
-        if(tempFolder == null || tempFolder.isBlank()){
+        if(ycsbConfig.getTemp() == null || ycsbConfig.getTemp().isBlank()){
             throw new IllegalArgumentException("Temporary folder is not specified");
         }
 
-        _tempSubfolder = Paths.get(tempFolder, UUID.randomUUID().toString().replace("-", ""));
+        _tempSubfolder = Paths.get(ycsbConfig.getTemp(), UUID.randomUUID().toString().replace("-", ""));
         _ycsbConfig = ycsbConfig;
-        _mddeClientConfig = getYCSBRunConfig(nodes, registryNetworkInterfaces);
+
+        _defaultClient = EYCSBClients.fromString(ycsbConfig.getYcsbClient());
+        if(_defaultClient == null){
+            throw new IllegalArgumentException(String.format("Unknown YCSB client %s", ycsbConfig.getYcsbClient()));
+        }
 
         var configWriter = new MDDEClientConfigurationWriter();
-        configWriter.writeConfiguration(_mddeClientConfig, getTempClientConfigFilePath());
+        configWriter.writeConfiguration(getYCSBRunConfig(nodes, connectionProperties), getTempClientConfigFilePath());
     }
 
     /**
@@ -88,20 +89,20 @@ public class YCSBRunner implements Closeable {
     /**
      * Generate configuration object that should be passed to YCSB
      * @param nodes Configuration of the data nodes (database instances)
-     * @param registryNetworkInterfaces  Network connectivity settings used by YCSB to interact with the Registry
+     * @param connectionProperties  Network connectivity settings used by YCSB to interact with the Registry
      * @return MDDEClientConfiguration
      */
     private MDDEClientConfiguration getYCSBRunConfig(
             List<DBNetworkNodesConfiguration> nodes,
-            MDDERegistryNetworkConfiguration registryNetworkInterfaces){
-        Objects.requireNonNull(registryNetworkInterfaces, "Network connectivity settings are not specified");
+            Map<String, String> connectionProperties){
+        Objects.requireNonNull(connectionProperties, "Network connectivity settings are not specified");
         if(nodes ==null || nodes.size() == 0 ){
             throw new IllegalArgumentException("Data nodes settings are not specified");
         }
 
         var newConfig = new MDDEClientConfiguration();
         newConfig.setNodes(nodes);
-        newConfig.setRegistryNetworkConnection(registryNetworkInterfaces);
+        newConfig.setRegistryNetworkConnection(connectionProperties);
 
         return newConfig;
     }
@@ -109,17 +110,16 @@ public class YCSBRunner implements Closeable {
     /**
      * Load workload data to the YCSB store
      * @param workload Selected YCSB workload
-     * @param client Selected YCSB client
      * @return Parsed YCSB output
      * @throws IOException
      */
-    public YCSBOutput loadWorkload(EWorkloadCatalog workload, EYCSBClients client) throws IOException {
+    public YCSBOutput loadWorkload(EYCSBWorkloadCatalog workload) throws IOException {
         var pathToTempWorkload = Paths.get(_tempSubfolder.toString(), workload.getResourceBaseFileName());
         ResourcesTools.copyResourceToFileSystem(workload.getResourceFileName(), pathToTempWorkload);
 
         return loadWorkload(pathToTempWorkload.toString(),
                 getTempClientConfigFilePath().toString(),
-                client.getClientName());
+                _defaultClient.getClientName());
     }
 
     /**
@@ -150,11 +150,10 @@ public class YCSBRunner implements Closeable {
     /**
      * Run the specified workload
      * @param workload Selected YCSB workload
-     * @param client Selected YCSB client
      * @return
      * @throws IOException
      */
-    public YCSBOutput runWorkload(EWorkloadCatalog workload, EYCSBClients client) throws IOException {
+    public YCSBOutput runWorkload(EYCSBWorkloadCatalog workload) throws IOException {
         var pathToTempWorkload = Paths.get(_tempSubfolder.toString(), workload.getResourceBaseFileName());
         if(!Files.exists(pathToTempWorkload)) {
             ResourcesTools.copyResourceToFileSystem(workload.getResourceFileName(), pathToTempWorkload);
@@ -162,7 +161,7 @@ public class YCSBRunner implements Closeable {
 
         return runWorkload(pathToTempWorkload.toString(),
                 getTempClientConfigFilePath().toString(),
-                client.getClientName());
+                _defaultClient.getClientName());
     }
 
     /**

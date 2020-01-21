@@ -21,7 +21,6 @@ import java.util.List;
 })
 public class RegistryConfig<TStore> {
     public static final String REGISTRY_STORE_FIELD = "store";
-    public static final String REGISTRY_TEMP_FOLDER_FIELD = "temp";
     public static final String DATA_NODES_FIELD = "nodes";
     public static final String BENCHMARK_YCSB_FIELD = "bench_ycsb";
      /**
@@ -36,10 +35,7 @@ public class RegistryConfig<TStore> {
      * YCSB Benchmark settings
      */
     private YCSBConfig _benchmarkYcsb;
-    /**
-     * Folder where MDDE-registry creates its temporary files (such as temp YCSB configs)
-     */
-    private String temp;
+
 
     @JsonGetter(REGISTRY_STORE_FIELD)
     public TStore getRegistryStore() {
@@ -68,22 +64,5 @@ public class RegistryConfig<TStore> {
     @JsonSetter(BENCHMARK_YCSB_FIELD)
     public void setBenchmarkYcsb(YCSBConfig benchmarkYcsb) {
         this._benchmarkYcsb = benchmarkYcsb;
-    }
-
-    /**
-     * Get path to the MDDE-Registry temporary files folder.
-     * If it's null, returns path to {bin_location}/temp
-     * @return
-     */
-    @JsonGetter(REGISTRY_TEMP_FOLDER_FIELD)
-    public String getTemp() {
-        if(temp != null && !temp.isBlank()){
-            return temp;
-        }
-        return Paths.get(System.getProperty("user.dir"),"temp").toString();
-    }
-    @JsonSetter(REGISTRY_TEMP_FOLDER_FIELD)
-    public void setTemp(String temp) {
-        this.temp = temp;
     }
 }

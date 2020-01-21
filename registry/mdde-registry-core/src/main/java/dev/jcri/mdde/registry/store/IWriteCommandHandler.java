@@ -100,4 +100,14 @@ public interface IWriteCommandHandler {
      * @param metaValue Vale of the meta serialized as string
      */
     void addMetaToFragmentExemplar(final String fragmentId, final String nodeId, final String metaField, final String metaValue) throws UnknownEntityIdException, WriteOperationException;
+
+    /**
+     * Remove all meta values for all fragments
+     */
+    void resetFragmentsMeta();
+
+    /**
+     * Clear all meta, fragments and tuples from the registry, leaving only empty nodes
+     */
+    void reset() throws WriteOperationException;
 }

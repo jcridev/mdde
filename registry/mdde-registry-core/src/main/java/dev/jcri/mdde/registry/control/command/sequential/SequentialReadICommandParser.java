@@ -31,21 +31,21 @@ public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser
         try {
             switch (EReadCommand) {
                 case GET_REGISTRY:
-                    return _serializer.serialize(processGetFullRegistryCommand());
+                    return processGetFullRegistryCommand();
                 case FIND_TUPLE:
-                    return _serializer.serialize(processFindTupleCommand(arguments));
+                    return processFindTupleCommand(arguments);
                 case FIND_TUPLE_FRAGMENT:
-                    return _serializer.serialize(processFindTupleFragmentCommand(arguments));
+                    return processFindTupleFragmentCommand(arguments);
                 case FIND_FRAGMENT:
-                    return _serializer.serialize(processFindFragmentNodesCommand(arguments));
+                    return processFindFragmentNodesCommand(arguments);
                 case GET_FRAGMENT_TUPLES:
-                    return _serializer.serialize(processGetFragmentTuplesCommand(arguments));
+                    return processGetFragmentTuplesCommand(arguments);
                 case COUNT_FRAGMENT:
-                    return _serializer.serialize(processCountFragmentsCommand(arguments));
+                    return processCountFragmentsCommand(arguments);
                 case COUNT_TUPLE:
-                    return _serializer.serialize(processCountTuplesCommand(arguments));
+                    return processCountTuplesCommand(arguments);
                 case GET_NODES:
-                    return _serializer.serialize(processGetNodesCommand());
+                    return processGetNodesCommand();
                 default:
                     throw new UnknownRegistryCommandExceptions(EReadCommand.toString());
             }

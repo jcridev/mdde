@@ -2,12 +2,15 @@ package dev.jcri.mdde.registry.server.tcp;
 
 import dev.jcri.mdde.registry.benchmark.BenchmarkRunner;
 import dev.jcri.mdde.registry.benchmark.cluster.InMemoryTupleLocatorFactory;
+import dev.jcri.mdde.registry.benchmark.ycsb.YCSBRunner;
 import dev.jcri.mdde.registry.configuration.RegistryConfig;
+import dev.jcri.mdde.registry.configuration.benchmark.YCSBConfig;
 import dev.jcri.mdde.registry.configuration.reader.ConfigReaderYamlAllRedis;
 import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.ICommandPreProcessor;
 import dev.jcri.mdde.registry.control.command.json.JsonCommandPreProcessor;
+import dev.jcri.mdde.registry.control.command.json.JsonControlCommandParser;
 import dev.jcri.mdde.registry.control.command.json.JsonReadCommandParser;
 import dev.jcri.mdde.registry.control.command.json.JsonWriteCommandParser;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
@@ -15,21 +18,26 @@ import dev.jcri.mdde.registry.control.serialization.ResponseSerializerJson;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.server.CommandProcessor;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
+import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
+import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.IWriteCommandHandler;
+import dev.jcri.mdde.registry.store.RegistryStateCommandHandler;
 import dev.jcri.mdde.registry.store.impl.redis.ReadCommandHandlerRedis;
 import dev.jcri.mdde.registry.store.impl.redis.RedisConnectionHelper;
 import dev.jcri.mdde.registry.store.impl.redis.WriteCommandHandlerRedis;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -66,7 +74,22 @@ public class Main {
             System.exit(1);
         }
         // Configure CommandProcessorSingleton
-        configureCommandProcessing(mddeConfig.getRegistryStore());
+        Map<String, String> connectionProperties = new HashMap<>();
+        connectionProperties.put(Constants.HOST_FIELD, "localhost");
+        connectionProperties.put(Constants.PORT_CONTROL_FILED, Integer.toString(parsedArgs.getTcpPort()));
+        connectionProperties.put(Constants.PORT_BENCHMARK_FIELD, Integer.toString(parsedArgs.getTcpBenchmarkPort()));
+
+        try {
+            configureCommandProcessing(mddeConfig.getRegistryStore(),
+                                        mddeConfig.getBenchmarkYcsb(),
+                                        mddeConfig.getDataNodes(),
+                                        connectionProperties);
+        } catch (IOException e) {
+            logger.error(e);
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
+
         // Populate nodes
         try {
             CommandProcessorSingleton.getDefaultInstance().initializeDefaultNodes(mddeConfig.getDataNodes());
@@ -105,36 +128,48 @@ public class Main {
      * Configure CommandProcessorSingleton for working with redis registry store
      * @param mddeStoreConfig Redis configuration for the registry records storage
      */
-    private static void configureCommandProcessing(RegistryStoreConfigRedis mddeStoreConfig){
+    private static void configureCommandProcessing(RegistryStoreConfigRedis mddeStoreConfig,
+                                                   YCSBConfig ycsbConfig,
+                                                   List<DBNetworkNodesConfiguration> nodes,
+                                                   Map<String, String> connectionProperties) throws IOException {
         // Configure redis registry store
         var redisConnection = new RedisConnectionHelper(mddeStoreConfig);
-        // Handle commands
+        // Handle read commands
         IReadCommandHandler readCommandHandler = new ReadCommandHandlerRedis(redisConnection);
+        // Initialize benchmark service
+        InMemoryTupleLocatorFactory tupleLocatorFactory = new InMemoryTupleLocatorFactory();
+        YCSBRunner ycsbRunner = new YCSBRunner(ycsbConfig, nodes, connectionProperties);
+        BenchmarkRunner benchmarkRunner = new BenchmarkRunner(tupleLocatorFactory, readCommandHandler, ycsbRunner);
+        // Initialize write command handler
         IWriteCommandHandler writeCommandHandler = new WriteCommandHandlerRedis(redisConnection, readCommandHandler);
-        // Parse commands
+        // Initialize state command handler
+        RegistryStateCommandHandler stateCommandHandler =
+                new RegistryStateCommandHandler(writeCommandHandler, benchmarkRunner, nodes);
+        // Commands parsers
         IResponseSerializer<String> responseSerializer = new ResponseSerializerJson();
         ICommandParser<String, EReadCommand, String> readCommandParser =
                 new JsonReadCommandParser<>(readCommandHandler, responseSerializer);
         ICommandParser<String, EWriteCommand, String> writeCommandParser =
                 new JsonWriteCommandParser<>(writeCommandHandler, responseSerializer);
+        ICommandParser<String, EStateControlCommand, String> stateControlCommandParser =
+                new JsonControlCommandParser<>(stateCommandHandler, responseSerializer);
         ICommandPreProcessor<String, String> commandPreProcessor = new JsonCommandPreProcessor();
         // Incoming statements processor
         var commandProcessor = new CommandProcessor<String, String, String>(commandPreProcessor,
+                                                                            stateControlCommandParser,
                                                                             readCommandParser,
                                                                             writeCommandParser,
                                                                             responseSerializer);
+        // Place common query command processor into singleton for TCP commands access
         CommandProcessorSingleton.getDefaultInstance().initializeCommandProcessor(commandProcessor);
-
-        // Initialize benchmark service
-        InMemoryTupleLocatorFactory tupleLocatorFactory = new InMemoryTupleLocatorFactory();
-        BenchmarkRunner benchmarkRunner = new BenchmarkRunner(tupleLocatorFactory, readCommandHandler);
+        // Place benchmark runner into singleton for TCP commands access
         BenchmarkRunnerSingleton.getDefaultInstance().initializeBenchmarkRunner(benchmarkRunner);
-        // TODO: Remove (add preparation of the environment by command)
+        /*
         try {
             BenchmarkRunnerSingleton.getDefaultInstance().getRunner().prepareBenchmarkEnvironment();
         } catch (MddeRegistryException e) {
             e.printStackTrace();
-        }
+        } */
     }
 
     /**

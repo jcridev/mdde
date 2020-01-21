@@ -2,36 +2,40 @@ package dev.jcri.mdde.registry.benchmark;
 
 import dev.jcri.mdde.registry.benchmark.cluster.IReadOnlyTupleLocator;
 import dev.jcri.mdde.registry.benchmark.cluster.ITupleLocatorFactory;
-import dev.jcri.mdde.registry.benchmark.ycsb.EWorkloadCatalog;
-import dev.jcri.mdde.registry.benchmark.ycsb.EYCSBClients;
+import dev.jcri.mdde.registry.benchmark.ycsb.EYCSBWorkloadCatalog;
 import dev.jcri.mdde.registry.benchmark.ycsb.YCSBRunner;
-import dev.jcri.mdde.registry.benchmark.ycsb.cli.YCSBOutput;
-import dev.jcri.mdde.registry.configuration.RegistryConfig;
-import dev.jcri.mdde.registry.configuration.benchmark.YCSBConfig;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.benchmark.commands.LocateTuple;
 import dev.jcri.mdde.registry.shared.benchmark.responses.TupleLocation;
-import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
-import dev.jcri.mdde.registry.shared.configuration.MDDERegistryNetworkConfiguration;
+import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
 import dev.jcri.mdde.registry.shared.store.response.TupleCatalog;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
-import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class BenchmarkRunner {
     private final ITupleLocatorFactory _tupleLocatorFactory;
     private final IReadCommandHandler _storeReader;
+    private final YCSBRunner _ycsbRunner;
 
+    /**
+     * Constructor
+     * @param tupleLocatorFactory Factory of the tuple locators used for benchmark runs
+     * @param storeReader Implementation of the Registry-store reader
+     * @param ycsbRunner YCSB Benchmark runner initialized instance
+     */
     public BenchmarkRunner(ITupleLocatorFactory tupleLocatorFactory,
-                           IReadCommandHandler storeReader){
+                           IReadCommandHandler storeReader,
+                           YCSBRunner ycsbRunner){
         Objects.requireNonNull(tupleLocatorFactory);
         Objects.requireNonNull(storeReader);
+        Objects.requireNonNull(ycsbRunner);
         _tupleLocatorFactory = tupleLocatorFactory;
         _storeReader = storeReader;
+        _ycsbRunner = ycsbRunner;
     }
 
     private IReadOnlyTupleLocator _tmpTupleLocator = null;
@@ -69,27 +73,144 @@ public class BenchmarkRunner {
         }
     }
 
+    private final ReentrantLock _benchmarkRunnerLock = new ReentrantLock();
+    private EBenchmarkRunStage _currentRunStage = EBenchmarkRunStage.READY;
+    private EBenchmarkLoadStage _currentLoadState = EBenchmarkLoadStage.EMPTY;
 
-    /**
-     * Execute benchmark in the prepared environment.
-     * @return
-     */
-    public YCSBOutput executeYCSBBenchmark(YCSBConfig ycsbConfig,
-                                           String tempFolder,
-                                           List<DBNetworkNodesConfiguration> dataNodes,
-                                           MDDERegistryNetworkConfiguration registryNetworkInterfaces,
-                                           EWorkloadCatalog workload,
-                                           EYCSBClients client)
-            throws IOException {
-        verifyState();
-        var ycsbRunner = new YCSBRunner(ycsbConfig, tempFolder, dataNodes, registryNetworkInterfaces);
-
-        return null;
+    public boolean generateData(String workload) {
+        var knownWorkload = EYCSBWorkloadCatalog.getWorkloadByTag(workload);
+        return generateData(knownWorkload);
     }
 
+    /**
+     * LOAD initial data into the data nodes
+     * @param workload Selected workload.
+     * @return
+     */
+    public boolean generateData(EYCSBWorkloadCatalog workload){
+        _benchmarkRunnerLock.lock();
+        try {
+            if (_currentLoadState != EBenchmarkLoadStage.EMPTY) {
+                throw new IllegalStateException(String.format("Benchmark data load is in incorrect state: %s",
+                        _currentLoadState.toString()));
+            }
+            if (_currentRunStage != EBenchmarkRunStage.READY) {
+                throw new IllegalStateException("Benchmark is already being executed");
+            }
+            _currentLoadState = EBenchmarkLoadStage.LOADING;
+        }
+        finally {
+            _benchmarkRunnerLock.unlock();
+        }
+        try{
+            var ycsbRunOutput = this._ycsbRunner.loadWorkload(workload);
+        } catch (IOException e) {
+            return false;
+        } finally {
+            _currentLoadState = EBenchmarkLoadStage.READY;
+        }
+        return true;
+    }
+
+    /**
+     * Execute workload RUN.
+     * Should always LOAD in data before running the benchmark for the first time
+     * @param workload Selected workload. Should be the same one each load at least until the test data is reloaded
+     *                 into the activate database.
+     * @return Relevant statistics gathered during the benchmark run
+     */
+    public BenchmarkRunResult executeBenchmark(String workload) {
+        var knownWorkload = EYCSBWorkloadCatalog.getWorkloadByTag(workload);
+        return executeBenchmark(knownWorkload);
+    }
+    /**
+     * Execute workload RUN.
+     * Should always LOAD in data before running the benchmark for the first time
+     * @param workload Selected workload. Should be the same one each load at least until the test data is reloaded
+     *                 into the activate database.
+     * @return Relevant statistics gathered during the benchmark run
+     */
+    public BenchmarkRunResult executeBenchmark(EYCSBWorkloadCatalog workload){
+        _benchmarkRunnerLock.lock();
+        try {
+            if (_currentLoadState != EBenchmarkLoadStage.READY) {
+                throw new IllegalStateException(String.format("Benchmark data load is in incorrect state: %s",
+                        _currentLoadState.toString()));
+            }
+            if (_currentRunStage != EBenchmarkRunStage.READY) {
+                throw new IllegalStateException("Benchmark is already being executed");
+            }
+        }
+        finally {
+            _benchmarkRunnerLock.unlock();
+        }
+        _currentRunStage = EBenchmarkRunStage.STARTING;
+        try {
+            _currentRunStage = EBenchmarkRunStage.RUNNING;
+            var ycsbRunOutput = this._ycsbRunner.runWorkload(workload);
+            _currentRunStage = EBenchmarkRunStage.FINALIZING;
+            var result = new BenchmarkRunResult();
+            result.setError(null);
+            result.setNodes(null); // TODO: Node statistics
+            result.setThroughput(ycsbRunOutput.getThroughput());
+            return result;
+        }
+        catch (Exception ex){
+            return new BenchmarkRunResult() {{setError(ex.getMessage());}};
+        }
+        finally {
+            _currentRunStage = EBenchmarkRunStage.READY;
+        }
+    }
+
+
+    /**
+     * Retrieves node where the requested tuple is located and records the retrieval statistic
+     * @param tupleParams Tuple location request argument
+     * @return Tuple location result container
+     */
     public TupleLocation getTupleLocation(LocateTuple tupleParams){
         verifyState();
         var result = _tmpTupleLocator.getNodeForRead(tupleParams.getTupleId());
         return new TupleLocation(result);
+    }
+
+    /**
+     * Stages of running the benchmark
+     */
+    private enum EBenchmarkLoadStage {
+        EMPTY("Empty"),
+        LOADING("Loading"),
+        READY("Ready");
+
+        private String _stage;
+        EBenchmarkLoadStage(String stage){
+            _stage = stage;
+        }
+
+        @Override
+        public String toString() {
+            return _stage;
+        }
+    }
+
+    /**
+     * Stages of running the benchmark
+     */
+    private enum EBenchmarkRunStage {
+        READY("Ready"),
+        STARTING("Starting"),
+        RUNNING("Running"),
+        FINALIZING("Finalizing");
+
+        private String _stage;
+        EBenchmarkRunStage(String stage){
+            _stage = stage;
+        }
+
+        @Override
+        public String toString() {
+            return _stage;
+        }
     }
 }

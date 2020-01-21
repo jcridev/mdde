@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.jcri.mdde.registry.shared.commands.Constants;
 import dev.jcri.mdde.registry.shared.commands.containers.CommandResultContainer;
+import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 
@@ -49,9 +50,11 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     }
 
     @Override
-    public String serialize(Object value) throws ResponseSerializationException {
+    public String serialize(boolean value) throws ResponseSerializationException {
         try {
-            return _mapper.writeValueAsString(new CommandResultContainer<Object>(value, null));
+            return _mapper.writeValueAsString(
+                    new CommandResultContainer<Boolean>(value, null)
+            );
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
         }
@@ -61,6 +64,15 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     public String serialize(FullRegistry value) throws ResponseSerializationException {
         try {
             return _mapper.writeValueAsString(new CommandResultContainer<FullRegistry>(value, null));
+        } catch (JsonProcessingException e) {
+            throw new ResponseSerializationException(e);
+        }
+    }
+
+    @Override
+    public String serialize(BenchmarkRunResult value) throws ResponseSerializationException {
+        try {
+            return _mapper.writeValueAsString(new CommandResultContainer<BenchmarkRunResult>(value, null));
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
         }

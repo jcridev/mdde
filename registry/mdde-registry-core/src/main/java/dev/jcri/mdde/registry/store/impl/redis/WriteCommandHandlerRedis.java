@@ -254,4 +254,19 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
             }
         }
     }
+
+    @Override
+    protected void runResetFragmentsMeta() {
+        try(var jedis = _redisConnection.getRedisCommands()) {
+            jedis.del(Constants.FRAGMENT_GLOBAL_META_PREFIX + "*");
+            jedis.del(Constants.FRAGMENT_EXEMPLAR_META_PREFIX + "*");
+        }
+    }
+
+    @Override
+    protected void runFlush() {
+        try(var jedis = _redisConnection.getRedisCommands()) {
+            jedis.flushAll();
+        }
+    }
 }

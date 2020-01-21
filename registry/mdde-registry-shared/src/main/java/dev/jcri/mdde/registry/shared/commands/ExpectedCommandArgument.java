@@ -9,7 +9,9 @@ public enum ExpectedCommandArgument{
     ARG_NODE_ID("Node ID", Constants.ArgNodeIdField, ExpectedCommandArgument.ArgumentType.STRING),
     ARG_NODE_IDs("Node IDs", Constants.ArgNodeIdsField, ExpectedCommandArgument.ArgumentType.SET_STRINGS),
     ARG_NODE_ID_B("2nd Node ID", Constants.ArgSecondNodeIdFiled, ExpectedCommandArgument.ArgumentType.STRING),
-    ARG_FRAGMENT_ID("Fragment ID", Constants.ArgFragmentIdField, ExpectedCommandArgument.ArgumentType.STRING);
+    ARG_FRAGMENT_ID("Fragment ID", Constants.ArgFragmentIdField, ExpectedCommandArgument.ArgumentType.STRING),
+
+    ARG_WORKLOAD_ID("Benchmark workload ID", Constants.ArgWorkloadIdField, ExpectedCommandArgument.ArgumentType.STRING);
 
 
     private final String _title;
