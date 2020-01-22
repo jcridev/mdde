@@ -5,6 +5,7 @@ import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Implement to create the registry query response serializer
@@ -13,6 +14,7 @@ import java.util.List;
 public interface IResponseSerializer<T> extends IResponseExceptionSerializer<T> {
     T serialize(String value) throws ResponseSerializationException;
     T serialize(List<String> value) throws ResponseSerializationException;
+    T serialize(Set<String> value) throws ResponseSerializationException;
     T serialize(int value) throws ResponseSerializationException;
     T serialize(boolean value) throws ResponseSerializationException;
     T serialize(FullRegistry value) throws ResponseSerializationException;

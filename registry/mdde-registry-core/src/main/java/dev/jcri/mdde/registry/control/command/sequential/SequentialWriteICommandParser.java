@@ -41,7 +41,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
                     processDeleteTupleCommand(arguments);
                     break;
                 case FORM_FRAGMENT:
-                    _serializer.serialize(processFormFragmentCommand(arguments));
+                    processFormFragmentCommand(arguments);
                     break;
                 case APPEND_TO_FRAGMENT:
                     processAppendToFragmentCommand(arguments);
@@ -53,9 +53,9 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
                     processDeleteFragmentExemplar(arguments);
                     break;
                 case DESTROY_FRAGMENT:
-                    return _serializer.serialize(processDestroyFragment(arguments));
+                    return processDestroyFragment(arguments);
                 case POPULATE_NODES:
-                    return _serializer.serialize(processPopulateNodes(arguments));
+                    return processPopulateNodes(arguments);
                 default:
                     throw new UnknownRegistryCommandExceptions(EWriteCommand.toString());
             }

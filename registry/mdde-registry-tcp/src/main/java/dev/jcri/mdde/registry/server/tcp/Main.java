@@ -15,7 +15,6 @@ import dev.jcri.mdde.registry.control.command.json.JsonReadCommandParser;
 import dev.jcri.mdde.registry.control.command.json.JsonWriteCommandParser;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerJson;
-import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.server.CommandProcessor;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;

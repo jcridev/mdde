@@ -9,6 +9,7 @@ import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Serialize responses to raw JSON String
@@ -34,6 +35,17 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
         try {
             return _mapper.writeValueAsString(
                     new CommandResultContainer<List<String>>(value, null)
+            );
+        } catch (JsonProcessingException e) {
+            throw new ResponseSerializationException(e);
+        }
+    }
+
+    @Override
+    public String serialize(Set<String> value) throws ResponseSerializationException {
+        try {
+            return _mapper.writeValueAsString(
+                    new CommandResultContainer<Set<String>>(value, null)
             );
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);

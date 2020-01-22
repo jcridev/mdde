@@ -5,6 +5,7 @@ import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Not a serializer really, just returns the output as a Object type.
@@ -18,6 +19,11 @@ public class ResponseSerializerPassThrough implements IResponseSerializer<Object
 
     @Override
     public Object serialize(List<String> value) throws ResponseSerializationException {
+        return value;
+    }
+
+    @Override
+    public Object serialize(Set<String> value) throws ResponseSerializationException {
         return value;
     }
 
