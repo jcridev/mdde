@@ -115,7 +115,7 @@ public class TestReadWriteCombinedOperations {
             try(var redisCommand = redisConnectionHelper.getRedisCommands()) {
                 redisCommand.del(Constants.NODES_SET);
                 redisCommand.del(Constants.NODE_PREFIX + randNodeId);
-                redisCommand.del(Constants.NODE_HEAP + randNodeId);
+                redisCommand.del(Constants.NODE_HEAP_PREFIX + randNodeId);
             }
         }
     }
@@ -289,7 +289,7 @@ public class TestReadWriteCombinedOperations {
                     p.del(Constants.NODES_SET);
                     for (Map.Entry<String, Set<String>> node : nodes.entrySet()) {
                         p.del(Constants.NODE_PREFIX + node.getKey());
-                        p.del(Constants.NODE_HEAP + node.getKey());
+                        p.del(Constants.NODE_HEAP_PREFIX + node.getKey());
                     }
                     p.sync();
                 }

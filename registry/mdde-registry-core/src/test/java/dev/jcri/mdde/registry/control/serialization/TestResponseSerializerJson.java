@@ -15,4 +15,5 @@ public class TestResponseSerializerJson {
 
         assertEquals(expectedResult, response);
     }
+
 }

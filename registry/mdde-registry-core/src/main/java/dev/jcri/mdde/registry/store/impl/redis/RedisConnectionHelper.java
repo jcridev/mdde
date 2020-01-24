@@ -4,13 +4,15 @@ import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
 import redis.clients.jedis.*;
 
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Set;
 
 /**
  * Redis connection helper class for the Redis-backed registry store command handlers.
  * Supports a single node Redis setup, not clusters.
  */
-public final class RedisConnectionHelper {
+public final class RedisConnectionHelper implements Closeable {
     private RegistryStoreConfigRedis _redisConfig;
     private JedisPool _jedisPool;
 
@@ -81,5 +83,12 @@ public final class RedisConnectionHelper {
             jedis.watch(watchKeys);
         }
         return jedis.multi();
+    }
+
+    @Override
+    public void close() {
+        if(_jedisPool != null){
+            _jedisPool.close();
+        }
     }
 }

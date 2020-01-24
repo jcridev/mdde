@@ -48,7 +48,13 @@ public class RedisDataShuffler implements IDataShuffler {
         }
     }
 
-
+    /**
+     * Copy (replicate) a set of tuples from one node to another
+     * @param sourceNodeId ID of the data node from where the Tuples should be copied
+     * @param destinationNodeId ID of the data node where the copy of the Tuples should be paced
+     * @param tupleIds IDs of the tuples that are located
+     * @return
+     */
     @Override
     public ShuffleKeysResult copyTuples(String sourceNodeId, String destinationNodeId, Set<String> tupleIds) {
         if(tupleIds == null || tupleIds.size() == 0){

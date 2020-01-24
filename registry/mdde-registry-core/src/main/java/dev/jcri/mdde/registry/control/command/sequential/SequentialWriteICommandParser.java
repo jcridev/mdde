@@ -41,8 +41,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
                     processDeleteTupleCommand(arguments);
                     break;
                 case FORM_FRAGMENT:
-                    processFormFragmentCommand(arguments);
-                    break;
+                    return processFormFragmentCommand(arguments);
                 case APPEND_TO_FRAGMENT:
                     processAppendToFragmentCommand(arguments);
                     break;
@@ -86,7 +85,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
     }
 
     private void processDeleteTupleCommand(final List<Object> arguments)
-            throws ResponseSerializationException, UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException {
+            throws UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException {
         final var thisCommand = EWriteCommand.DELETE_TUPLE;
         validateNotNullArguments(arguments, thisCommand.toString());
 

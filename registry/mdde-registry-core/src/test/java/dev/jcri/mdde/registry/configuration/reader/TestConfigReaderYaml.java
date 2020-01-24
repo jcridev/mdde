@@ -9,9 +9,9 @@ import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfiguration;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfigurationWriter;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
-import dev.jcri.mdde.registry.shared.configuration.MDDERegistryNetworkConfiguration;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -148,10 +148,10 @@ public class TestConfigReaderYaml {
     public void testCreateYCSBClientConfig(){
         var redisBackedConfig = generateRedisConfig();
 
-        var registryNetworkInterfaces = new MDDERegistryNetworkConfiguration();
-        registryNetworkInterfaces.setMddeRegistryHost("localhost");
-        registryNetworkInterfaces.setMddeRegistryPort(8942);
-        registryNetworkInterfaces.setMddeRegistryBenchmarkPort(8954);
+        var registryNetworkInterfaces = new HashMap<String, String>();
+        registryNetworkInterfaces.put("host","localhost");
+        registryNetworkInterfaces.put("port",Integer.toString(8942));
+        registryNetworkInterfaces.put("portBench",Integer.toString(8954));
 
         var newClientConfig = new MDDEClientConfiguration();
         newClientConfig.setNodes(redisBackedConfig.getDataNodes());

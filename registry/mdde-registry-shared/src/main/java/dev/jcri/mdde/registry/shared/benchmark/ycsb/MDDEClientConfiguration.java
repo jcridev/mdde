@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
-import dev.jcri.mdde.registry.shared.configuration.MDDERegistryNetworkConfiguration;
 
 import java.io.IOException;
 import java.util.List;

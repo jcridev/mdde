@@ -1,7 +1,6 @@
 package dev.jcri.mdde.registry.store.impl.redis;
 
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
-import dev.jcri.mdde.registry.store.impl.ReadCommandHandler;
 import dev.jcri.mdde.registry.store.impl.WriteCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.RegistryEntityType;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
@@ -27,7 +26,7 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
     @Override
     protected void runInsertTupleToNode(String tupleId, String nodeId) throws WriteOperationException {
         try(Jedis jedis = _redisConnection.getRedisCommands()) {
-            var added = jedis.sadd(Constants.NODE_HEAP + nodeId, tupleId);
+            var added = jedis.sadd(Constants.NODE_HEAP_PREFIX + nodeId, tupleId);
             if (added < 0) {
                 throw new WriteOperationException(String.format("Failed to add %s", tupleId));
             }
@@ -40,7 +39,7 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
         try(var jedis = _redisConnection.getRedisCommands()) {
             try (var p = jedis.pipelined()) {
                 for (String tupleId : tupleIds) {
-                    Response<Long> r = p.sadd(Constants.NODE_HEAP + nodeId, tupleId);
+                    Response<Long> r = p.sadd(Constants.NODE_HEAP_PREFIX + nodeId, tupleId);
                     responses.put(nodeId, r);
                 }
                 p.sync();
@@ -88,7 +87,7 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
         try(var jedis = _redisConnection.getRedisCommands()) {
             try(var p = jedis.pipelined()) {
                 for (String nodeId : nodes) {
-                    p.srem(Constants.NODE_HEAP + nodeId, tupleIds);
+                    p.srem(Constants.NODE_HEAP_PREFIX + nodeId, tupleIds);
                 }
                 var tempRes = p.syncAndReturnAll();
                 return tempRes.stream().anyMatch(x -> ((long) x > 0));

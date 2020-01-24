@@ -32,7 +32,8 @@ public enum EReadCommand implements ICommand {
         _numExpectedArguments = _expectedArguments.size();
     }
 
-    private static Map<String, EReadCommand> _commandsMap = Arrays.stream(EReadCommand.values()).collect(Collectors.toMap(e -> e._command, e -> e));
+    private static Map<String, EReadCommand> _commandsMap = Arrays.stream(EReadCommand.values())
+                                                                    .collect(Collectors.toMap(e -> e._command, e -> e));
 
     @Override
     public String toString() {

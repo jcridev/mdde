@@ -31,8 +31,12 @@ public final class Constants {
     /**
      * Prefix for the specific key storing unassigned to any fragment tuples stored on a node
      */
-    public static final String NODE_HEAP = "mdde/unassigned/";
+    public static final String NODE_HEAP_PREFIX = "mdde/unassigned/";
 
+    /**
+     * Queue (LIST) of the data actions that should be later performed on the actual data nodes
+     */
+    public static final String DATA_SHUFFLE_QUEUE_KEY = "mdde/_dataqueue";
     /**
      * Private default constructor preventing creation of instances
      */

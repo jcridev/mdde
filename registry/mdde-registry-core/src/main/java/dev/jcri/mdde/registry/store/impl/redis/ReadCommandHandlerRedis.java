@@ -60,7 +60,7 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
             try (var p = jedis.pipelined()) {
                 var tempRes = new HashMap<String, Response<Boolean>>();
                 for (String nodeId : nodes) {
-                    tempRes.put(nodeId, p.sismember(Constants.NODE_HEAP + nodeId, tupleId));
+                    tempRes.put(nodeId, p.sismember(Constants.NODE_HEAP_PREFIX + nodeId, tupleId));
                 }
                 p.sync();
 
@@ -169,7 +169,7 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
     @Override
     public Set<String> runGetUnassignedTuples(String nodeId) {
         try (var jedis = _redisConnection.getRedisCommands()) {
-            return jedis.smembers(Constants.NODE_HEAP + nodeId);
+            return jedis.smembers(Constants.NODE_HEAP_PREFIX + nodeId);
         }
     }
 
@@ -201,7 +201,7 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
             try (var p = jedis.pipelined()) {
 
                 for (String tupleId : tupleIds) {
-                    responses.put(tupleId, p.sismember(Constants.NODE_HEAP + nodeId, tupleId));
+                    responses.put(tupleId, p.sismember(Constants.NODE_HEAP_PREFIX + nodeId, tupleId));
                 }
                 p.sync();
             }
