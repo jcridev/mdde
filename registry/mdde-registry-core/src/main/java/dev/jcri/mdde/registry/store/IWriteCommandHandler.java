@@ -48,11 +48,22 @@ public interface IWriteCommandHandler {
      * @throws WriteOperationException
      */
     String formFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
-            throws UnknownEntityIdException, WriteOperationException, DuplicateEntityRecordException, IllegalRegistryActionException;
+            throws UnknownEntityIdException, WriteOperationException, DuplicateEntityRecordException,
+            IllegalRegistryActionException;
+
 
     void appendTupleToFragment(final String tupleId, final String fragmentId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException;
 
+    /**
+     * Copy fragment tuples
+     * @param fragmentId Fragment ID
+     * @param sourceNodeId Where Fragment should be copied from
+     * @param destinationNodeId Where it should be placed
+     * @throws UnknownEntityIdException
+     * @throws WriteOperationException
+     * @throws IllegalRegistryActionException
+     */
     void replicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
             throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException;
 

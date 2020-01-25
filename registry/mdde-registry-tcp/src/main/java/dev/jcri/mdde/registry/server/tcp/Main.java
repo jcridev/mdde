@@ -16,6 +16,8 @@ import dev.jcri.mdde.registry.control.command.json.JsonWriteCommandParser;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerJson;
 import dev.jcri.mdde.registry.server.CommandProcessor;
+import dev.jcri.mdde.registry.server.responders.ReadCommandResponder;
+import dev.jcri.mdde.registry.server.responders.WriteCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
@@ -26,6 +28,8 @@ import dev.jcri.mdde.registry.store.RegistryStateCommandHandler;
 import dev.jcri.mdde.registry.store.impl.redis.ReadCommandHandlerRedis;
 import dev.jcri.mdde.registry.store.impl.redis.RedisConnectionHelper;
 import dev.jcri.mdde.registry.store.impl.redis.WriteCommandHandlerRedis;
+import dev.jcri.mdde.registry.store.queue.IDataShuffleQueue;
+import dev.jcri.mdde.registry.store.queue.impl.redis.DataShuffleQueueRedis;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -144,12 +148,21 @@ public class Main {
         // Initialize state command handler
         RegistryStateCommandHandler stateCommandHandler =
                 new RegistryStateCommandHandler(writeCommandHandler, benchmarkRunner, nodes);
+        // Data shuffler
+        var redisConnectionShuffler = new RedisConnectionHelper(mddeStoreConfig);
+        IDataShuffleQueue dataShuffler = new DataShuffleQueueRedis(redisConnectionShuffler);
+        // Command responders
+        WriteCommandResponder writeCommandResponder = new WriteCommandResponder(writeCommandHandler,
+                                                                                readCommandHandler,
+                                                                                dataShuffler);
+        ReadCommandResponder readCommandResponder = new ReadCommandResponder(readCommandHandler);
+
         // Commands parsers
         IResponseSerializer<String> responseSerializer = new ResponseSerializerJson();
         ICommandParser<String, EReadCommand, String> readCommandParser =
-                new JsonReadCommandParser<>(readCommandHandler, responseSerializer);
+                new JsonReadCommandParser<>(readCommandResponder, responseSerializer);
         ICommandParser<String, EWriteCommand, String> writeCommandParser =
-                new JsonWriteCommandParser<>(writeCommandHandler, responseSerializer);
+                new JsonWriteCommandParser<>(writeCommandResponder, responseSerializer);
         ICommandParser<String, EStateControlCommand, String> stateControlCommandParser =
                 new JsonControlCommandParser<>(stateCommandHandler, responseSerializer);
         ICommandPreProcessor<String, String> commandPreProcessor = new JsonCommandPreProcessor();

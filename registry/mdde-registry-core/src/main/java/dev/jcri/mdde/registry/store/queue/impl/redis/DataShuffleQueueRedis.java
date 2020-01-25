@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.store.queue.impl.redis;
 
+import dev.jcri.mdde.registry.store.impl.redis.Constants;
 import dev.jcri.mdde.registry.store.impl.redis.RedisConnectionHelper;
 import dev.jcri.mdde.registry.store.queue.IDataShuffleQueue;
 import dev.jcri.mdde.registry.store.queue.actions.DataAction;
@@ -16,6 +17,14 @@ import java.util.Objects;
 public class DataShuffleQueueRedis implements IDataShuffleQueue {
     private final RedisConnectionHelper _redisConnectionHelper;
     private final String _redisListKey;
+
+    /**
+     * Constructor (using default queue Registry key)
+     * @param redisConnectionHelper Initialized Redis connection pool to the Registry
+     */
+    public DataShuffleQueueRedis(RedisConnectionHelper redisConnectionHelper){
+        this(redisConnectionHelper, Constants.DATA_SHUFFLE_QUEUE_KEY);
+    }
 
     /**
      * Constructor

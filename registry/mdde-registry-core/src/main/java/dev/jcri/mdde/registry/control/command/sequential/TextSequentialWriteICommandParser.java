@@ -4,8 +4,8 @@ import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.command.sequential.arguments.ISequenceParser;
 import dev.jcri.mdde.registry.control.command.sequential.arguments.SimpleSequenceParser;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.server.responders.WriteCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
-import dev.jcri.mdde.registry.store.IWriteCommandHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ public class TextSequentialWriteICommandParser<T>  implements ICommandParser<T, 
     private final SequentialWriteICommandParser<T> _writeSequentialCommandParser;
     private final IResponseSerializer<T> _serializer;
 
-    public TextSequentialWriteICommandParser(IWriteCommandHandler writeCommandHandler, IResponseSerializer<T> serializer) {
+    public TextSequentialWriteICommandParser(WriteCommandResponder writeCommandHandler, IResponseSerializer<T> serializer) {
         _writeSequentialCommandParser = new SequentialWriteICommandParser<T>(writeCommandHandler, serializer);
         _serializer = serializer;
     }

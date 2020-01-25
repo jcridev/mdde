@@ -3,8 +3,8 @@ package dev.jcri.mdde.registry.control.command.sequential;
 
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
+import dev.jcri.mdde.registry.server.responders.ReadCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
-import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
@@ -17,10 +17,10 @@ import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
 
 public class SequentialReadICommandParser<T> extends BaseSequentialCommandParser implements ICommandParser<T, EReadCommand, List<Object>> {
-    private final IReadCommandHandler _readCommandHandler;
+    private final ReadCommandResponder _readCommandHandler;
     private final IResponseSerializer<T> _serializer;
 
-    public SequentialReadICommandParser(IReadCommandHandler readCommandHandler, IResponseSerializer<T> serializer){
+    public SequentialReadICommandParser(ReadCommandResponder readCommandHandler, IResponseSerializer<T> serializer){
         Objects.requireNonNull(readCommandHandler, "Read commands handlers can't be null");
         Objects.requireNonNull(serializer, "Serializer can't be null");
         _serializer = serializer;

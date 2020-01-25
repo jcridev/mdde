@@ -2,8 +2,8 @@ package dev.jcri.mdde.registry.control.command.sequential;
 
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
+import dev.jcri.mdde.registry.server.responders.WriteCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
-import dev.jcri.mdde.registry.store.IWriteCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.*;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 
@@ -14,10 +14,10 @@ import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
 
 public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParser implements ICommandParser<T, EWriteCommand, List<Object>> {
-    private final IWriteCommandHandler _writeCommandHandler;
+    private final WriteCommandResponder _writeCommandHandler;
     private final IResponseSerializer<T> _serializer;
 
-    public SequentialWriteICommandParser(IWriteCommandHandler writeCommandHandler, IResponseSerializer<T> serializer) {
+    public SequentialWriteICommandParser(WriteCommandResponder writeCommandHandler, IResponseSerializer<T> serializer) {
         Objects.requireNonNull(writeCommandHandler, "Write commands handlers can't be null");
         Objects.requireNonNull(serializer, "Serializer can't be null");
         _serializer = serializer;
@@ -116,7 +116,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
     }
 
     private void processReplicateFragmentCommand(final List<Object> arguments)
-            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException {
+            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException, ReadOperationException {
         final var thisCommand = EWriteCommand.REPLICATE_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -127,7 +127,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
     }
 
     private void processDeleteFragmentExemplar(final List<Object> arguments)
-            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException {
+            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException, ReadOperationException {
         final var thisCommand = EWriteCommand.DELETE_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -137,7 +137,7 @@ public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParse
     }
 
     private T processDestroyFragment(final List<Object> arguments)
-            throws ResponseSerializationException, UnknownEntityIdException, IllegalCommandArgumentException {
+            throws ResponseSerializationException, UnknownEntityIdException, IllegalCommandArgumentException, WriteOperationException, ReadOperationException {
         final var thisCommand = EWriteCommand.DESTROY_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 

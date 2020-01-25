@@ -1,6 +1,7 @@
 package dev.jcri.mdde.registry.control.command;
 
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
+import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 
@@ -67,6 +68,18 @@ public class CommandComponents<T> {
     public EWriteCommand tryGetIsWriteCommandKeyword(){
         try {
             return EWriteCommand.getCommandTag(getKeyword());
+        } catch (NoSuchElementException unknownRegistryCommandExceptions) {
+            return null;
+        }
+    }
+
+    public EStateControlCommand getIsStateControlCommandKeyword() throws UnknownRegistryCommandExceptions{
+        return EStateControlCommand.getCommandTag(getKeyword());
+    }
+
+    public EStateControlCommand tryGetIsStateControlCommandKeyword(){
+        try {
+            return EStateControlCommand.getCommandTag(getKeyword());
         } catch (NoSuchElementException unknownRegistryCommandExceptions) {
             return null;
         }

@@ -1,16 +1,12 @@
 package dev.jcri.mdde.registry.server;
 
-import dev.jcri.mdde.registry.benchmark.BenchmarkRunner;
-import dev.jcri.mdde.registry.benchmark.cluster.ITupleLocatorFactory;
-import dev.jcri.mdde.registry.control.*;
+import dev.jcri.mdde.registry.control.ICommandParser;
+import dev.jcri.mdde.registry.control.ICommandPreProcessor;
 import dev.jcri.mdde.registry.control.command.CommandComponents;
-import dev.jcri.mdde.registry.control.exceptions.MalformedCommandStatementException;
 import dev.jcri.mdde.registry.control.serialization.IResponseExceptionSerializer;
-import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
-import dev.jcri.mdde.registry.store.RegistryStateCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,25 +14,25 @@ import org.apache.logging.log4j.Logger;
 import java.util.Objects;
 
 /**
- *
- * @param <Tin> Type of incoming statements
- * @param <Targs> Type of the arguments object
- * @param <Tout> Type of the returned processing values
+ * Entry point for the incoming Registry reading or altering commands. These are the interfaces used by the learners.
+ * @param <TIn> Type of incoming statements
+ * @param <TArgs> Type of the arguments object
+ * @param <TOut> Type of the returned processing values
  */
-public final class CommandProcessor<Tin, Targs, Tout> {
+public final class CommandProcessor<TIn, TArgs, TOut> {
     private static final Logger logger = LogManager.getLogger(CommandProcessor.class);
 
-    private final ICommandPreProcessor<Targs, Tin> _commandPreProcessor;
-    private final ICommandParser<Tout, EStateControlCommand, Targs> _controlCommandParser;
-    private final ICommandParser<Tout, EReadCommand, Targs> _readCommandParser;
-    private final ICommandParser<Tout, EWriteCommand, Targs> _writeCommandParser;
-    private final IResponseExceptionSerializer<Tout> _errorSerializer;
+    private final ICommandPreProcessor<TArgs, TIn> _commandPreProcessor;
+    private final ICommandParser<TOut, EStateControlCommand, TArgs> _controlCommandParser;
+    private final ICommandParser<TOut, EReadCommand, TArgs> _readCommandParser;
+    private final ICommandParser<TOut, EWriteCommand, TArgs> _writeCommandParser;
+    private final IResponseExceptionSerializer<TOut> _errorSerializer;
 
-    public CommandProcessor(ICommandPreProcessor<Targs, Tin> commandPreProcessor,
-                            ICommandParser<Tout, EStateControlCommand, Targs> controlCommandParser,
-                            ICommandParser<Tout, EReadCommand, Targs> readCommandParser,
-                            ICommandParser<Tout, EWriteCommand, Targs> writeCommandParser,
-                            IResponseExceptionSerializer<Tout> errorSerializer)
+    public CommandProcessor(ICommandPreProcessor<TArgs, TIn> commandPreProcessor,
+                            ICommandParser<TOut, EStateControlCommand, TArgs> controlCommandParser,
+                            ICommandParser<TOut, EReadCommand, TArgs> readCommandParser,
+                            ICommandParser<TOut, EWriteCommand, TArgs> writeCommandParser,
+                            IResponseExceptionSerializer<TOut> errorSerializer)
     {
         Objects.requireNonNull(commandPreProcessor, "commandPreProcessor can't be null");
         Objects.requireNonNull(controlCommandParser, "controlCommandParser can't be null");
@@ -51,20 +47,25 @@ public final class CommandProcessor<Tin, Targs, Tout> {
         _errorSerializer = errorSerializer;
     }
 
-    public Tout processIncomingStatement(Tin statement){
+    public TOut processIncomingStatement(TIn statement){
         try {
             Objects.requireNonNull(statement, "statement can't be null");
 
             // Split the statement (get keyword separately from the arguments)
-            CommandComponents<Targs> components = null;
+            CommandComponents<TArgs> components = null;
             components = _commandPreProcessor.splitIncoming(statement);
 
             // Determine type of the command
             EStateControlCommand stateCommand = null;
             EReadCommand readCommand = null;
             EWriteCommand writeCommand = null;
-            Tout result = null;
-            if ((readCommand = components.tryGetIsReadCommandKeyword()) != null) {
+            EStateControlCommand stateControlCommand = null;
+            TOut result = null;
+            if((stateControlCommand = components.tryGetIsStateControlCommandKeyword()) != null){
+                // Is state control command
+                result = _controlCommandParser.runCommand(stateControlCommand, components.getArgs());
+            }
+            else if ((readCommand = components.tryGetIsReadCommandKeyword()) != null) {
                 // It's read command
                 result = _readCommandParser.runCommand(readCommand, components.getArgs());
             } else if (((writeCommand = components.tryGetIsWriteCommandKeyword())) != null) {
