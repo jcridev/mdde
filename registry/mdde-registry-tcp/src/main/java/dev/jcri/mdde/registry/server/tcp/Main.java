@@ -176,12 +176,6 @@ public class Main {
         CommandProcessorSingleton.getDefaultInstance().initializeCommandProcessor(commandProcessor);
         // Place benchmark runner into singleton for TCP commands access
         BenchmarkRunnerSingleton.getDefaultInstance().initializeBenchmarkRunner(benchmarkRunner);
-        /*
-        try {
-            BenchmarkRunnerSingleton.getDefaultInstance().getRunner().prepareBenchmarkEnvironment();
-        } catch (MddeRegistryException e) {
-            e.printStackTrace();
-        } */
     }
 
     /**

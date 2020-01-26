@@ -3,6 +3,7 @@ from typing import Protocol, List
 
 from mdde.common.data import Fragment
 
+
 class PObservationFilter(Protocol):  # TODO: Observation filtering protocol per actor basis
     @abstractmethod
     def get_observations(self, full_observation) -> List[Fragment]:

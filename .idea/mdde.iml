@@ -9,11 +9,9 @@
       <sourceFolder url="file://$MODULE_DIR$/mdde/mdde-agent" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/agents/mdde-redis" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/scenarios" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/mdde/mdde-registry-client-tcp" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-  </component>
-  <component name="TestRunnerService">
-    <option name="PROJECT_TEST_RUNNER" value="Unittests" />
   </component>
 </module>
