@@ -19,7 +19,7 @@
         </RollingFile>
     </Appenders>
     <Loggers>
-        <Logger name="dev.jcri.mdde" level="debug" additivity="false">
+        <Logger name="dev.jcri.mdde" level="debug" additivity="true">
             <AppenderRef ref="LogToConsole"/>
             <AppenderRef ref="RollingDebug"/>
         </Logger>
