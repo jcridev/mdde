@@ -1,5 +1,9 @@
-from mdde.registry.tcp import RegistryClientTCP
+from mdde.registry.tcp.RegistryClientTCP import RegistryClientTCP
 
-class test:
-    def testRun(self):
-        return None
+
+def testClientRun():
+    tcpClient = RegistryClientTCP("localhost", 8942)
+    print(tcpClient.ctrl_set_benchmark_mode())
+
+
+testClientRun()

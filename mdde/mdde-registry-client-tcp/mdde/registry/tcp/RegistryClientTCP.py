@@ -37,17 +37,19 @@ class RegistryClientTCP(PRegistryClient):
                 len_bytes = reg_socket.recv(4)
                 if not len_bytes:
                     raise EOFError("No response from the server received")
-                length_buf += len_bytes
+                received_length += len(len_bytes)
+                length_buf.extend(len_bytes)
             # Decode expected length of the response
-            reg_socket.recv_into(length_buf, 4)
             expected_response_length = self.__bytes_to_number__(length_buf)
             # Read response JSON payload
             response_buf = bytearray(0)
             received_length = 0
             while received_length < expected_response_length:
                 payload_bytes_chunk = reg_socket.recv(expected_response_length)
+                if not payload_bytes_chunk:
+                    raise EOFError("No response payload from the server received")
                 received_length += len(payload_bytes_chunk)
-                response_buf += payload_bytes_chunk
+                response_buf.extend(payload_bytes_chunk)
             # Decode retrieved message
             return self.__decode_message__(response_buf)
         finally:

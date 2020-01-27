@@ -7,6 +7,8 @@ import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfiguration;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfigurationWriter;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
 import dev.jcri.mdde.registry.utility.ResourcesTools;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -21,6 +23,7 @@ import java.util.UUID;
  * Class that runs YCSB and gets the output in the parsed form
  */
 public class YCSBRunner implements Closeable {
+    private static final Logger logger = LogManager.getLogger(YCSBRunner.class);
     /**
      * New line separator specific to the current OS
      */
@@ -66,7 +69,14 @@ public class YCSBRunner implements Closeable {
             throw new IllegalArgumentException("Temporary folder is not specified");
         }
 
-        _tempSubfolder = Paths.get(ycsbConfig.getTemp(), UUID.randomUUID().toString().replace("-", ""));
+        _tempSubfolder = Paths.get(ycsbConfig.getTemp(),
+                            UUID.randomUUID().toString().replace("-", ""))
+                        .toAbsolutePath()
+                        .normalize();
+        // Create temp folder if needed
+        final boolean tempFolderCreated = new File(_tempSubfolder.toString()).mkdirs();
+        logger.trace("Created temporary directory {}", tempFolderCreated);
+
         _ycsbConfig = ycsbConfig;
 
         _defaultClient = EYCSBClients.fromString(ycsbConfig.getYcsbClient());

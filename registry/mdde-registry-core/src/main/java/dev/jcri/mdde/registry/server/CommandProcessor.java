@@ -50,6 +50,7 @@ public final class CommandProcessor<TIn, TArgs, TOut> {
     public TOut processIncomingStatement(TIn statement){
         try {
             Objects.requireNonNull(statement, "statement can't be null");
+            logger.trace("Incoming statement: '{}'", statement);
 
             // Split the statement (get keyword separately from the arguments)
             CommandComponents<TArgs> components = null;
@@ -60,6 +61,7 @@ public final class CommandProcessor<TIn, TArgs, TOut> {
             EReadCommand readCommand = null;
             EWriteCommand writeCommand = null;
             EStateControlCommand stateControlCommand = null;
+
             TOut result = null;
             if((stateControlCommand = components.tryGetIsStateControlCommandKeyword()) != null){
                 // Is state control command

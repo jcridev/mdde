@@ -44,7 +44,8 @@ public class MddeCommandReaderHandler extends ChannelInboundHandlerAdapter {
                     logger.trace("Channel read complete: {}; Empty message.", ctx.channel().remoteAddress());
                 }
             }
-            ctx.write(processCommand(_lastReceivedMessage));
+            var response = processCommand(_lastReceivedMessage);
+            ctx.write(response);
             ctx.flush();
         }
         catch (Exception ex){
