@@ -10,14 +10,14 @@ import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TextSequentialWriteICommandParser<T>  implements ICommandParser<T, EWriteCommand, String>
+public class TextSequentialWriteCommandParser<T>  implements ICommandParser<T, EWriteCommand, String>
 {
     private final ISequenceParser _stringParser = new SimpleSequenceParser();
-    private final SequentialWriteICommandParser<T> _writeSequentialCommandParser;
+    private final SequentialWriteCommandParser<T> _writeSequentialCommandParser;
     private final IResponseSerializer<T> _serializer;
 
-    public TextSequentialWriteICommandParser(WriteCommandResponder writeCommandHandler, IResponseSerializer<T> serializer) {
-        _writeSequentialCommandParser = new SequentialWriteICommandParser<T>(writeCommandHandler, serializer);
+    public TextSequentialWriteCommandParser(WriteCommandResponder writeCommandHandler, IResponseSerializer<T> serializer) {
+        _writeSequentialCommandParser = new SequentialWriteCommandParser<T>(writeCommandHandler, serializer);
         _serializer = serializer;
     }
 

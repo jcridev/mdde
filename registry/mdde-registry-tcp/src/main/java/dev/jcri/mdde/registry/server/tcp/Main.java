@@ -15,6 +15,8 @@ import dev.jcri.mdde.registry.control.command.json.JsonReadCommandParser;
 import dev.jcri.mdde.registry.control.command.json.JsonWriteCommandParser;
 import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerJson;
+import dev.jcri.mdde.registry.data.IDataShuffler;
+import dev.jcri.mdde.registry.data.impl.redis.RedisDataShuffler;
 import dev.jcri.mdde.registry.server.CommandProcessor;
 import dev.jcri.mdde.registry.server.responders.ReadCommandResponder;
 import dev.jcri.mdde.registry.server.responders.WriteCommandResponder;
@@ -23,10 +25,12 @@ import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
+import dev.jcri.mdde.registry.store.IStoreManager;
 import dev.jcri.mdde.registry.store.IWriteCommandHandler;
 import dev.jcri.mdde.registry.store.RegistryStateCommandHandler;
 import dev.jcri.mdde.registry.store.impl.redis.ReadCommandHandlerRedis;
 import dev.jcri.mdde.registry.store.impl.redis.RedisConnectionHelper;
+import dev.jcri.mdde.registry.store.impl.redis.RedisStoreManager;
 import dev.jcri.mdde.registry.store.impl.redis.WriteCommandHandlerRedis;
 import dev.jcri.mdde.registry.store.queue.IDataShuffleQueue;
 import dev.jcri.mdde.registry.store.queue.impl.redis.DataShuffleQueueRedis;
@@ -86,7 +90,8 @@ public class Main {
             configureCommandProcessing(mddeConfig.getRegistryStore(),
                                         mddeConfig.getBenchmarkYcsb(),
                                         mddeConfig.getDataNodes(),
-                                        connectionProperties);
+                                        connectionProperties,
+                                        mddeConfig.getSnapshotsDir());
         } catch (IOException e) {
             logger.error(e);
             System.err.println(e.getMessage());
@@ -134,7 +139,8 @@ public class Main {
     private static void configureCommandProcessing(RegistryStoreConfigRedis mddeStoreConfig,
                                                    YCSBConfig ycsbConfig,
                                                    List<DBNetworkNodesConfiguration> nodes,
-                                                   Map<String, String> connectionProperties) throws IOException {
+                                                   Map<String, String> connectionProperties,
+                                                   String snapshotsDir) throws IOException {
         // Configure redis registry store
         var redisConnection = new RedisConnectionHelper(mddeStoreConfig);
         // Handle read commands
@@ -145,16 +151,25 @@ public class Main {
         BenchmarkRunner benchmarkRunner = new BenchmarkRunner(tupleLocatorFactory, readCommandHandler, ycsbRunner);
         // Initialize write command handler
         IWriteCommandHandler writeCommandHandler = new WriteCommandHandlerRedis(redisConnection, readCommandHandler);
+        // General registry store management
+        IStoreManager storeManager = new RedisStoreManager(new RedisConnectionHelper(mddeStoreConfig));
+        // Data nodes shuffle control
+        IDataShuffler dataShuffler = new RedisDataShuffler(nodes);
+        IDataShuffleQueue dataShuffleQueue = new DataShuffleQueueRedis(new RedisConnectionHelper(mddeStoreConfig));
         // Initialize state command handler
         RegistryStateCommandHandler stateCommandHandler =
-                new RegistryStateCommandHandler(writeCommandHandler, benchmarkRunner, nodes);
-        // Data shuffler
-        var redisConnectionShuffler = new RedisConnectionHelper(mddeStoreConfig);
-        IDataShuffleQueue dataShuffler = new DataShuffleQueueRedis(redisConnectionShuffler);
+                new RegistryStateCommandHandler(writeCommandHandler,
+                                                    storeManager,
+                                                    dataShuffler,
+                                                    dataShuffleQueue,
+                                                    benchmarkRunner,
+                                                    nodes,
+                                                    snapshotsDir);
+
         // Command responders
         WriteCommandResponder writeCommandResponder = new WriteCommandResponder(writeCommandHandler,
                                                                                 readCommandHandler,
-                                                                                dataShuffler);
+                                                                                dataShuffleQueue);
         ReadCommandResponder readCommandResponder = new ReadCommandResponder(readCommandHandler);
 
         // Commands parsers

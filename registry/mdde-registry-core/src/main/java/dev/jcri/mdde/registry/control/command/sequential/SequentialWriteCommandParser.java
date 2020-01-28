@@ -13,11 +13,11 @@ import java.util.Objects;
 import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
 
-public class SequentialWriteICommandParser<T> extends BaseSequentialCommandParser implements ICommandParser<T, EWriteCommand, List<Object>> {
+public class SequentialWriteCommandParser<T> extends BaseSequentialCommandParser implements ICommandParser<T, EWriteCommand, List<Object>> {
     private final WriteCommandResponder _writeCommandHandler;
     private final IResponseSerializer<T> _serializer;
 
-    public SequentialWriteICommandParser(WriteCommandResponder writeCommandHandler, IResponseSerializer<T> serializer) {
+    public SequentialWriteCommandParser(WriteCommandResponder writeCommandHandler, IResponseSerializer<T> serializer) {
         Objects.requireNonNull(writeCommandHandler, "Write commands handlers can't be null");
         Objects.requireNonNull(serializer, "Serializer can't be null");
         _serializer = serializer;

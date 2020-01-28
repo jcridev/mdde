@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.ARG_WORKLOAD_ID;
+import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
 /**
  * Process incoming registry state control commands
@@ -48,6 +48,14 @@ public class SequentialControlCommandParser<T> extends BaseSequentialCommandPars
                     return _serializer.serialize(syncDataFromRegistryToNodes());
                 case RESET:
                     return _serializer.serialize(processReset());
+                case FLUSHALL:
+                    return _serializer.serialize(processFlushAll());
+                case SNAPSHOT_CREATE:
+                    return _serializer.serialize(processCreateSnapshot(arguments));
+                case SNAPSHOT_LOAD:
+                    return _serializer.serialize(processLoadSnapshot(arguments));
+                case GET_BENCHMARK:
+                    return _serializer.serialize(processGetBenchmarkState());
                 default:
                     throw new UnknownRegistryCommandExceptions(command.toString());
             }
@@ -65,11 +73,11 @@ public class SequentialControlCommandParser<T> extends BaseSequentialCommandPars
         return _stateCommandHandler.switchToShuffle();
     }
 
-    private Boolean processReset(){
+    private Boolean processReset() throws IOException{
         return _stateCommandHandler.reset();
     }
 
-    private Boolean syncDataFromRegistryToNodes(){
+    private Boolean syncDataFromRegistryToNodes() throws IOException {
         return _stateCommandHandler.syncRegistryToNodes();
     }
 
@@ -89,5 +97,33 @@ public class SequentialControlCommandParser<T> extends BaseSequentialCommandPars
 
         var workloadId = getPositionalArgumentAsString(arguments, thisCommand, ARG_WORKLOAD_ID);
         return _stateCommandHandler.generateData(workloadId);
+    }
+
+    private boolean processFlushAll(){
+        return _stateCommandHandler.flushAll();
+    }
+
+    private String processCreateSnapshot(List<Object> arguments)
+            throws IllegalCommandArgumentException, IOException {
+        final EStateControlCommand thisCommand = EStateControlCommand.SNAPSHOT_CREATE;
+        validateNotNullArguments(arguments, thisCommand.toString());
+
+        var createAsDefault = getPositionalArgumentAsBoolean(arguments, thisCommand, ARG_DEFAULT_SNAPSHOT_FLAG);
+        return _stateCommandHandler.createSnapshot(createAsDefault);
+    }
+
+    private boolean processLoadSnapshot(List<Object> arguments)
+            throws IllegalCommandArgumentException, IOException{
+
+        final EStateControlCommand thisCommand = EStateControlCommand.SNAPSHOT_LOAD;
+        validateNotNullArguments(arguments, thisCommand.toString());
+
+        var snapshot = getPositionalArgumentAsString(arguments, thisCommand, ARG_SNAPSHOT_ID);
+        return _stateCommandHandler.loadSnapshot(snapshot);
+    }
+
+    private String processGetBenchmarkState(){
+        // TODO:
+        return null;
     }
 }

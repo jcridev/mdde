@@ -31,11 +31,19 @@ public abstract class JsonCommandParserBase {
             parent = mapper.readTree(arguments);
             for(var arg: command.getExpectedArguments()){
                 if(arg.getArgumentType() == ExpectedCommandArgument.ArgumentType.STRING){
+                    // Simple string value
                     result.add(parent.get(arg.getTag()).asText());
                 }
                 else if(arg.getArgumentType() == ExpectedCommandArgument.ArgumentType.SET_STRINGS){
+                    // Set of strings
                     var jsonNode = parent.get(arg.getTag());
                     var content = mapper.convertValue(jsonNode, new TypeReference<HashSet<String>>() { });
+                    result.add(content);
+                }
+                else if(arg.getArgumentType() == ExpectedCommandArgument.ArgumentType.BOOLEAN){
+                    // Boolean value
+                    var jsonNode = parent.get(arg.getTag());
+                    var content = mapper.convertValue(jsonNode, Boolean.class);
                     result.add(content);
                 }
             }

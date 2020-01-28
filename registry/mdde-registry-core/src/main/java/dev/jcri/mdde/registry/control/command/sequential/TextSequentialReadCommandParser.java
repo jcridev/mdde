@@ -10,13 +10,13 @@ import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TextSequentialReadICommandParser<T> implements ICommandParser<T, EReadCommand, String> {
+public class TextSequentialReadCommandParser<T> implements ICommandParser<T, EReadCommand, String> {
     private final ISequenceParser _stringParser = new SimpleSequenceParser();
-    private final SequentialReadICommandParser<T> _sequentialCommandParser;
+    private final SequentialReadCommandParser<T> _sequentialCommandParser;
     private final IResponseSerializer<T> _serializer;
 
-    public TextSequentialReadICommandParser(ReadCommandResponder readCommandHandler, IResponseSerializer<T> serializer) {
-        _sequentialCommandParser = new SequentialReadICommandParser<>(readCommandHandler, serializer);
+    public TextSequentialReadCommandParser(ReadCommandResponder readCommandHandler, IResponseSerializer<T> serializer) {
+        _sequentialCommandParser = new SequentialReadCommandParser<>(readCommandHandler, serializer);
         _serializer = serializer;
     }
 

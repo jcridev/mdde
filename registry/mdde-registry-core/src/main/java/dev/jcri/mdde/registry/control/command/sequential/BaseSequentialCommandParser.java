@@ -39,7 +39,7 @@ public abstract class BaseSequentialCommandParser {
      * Read argument as a String value from the position as specified in the corresponding ICommands
      * @param arguments List of arguments
      * @param command Command name
-     * @param argument Argument name
+     * @param argument Argument description object
      * @return Argument value
      */
     protected String getPositionalArgumentAsString(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
@@ -54,10 +54,29 @@ public abstract class BaseSequentialCommandParser {
     }
 
     /**
+     * Read argument as a Boolean value from the position as specified in the corresponding ICommands
+     * @param arguments List of arguments
+     * @param command Command name
+     * @param argument Argument description object
+     * @return Argument value
+     * @throws IllegalCommandArgumentException
+     */
+    protected Boolean getPositionalArgumentAsBoolean(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
+            throws IllegalCommandArgumentException {
+        var argIndex = command.getExpectedArguments().indexOf(argument);
+        if(argIndex < 0){
+            throw new IllegalCommandArgumentException(getIllegalArgumentError(command, argument));
+        }
+        return (Boolean) Objects.requireNonNull(arguments.get(argIndex),
+                                                getPositionalArgumentError(command.toString(),
+                                                        argument, argIndex));
+    }
+
+    /**
      * Read argument as a Set<String> value from the position as specified in the corresponding ICommands
      * @param arguments List of arguments
      * @param command Command name
-     * @param argument Argument name
+     * @param argument Argument description object
      * @return Argument value
      */
     protected Set<String> getPositionalArgumentAsSet(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
