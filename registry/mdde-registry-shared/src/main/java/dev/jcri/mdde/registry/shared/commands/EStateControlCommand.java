@@ -29,12 +29,26 @@ public enum  EStateControlCommand implements ICommand {
     SET_SHUFFLE("SHUFFLE"),
     /**
      * Execute the current shuffle query on the actual data nodes.
+     * All of the actions that were performed in the registry must've been placed in the data shuffle queue, when this
+     * command is executed operations from the shuffle queue are executed one by one in the data nodes, thus
+     * synchronizing the state of the data nodes with the registry.
      */
     RUN_SHUFFLE("SYNCNODES"),
     /**
      * Reset the state of the environment.
+     * Following must happen after this command is executed:
+     *  1. Flush Registry
+     *  2. Flush Data nodes
+     *  3. Populate node records within the registry according to the registry configuration
+     *  4. Populate data nodes with tuples and registry with records about these tuples
+     *
      */
-    RESET("RESET");
+    RESET("RESET"),
+    /**
+     * Clears the registry, data nodes and any temporary files that were potentially created during the runtime; thus
+     * returning the environment into the default state.
+     */
+    FLUSHALL("FLUSHALL");
 
     private final String _command;
     private final List<ExpectedCommandArgument> _expectedArguments;

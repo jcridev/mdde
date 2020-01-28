@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.data;
 
+import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -31,4 +32,20 @@ public interface IDataShuffler {
      * @return True - data was removed
      */
     boolean flushData();
+
+    /**
+     * Save all of the current data nodes data snapshots to a file.
+     * Database specific file, meant for later restore by restoreFromFile(...)
+     * @param pathToFile Full file name
+     * @param overwrite Overwrite if the file already exits
+     * @return True - data was saved successfully
+     */
+    boolean dumpToFile(String pathToFile, boolean overwrite) throws IOException;
+
+    /**
+     * Restore data from a file
+     * @param pathToFile Full file name
+     * @return True - data was restored successfully
+     */
+    boolean restoreFromFile(String pathToFile) throws IOException;
 }

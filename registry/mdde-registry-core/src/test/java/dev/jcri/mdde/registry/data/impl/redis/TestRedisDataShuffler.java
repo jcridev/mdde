@@ -15,9 +15,16 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Pipeline;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Testcontainers
 public class TestRedisDataShuffler {
@@ -466,6 +473,148 @@ public class TestRedisDataShuffler {
 
         Set<String> emptySet = new HashSet<>();
         assertEquals(emptySet, retrievedKeys);
+    }
+
+    /**
+     * Test data removal from the data nodes
+     */
+    @Test
+    public void testFlushAllData(){
+        final int numberOfTestStringKeys = 512;
+        final int numberOfTestListKeys = 256;
+        final int numberOfItemsPerList = 20;
+        final int numberOfTestSetKeys = 100;
+        final int numberOfItemsPerSet = 42;
+        final int numberOfTestHashKeys = 100;
+        final int numberOfItemsPerHash = 20;
+
+        Map<String, Map<String, String>> testHashItems_node1 = generateTestDataHash(numberOfTestHashKeys, numberOfItemsPerHash);
+        Map<String, Set<String>> testSetItems_node1 = generateTestDataSet(numberOfTestSetKeys, numberOfItemsPerSet);
+        Map<String, List<String>> testListItems_node1 = generateTestDataList(numberOfTestListKeys, numberOfItemsPerList);
+        Map<String, String> testStringItems_node1 = generateTestDataString(numberOfTestStringKeys);
+
+        Map<String, Map<String, String>> testHashItems_node2 = generateTestDataHash(numberOfTestHashKeys, numberOfItemsPerHash);
+        Map<String, Set<String>> testSetItems_node2 = generateTestDataSet(numberOfTestSetKeys, numberOfItemsPerSet);
+        Map<String, List<String>> testListItems_node2 = generateTestDataList(numberOfTestListKeys, numberOfItemsPerList);
+        Map<String, String> testStringItems_node2 = generateTestDataString(numberOfTestStringKeys);
+
+        var nodeIds = redisConnections.keySet().toArray(new String[0]);
+        // Populate node 1
+        var nodeId_node1 = nodeIds[0];
+        var pool_node1 = redisConnections.get(nodeId_node1);
+        populateRedisWithTestDataHash(testHashItems_node1, pool_node1);
+        populateRedisWithTestDataSet(testSetItems_node1, pool_node1);
+        populateRedisWithTestDataList(testListItems_node1, pool_node1);
+        populateRedisWithTestDataString(testStringItems_node1, pool_node1);
+
+        // Populate node 2
+        var nodeId_node2 = nodeIds[1];
+        var pool_node2 = redisConnections.get(nodeId_node2);
+        populateRedisWithTestDataHash(testHashItems_node2, pool_node2);
+        populateRedisWithTestDataSet(testSetItems_node2, pool_node2);
+        populateRedisWithTestDataList(testListItems_node2, pool_node2);
+        populateRedisWithTestDataString(testStringItems_node2, pool_node2);
+        // Check the keys were created in the database
+        try(Jedis jedis = pool_node1.getResource()){
+            long expectedNKeys = testHashItems_node1.size()
+                    + testSetItems_node1.size()
+                    + testListItems_node1.size()
+                    + testStringItems_node1.size();
+            assertEquals(expectedNKeys , jedis.dbSize().longValue());
+        }
+
+        try(Jedis jedis = pool_node2.getResource()){
+            long expectedNKeys = testHashItems_node2.size()
+                    + testSetItems_node2.size()
+                    + testListItems_node2.size()
+                    + testStringItems_node2.size();
+            assertEquals(expectedNKeys , jedis.dbSize().longValue());
+        }
+
+        // Test shuffler
+        IDataShuffler shuffler = new RedisDataShuffler(testRedisNodes);
+        shuffler.flushData();
+
+        try(Jedis jedis = pool_node1.getResource()){
+            assertEquals(0 , jedis.dbSize().longValue());
+        }
+
+        try(Jedis jedis = pool_node2.getResource()){
+            assertEquals(0 , jedis.dbSize().longValue());
+        }
+    }
+
+    /**
+     * Test dumping the nodes data into a file and restoring it back
+     */
+    @Test
+    public void testSerialization(){
+        final int numberOfTestStringKeys = 512;
+        final int numberOfTestListKeys = 256;
+        final int numberOfItemsPerList = 20;
+        final int numberOfTestSetKeys = 100;
+        final int numberOfItemsPerSet = 42;
+        final int numberOfTestHashKeys = 100;
+        final int numberOfItemsPerHash = 20;
+
+        Map<String, Map<String, String>> testHashItems_node1 = generateTestDataHash(numberOfTestHashKeys, numberOfItemsPerHash);
+        Map<String, Set<String>> testSetItems_node1 = generateTestDataSet(numberOfTestSetKeys, numberOfItemsPerSet);
+        Map<String, List<String>> testListItems_node1 = generateTestDataList(numberOfTestListKeys, numberOfItemsPerList);
+        Map<String, String> testStringItems_node1 = generateTestDataString(numberOfTestStringKeys);
+
+        Map<String, Map<String, String>> testHashItems_node2 = generateTestDataHash(numberOfTestHashKeys, numberOfItemsPerHash);
+        Map<String, Set<String>> testSetItems_node2 = generateTestDataSet(numberOfTestSetKeys, numberOfItemsPerSet);
+        Map<String, List<String>> testListItems_node2 = generateTestDataList(numberOfTestListKeys, numberOfItemsPerList);
+        Map<String, String> testStringItems_node2 = generateTestDataString(numberOfTestStringKeys);
+
+        var nodeIds = redisConnections.keySet().toArray(new String[0]);
+        // Populate node 1
+        String nodeId_node1 = nodeIds[0];
+        var pool_node1 = redisConnections.get(nodeId_node1);
+        populateRedisWithTestDataHash(testHashItems_node1, pool_node1);
+        populateRedisWithTestDataSet(testSetItems_node1, pool_node1);
+        populateRedisWithTestDataList(testListItems_node1, pool_node1);
+        populateRedisWithTestDataString(testStringItems_node1, pool_node1);
+
+        // Populate node 2
+        String nodeId_node2 = nodeIds[1];
+        var pool_node2 = redisConnections.get(nodeId_node2);
+        populateRedisWithTestDataHash(testHashItems_node2, pool_node2);
+        populateRedisWithTestDataSet(testSetItems_node2, pool_node2);
+        populateRedisWithTestDataList(testListItems_node2, pool_node2);
+        populateRedisWithTestDataString(testStringItems_node2, pool_node2);
+
+        // Test shuffler
+        IDataShuffler shuffler = new RedisDataShuffler(testRedisNodes);
+
+        Path workingDir = FileSystems.getDefault().getPath(".").toAbsolutePath();
+        String testFileName = UUID.randomUUID().toString().replace("-", "") + ".rdmp";
+        String pathToTestFile = workingDir.resolve(testFileName).normalize().toString();
+        File testFile = new File(pathToTestFile);
+        try {
+            shuffler.dumpToFile(pathToTestFile, true);
+            assertTrue(testFile.exists());
+            instancesCleanup(); // Remove all data from the nodes
+            shuffler.restoreFromFile(pathToTestFile);
+
+            assertCopyResultsHash(testHashItems_node1, pool_node1);
+            assertCopyResultsSet(testSetItems_node1, pool_node1);
+            assertCopyResultsList(testListItems_node1, pool_node1);
+            assertCopyResultsString(testStringItems_node1, pool_node1);
+
+            assertCopyResultsHash(testHashItems_node2, pool_node2);
+            assertCopyResultsSet(testSetItems_node2, pool_node2);
+            assertCopyResultsList(testListItems_node2, pool_node2);
+            assertCopyResultsString(testStringItems_node2, pool_node2);
+
+        } catch (IOException e) {
+            fail(e);
+        }
+        finally {
+            if(testFile.exists()){
+                testFile.delete();
+            }
+        }
     }
 
 //region Common assertions
