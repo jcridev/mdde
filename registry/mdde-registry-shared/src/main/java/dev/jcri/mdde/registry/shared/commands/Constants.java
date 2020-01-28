@@ -23,6 +23,9 @@ public final class Constants {
 
     public static final String ArgWorkloadIdField = "workload";
 
+    public static final String ArgSnapshotIdField = "snapid";
+    public static final String ArgSnapshotDefaultField = "snapisdef";
+
     public static final String ResultPayload = "result";
     public static final String ResultError = "error";
 

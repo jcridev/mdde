@@ -62,5 +62,11 @@ public abstract class DataAction {
         public byte getCode() {
             return _actionCode;
         }
+
+
+        @Override
+        public String toString() {
+            return _actionTag;
+        }
     }
 }

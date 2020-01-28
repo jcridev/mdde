@@ -11,8 +11,9 @@ public enum ExpectedCommandArgument{
     ARG_NODE_ID_B("2nd Node ID", Constants.ArgSecondNodeIdFiled, ExpectedCommandArgument.ArgumentType.STRING),
     ARG_FRAGMENT_ID("Fragment ID", Constants.ArgFragmentIdField, ExpectedCommandArgument.ArgumentType.STRING),
 
-    ARG_WORKLOAD_ID("Benchmark workload ID", Constants.ArgWorkloadIdField, ExpectedCommandArgument.ArgumentType.STRING);
-
+    ARG_WORKLOAD_ID("Benchmark workload ID", Constants.ArgWorkloadIdField, ExpectedCommandArgument.ArgumentType.STRING),
+    ARG_DEFAULT_SNAPSHOT_FLAG("Snapshot ID assigned as default", Constants.ArgSnapshotDefaultField, ArgumentType.BOOLEAN),
+    ARG_SNAPSHOT_ID("Snapshot ID", Constants.ArgSnapshotIdField, ArgumentType.STRING);
 
     private final String _title;
     private final ArgumentType _argumentType;
@@ -42,7 +43,8 @@ public enum ExpectedCommandArgument{
      */
     public enum ArgumentType{
         STRING("String"),
-        SET_STRINGS("Set of strings");
+        SET_STRINGS("Set of strings"),
+        BOOLEAN("Boolean");
 
         private final String _description;
         ArgumentType(String description){

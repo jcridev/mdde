@@ -23,6 +23,7 @@ public class RegistryConfig<TStore> {
     public static final String REGISTRY_STORE_FIELD = "store";
     public static final String DATA_NODES_FIELD = "nodes";
     public static final String BENCHMARK_YCSB_FIELD = "bench_ycsb";
+    public static final String SNAPSHOTS_FOLDER_FIELD = "snapshot_dir";
      /**
      * Configuration for the registry storage
      */
@@ -35,7 +36,10 @@ public class RegistryConfig<TStore> {
      * YCSB Benchmark settings
      */
     private YCSBConfig _benchmarkYcsb;
-
+    /**
+     * Directory where the registry and data node snapshots should be placed
+     */
+    private String _snapshotsDir;
 
     @JsonGetter(REGISTRY_STORE_FIELD)
     public TStore getRegistryStore() {
@@ -64,5 +68,14 @@ public class RegistryConfig<TStore> {
     @JsonSetter(BENCHMARK_YCSB_FIELD)
     public void setBenchmarkYcsb(YCSBConfig benchmarkYcsb) {
         this._benchmarkYcsb = benchmarkYcsb;
+    }
+
+    @JsonGetter(SNAPSHOTS_FOLDER_FIELD)
+    public String getSnapshotsDir() {
+        return _snapshotsDir;
+    }
+    @JsonSetter(SNAPSHOTS_FOLDER_FIELD)
+    public void setSnapshotsDir(String snapshotsDir) {
+        this._snapshotsDir = snapshotsDir;
     }
 }

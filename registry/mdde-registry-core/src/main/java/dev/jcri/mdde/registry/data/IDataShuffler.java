@@ -1,5 +1,7 @@
 package dev.jcri.mdde.registry.data;
 
+import dev.jcri.mdde.registry.store.queue.actions.DataAction;
+
 import java.io.IOException;
 import java.util.Set;
 
@@ -12,7 +14,7 @@ public interface IDataShuffler {
      * @param sourceNodeId ID of the data node from where the Tuples should be copied
      * @param destinationNodeId ID of the data node where the copy of the Tuples should be paced
      * @param tupleIds IDs of the tuples that are located
-     * @return True if all of the specified tuples were copied from one node to another, False otherwise
+     * @return Execution result
      */
     ShuffleKeysResult copyTuples(String sourceNodeId,
                        String destinationNodeId,
@@ -22,10 +24,11 @@ public interface IDataShuffler {
      * Remove a set of tuples from a node
      * @param nodeId ID of the node from which tuples should be removed
      * @param tupleIds Set of tuple IDs
-     * @return True if all of the specified tuples were removed from the node, False otherwise
+     * @return Execution result
      */
     ShuffleKeysResult deleteTuples(String nodeId,
                                    Set<String> tupleIds);
+
 
     /**
      * Remove all data from the data nodes

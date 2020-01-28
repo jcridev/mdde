@@ -3,7 +3,7 @@ package dev.jcri.mdde.registry.shared.commands;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.ARG_WORKLOAD_ID;
+import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
 /**
  * Registry state switch
@@ -18,6 +18,10 @@ public enum  EStateControlCommand implements ICommand {
      * Execute benchmark and return the resulted metrics
      */
     RUN_BENCHMARK("BENCHRUN", new ArrayList<ExpectedCommandArgument>(){{add(ARG_WORKLOAD_ID); }}),
+    /**
+     * Get the status of the benchmark. If the benchmark run was finished, returns the results
+     */
+    GET_BENCHMARK("BENCHSTATE"),
     /**
      * Generate data for the benchmark
      */
@@ -39,16 +43,31 @@ public enum  EStateControlCommand implements ICommand {
      * Following must happen after this command is executed:
      *  1. Flush Registry
      *  2. Flush Data nodes
-     *  3. Populate node records within the registry according to the registry configuration
-     *  4. Populate data nodes with tuples and registry with records about these tuples
-     *
+     *  3. Populate registry
+     *      3.1. If there is a default snapshot:
+     *          3.1.1. Restore registry from the snapshot
+     *          3.1.2. Restore data nodes from the snapshot
+     *      3.2. If the is no default snapshot:
+     *          3.2.1. Populate node records within the registry according to the registry configuration
+     *          - [user] Data nodes remain empty. Data LOAD command must be executed with the appropriate workload arg
+     *          - [user] Default snapshot should be created
      */
     RESET("RESET"),
     /**
      * Clears the registry, data nodes and any temporary files that were potentially created during the runtime; thus
      * returning the environment into the default state.
      */
-    FLUSHALL("FLUSHALL");
+    FLUSHALL("FLUSHALL"),
+    /**
+     * Save the current state of the registry and data nodes into files
+     * If Default Snapshot flag is set to True, this snapshot will be used next time RESET is executed.
+     * Returns newly created Snapshot ID
+     */
+    SNAPSHOT_CREATE("SNAPSAVE", new ArrayList<ExpectedCommandArgument>(){{add(ARG_DEFAULT_SNAPSHOT_FLAG); }}),
+    /**
+     * Explicitly load a snapshot with an ID.
+     */
+    SNAPSHOT_LOAD("SNAPLOAD", new ArrayList<ExpectedCommandArgument>(){{add(ARG_SNAPSHOT_ID); }});
 
     private final String _command;
     private final List<ExpectedCommandArgument> _expectedArguments;
