@@ -18,6 +18,7 @@ public enum  EStateControlCommand implements ICommand {
      * Execute benchmark and return the resulted metrics
      */
     RUN_BENCHMARK("BENCHRUN", new ArrayList<ExpectedCommandArgument>(){{add(ARG_WORKLOAD_ID); }}),
+
     /**
      * Get the status of the benchmark. If the benchmark run was finished, returns the results
      */

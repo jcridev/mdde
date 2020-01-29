@@ -1,6 +1,7 @@
 package dev.jcri.mdde.registry.control.serialization;
 
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
+import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 
@@ -19,4 +20,5 @@ public interface IResponseSerializer<T> extends IResponseExceptionSerializer<T> 
     T serialize(boolean value) throws ResponseSerializationException;
     T serialize(FullRegistry value) throws ResponseSerializationException;
     T serialize(BenchmarkRunResult value) throws ResponseSerializationException;
+    T serialize(BenchmarkStatus value) throws ResponseSerializationException;
 }

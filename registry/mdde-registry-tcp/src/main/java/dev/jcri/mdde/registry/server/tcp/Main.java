@@ -140,7 +140,8 @@ public class Main {
                                                    YCSBConfig ycsbConfig,
                                                    List<DBNetworkNodesConfiguration> nodes,
                                                    Map<String, String> connectionProperties,
-                                                   String snapshotsDir) throws IOException {
+                                                   String snapshotsDir)
+            throws IOException {
         // Configure redis registry store
         var redisConnection = new RedisConnectionHelper(mddeStoreConfig);
         // Handle read commands

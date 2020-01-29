@@ -4,6 +4,7 @@ import dev.jcri.mdde.registry.benchmark.BenchmarkRunner;
 import dev.jcri.mdde.registry.data.IDataShuffler;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
+import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
 import dev.jcri.mdde.registry.store.exceptions.IllegalRegistryActionException;
 import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
@@ -131,7 +132,7 @@ public final class RegistryStateCommandHandler {
      * Run benchmark within the prepared environment and return the results
      * @return
      */
-    public synchronized BenchmarkRunResult executeBenchmark(String workloadId){
+    public synchronized String executeBenchmark(String workloadId){
         _commandExecutionLock.lock();
         try {
             if(_registryState ==  ERegistryState.shuffle){
@@ -142,6 +143,14 @@ public final class RegistryStateCommandHandler {
         finally {
             _commandExecutionLock.unlock();
         }
+    }
+
+    /**
+     * Retrieve the status of the latest executed or currently executing benchmark
+     * @return
+     */
+    public synchronized BenchmarkStatus retrieveLatestBenchmarkRunStatus(){
+        return _benchmarkRunner.getBenchmarkStatus();
     }
 
     /**

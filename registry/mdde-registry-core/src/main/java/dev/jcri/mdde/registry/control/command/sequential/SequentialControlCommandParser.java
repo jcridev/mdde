@@ -7,6 +7,7 @@ import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
+import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.store.RegistryStateCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 
@@ -81,7 +82,7 @@ public class SequentialControlCommandParser<T> extends BaseSequentialCommandPars
         return _stateCommandHandler.syncRegistryToNodes();
     }
 
-    private BenchmarkRunResult processExecuteBenchmarkCommand(List<Object> arguments)
+    private String processExecuteBenchmarkCommand(List<Object> arguments)
             throws IllegalCommandArgumentException {
         final EStateControlCommand thisCommand = EStateControlCommand.RUN_BENCHMARK;
         validateNotNullArguments(arguments, thisCommand.toString());
@@ -122,8 +123,7 @@ public class SequentialControlCommandParser<T> extends BaseSequentialCommandPars
         return _stateCommandHandler.loadSnapshot(snapshot);
     }
 
-    private String processGetBenchmarkState(){
-        // TODO:
-        return null;
+    private BenchmarkStatus processGetBenchmarkState(){
+        return _stateCommandHandler.retrieveLatestBenchmarkRunStatus();
     }
 }

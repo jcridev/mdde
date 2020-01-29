@@ -8,11 +8,13 @@ import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.benchmark.commands.LocateTuple;
 import dev.jcri.mdde.registry.shared.benchmark.responses.TupleLocation;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
+import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.shared.store.response.TupleCatalog;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 
 
@@ -20,6 +22,11 @@ public class BenchmarkRunner {
     private final ITupleLocatorFactory _tupleLocatorFactory;
     private final IReadCommandHandler _storeReader;
     private final YCSBRunner _ycsbRunner;
+
+    /**
+     * State of the executing benchmark, results of the executed benchmark
+     */
+    private final RunnerState _runnerState = new RunnerState();
 
     /**
      * Constructor
@@ -74,7 +81,6 @@ public class BenchmarkRunner {
     }
 
     private final ReentrantLock _benchmarkRunnerLock = new ReentrantLock();
-    private EBenchmarkRunStage _currentRunStage = EBenchmarkRunStage.READY;
     private EBenchmarkLoadStage _currentLoadState = EBenchmarkLoadStage.EMPTY;
 
     public boolean generateData(String workload) {
@@ -94,7 +100,7 @@ public class BenchmarkRunner {
                 throw new IllegalStateException(String.format("Benchmark data load is in incorrect state: %s",
                         _currentLoadState.toString()));
             }
-            if (_currentRunStage != EBenchmarkRunStage.READY) {
+            if (_runnerState.getState() != EBenchmarkRunStage.READY) {
                 throw new IllegalStateException("Benchmark is already being executed");
             }
             _currentLoadState = EBenchmarkLoadStage.LOADING;
@@ -119,7 +125,7 @@ public class BenchmarkRunner {
      *                 into the activate database.
      * @return Relevant statistics gathered during the benchmark run
      */
-    public BenchmarkRunResult executeBenchmark(String workload) {
+    public String executeBenchmark(String workload) {
         var knownWorkload = EYCSBWorkloadCatalog.getWorkloadByTag(workload);
         return executeBenchmark(knownWorkload);
     }
@@ -128,39 +134,41 @@ public class BenchmarkRunner {
      * Should always LOAD in data before running the benchmark for the first time
      * @param workload Selected workload. Should be the same one each load at least until the test data is reloaded
      *                 into the activate database.
-     * @return Relevant statistics gathered during the benchmark run
+     * @return ID of the new Run
      */
-    public BenchmarkRunResult executeBenchmark(EYCSBWorkloadCatalog workload){
+    public String executeBenchmark(EYCSBWorkloadCatalog workload){
         _benchmarkRunnerLock.lock();
         try {
             if (_currentLoadState != EBenchmarkLoadStage.READY) {
                 throw new IllegalStateException(String.format("Benchmark data load is in incorrect state: %s",
                         _currentLoadState.toString()));
             }
-            if (_currentRunStage != EBenchmarkRunStage.READY) {
+            if (_runnerState.getState() != EBenchmarkRunStage.READY) {
                 throw new IllegalStateException("Benchmark is already being executed");
             }
+            // Reset the state
+            _runnerState.setState(EBenchmarkRunStage.STARTING);
+            _runnerState.setCompeted(false);
+            _runnerState.setResult(null);
         }
         finally {
             _benchmarkRunnerLock.unlock();
         }
-        _currentRunStage = EBenchmarkRunStage.STARTING;
-        try {
-            _currentRunStage = EBenchmarkRunStage.RUNNING;
-            var ycsbRunOutput = this._ycsbRunner.runWorkload(workload);
-            _currentRunStage = EBenchmarkRunStage.FINALIZING;
-            var result = new BenchmarkRunResult();
-            result.setError(null);
-            result.setNodes(null); // TODO: Node statistics
-            result.setThroughput(ycsbRunOutput.getThroughput());
-            return result;
-        }
-        catch (Exception ex){
-            return new BenchmarkRunResult() {{setError(ex.getMessage());}};
-        }
-        finally {
-            _currentRunStage = EBenchmarkRunStage.READY;
-        }
+        _runnerState.setRunId(UUID.randomUUID().toString());
+        Thread t = new Thread(new BenchmarkThread(_runnerState, _ycsbRunner, workload ));
+        return _runnerState.getRunId();
+    }
+
+    /**
+     * Retrieve the status of the benchmark run
+     * @return
+     */
+    public BenchmarkStatus getBenchmarkStatus(){
+        var result = this._runnerState.getResult();
+        var failed = this._runnerState.isFailed();
+        var stage = this._runnerState.getState().toString();
+        var completed = this._runnerState.isCompeted; // read this flag last
+        return new BenchmarkStatus(completed, failed, stage, result, this._runnerState.getRunId());
     }
 
 
@@ -211,6 +219,110 @@ public class BenchmarkRunner {
         @Override
         public String toString() {
             return _stage;
+        }
+    }
+
+    /**
+     * State holder for the current benchmark execution
+     */
+    public final class RunnerState{
+        /**
+         * When benchmark execution is invoked a new ID is generated
+         */
+        private String _runId;
+        /**
+         * After every run, the latest result object stored in this variable
+         */
+        private BenchmarkRunResult _result;
+        /**
+         * Current state of the runner thread
+         */
+        private EBenchmarkRunStage _state;
+        /**
+         * Benchmark run has failed. Cause will be in the _result
+         */
+        private boolean isFailed = false;
+        /**
+         * Benchmark run has completed it's run. Meaning the execution finished after the last time the thread was
+         * called. icCompleted = true doesn't mean there was no errors during the execution.
+         */
+        private boolean isCompeted = false;
+
+        public String getRunId() {
+            return _runId;
+        }
+
+        public void setRunId(String runId) {
+            this._runId = runId;
+        }
+
+
+        public BenchmarkRunResult getResult() {
+            return _result;
+        }
+
+        public void setResult(BenchmarkRunResult result) {
+            this._result = result;
+        }
+
+        public EBenchmarkRunStage getState() {
+            return _state;
+        }
+
+        public void setState(EBenchmarkRunStage state) {
+            this._state = state;
+        }
+
+        public boolean isFailed() {
+            return isFailed;
+        }
+
+        public void setFailed(boolean failed) {
+            isFailed = failed;
+        }
+
+        public boolean isCompeted() {
+            return isCompeted;
+        }
+
+        public void setCompeted(boolean competed) {
+            isCompeted = competed;
+        }
+    }
+
+    private final class BenchmarkThread implements Runnable{
+
+        final RunnerState _state;
+        final YCSBRunner _ycsbRunner;
+        final EYCSBWorkloadCatalog _workload;
+
+        private BenchmarkThread(RunnerState stateObj, YCSBRunner runner, EYCSBWorkloadCatalog workload) {
+            _state = stateObj;
+            _ycsbRunner = runner;
+            _workload = workload;
+        }
+
+        @Override
+        public void run() {
+            try {
+                this._state.setCompeted(false);
+                this._state.setState(EBenchmarkRunStage.RUNNING);
+                var ycsbRunOutput = this._ycsbRunner.runWorkload(this._workload);
+                this._state.setState(EBenchmarkRunStage.FINALIZING);
+                var result = new BenchmarkRunResult();
+                result.setError(null);
+                result.setNodes(null); // TODO: Node statistics
+                result.setThroughput(ycsbRunOutput.getThroughput());
+                _state.setResult(result);
+            }
+            catch (Exception ex){
+                this._state.setFailed(true);
+                _state.setResult(new BenchmarkRunResult() {{setError(ex.getMessage());}});
+            }
+            finally {
+                this._state.setCompeted(true);
+                this._state.setState(EBenchmarkRunStage.READY);
+            }
         }
     }
 }
