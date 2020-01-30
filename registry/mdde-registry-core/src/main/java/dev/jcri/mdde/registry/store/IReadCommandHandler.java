@@ -134,7 +134,7 @@ public interface IReadCommandHandler {
      * @param metaName Meta field name
      * @return Value or null if value is not set.
      */
-    String getFragmentGlobalMeta(String fragmentId, String metaName);
+    String getMetaFragmentGlobal(String fragmentId, String metaName);
 
     /**
      * Get a meta value specific for a fragment exemplar
@@ -143,5 +143,5 @@ public interface IReadCommandHandler {
      * @param metaName Meta field name
      * @return Value or null if value is not set.
      */
-    String getFragmentExemplarMeta(String fragmentId, String nodeId, String metaName);
+    String getMetaFragmentExemplar(String fragmentId, String nodeId, String metaName);
 }

@@ -11,6 +11,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Response;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class WriteCommandHandlerRedis extends WriteCommandHandler {
     private static final Logger logger = LogManager.getLogger(WriteCommandHandler.class);
@@ -24,17 +25,18 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
     }
 
     @Override
-    protected void runInsertTupleToNode(String tupleId, String nodeId) throws WriteOperationException {
+    protected boolean runInsertTupleToNode(String tupleId, String nodeId) throws WriteOperationException {
         try(Jedis jedis = _redisConnection.getRedisCommands()) {
             var added = jedis.sadd(Constants.NODE_HEAP_PREFIX + nodeId, tupleId);
-            if (added < 0) {
-                throw new WriteOperationException(String.format("Failed to add %s", tupleId));
+            if (added == 0) {
+                return false;
             }
         }
+        return true;
     }
 
     @Override
-    protected void runInsertTupleToNode(Set<String> tupleIds, String nodeId) throws WriteOperationException {
+    protected boolean runInsertTupleToNode(Set<String> tupleIds, String nodeId) throws WriteOperationException {
         Map<String, Response<Long>> responses = new HashMap<>();
         try(var jedis = _redisConnection.getRedisCommands()) {
             try (var p = jedis.pipelined()) {
@@ -45,25 +47,31 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
                 p.sync();
             }
         }
-        for (Map.Entry<String, Response<Long>> r : responses.entrySet()) {
-            if (r.getValue().get() == 0) {
-                throw new WriteOperationException(String.format("Failed to add %s", r.getKey()));
-            }
+        Set<String> failed = responses.entrySet()
+                .stream()
+                .filter(x -> x.getValue().get() == 0)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+
+        if (failed.size() > 0){
+            throw new WriteOperationException(String.format("Failed to add keys %s", String.join(",", failed)));
         }
+        return true;
     }
 
     @Override
-    protected void runInsertTupleToFragment(String tupleId, String fragmentId) throws WriteOperationException {
+    protected boolean runInsertTupleToFragment(String tupleId, String fragmentId) throws WriteOperationException {
         try(Jedis jedis = _redisConnection.getRedisCommands()) {
             var added = jedis.sadd(Constants.FRAGMENT_PREFIX + fragmentId, tupleId);
-            if (added < 0) {
-                throw new WriteOperationException(String.format("Failed to add %s", tupleId));
+            if (added == 0) {
+                return false;
             }
         }
+        return true;
     }
 
     @Override
-    protected void runInsertTupleToFragment(Set<String> tupleIds, String fragmentId) throws WriteOperationException {
+    protected boolean runInsertTupleToFragment(Set<String> tupleIds, String fragmentId) throws WriteOperationException {
         Map<String, Response<Long>> responses = new HashMap<>();
         try(var jedis = _redisConnection.getRedisCommands()) {
             try(var p = jedis.pipelined()) {
@@ -75,14 +83,19 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
             }
         }
 
-        for(Map.Entry<String, Response<Long>> r: responses.entrySet()){
-            if (r.getValue().get() == 0){
-                throw new WriteOperationException(String.format("Failed to add %s", r.getKey()));
-            }
+        Set<String> failed = responses.entrySet()
+                                .stream()
+                                .filter(x -> x.getValue().get() == 0)
+                                .map(Map.Entry::getKey)
+                                .collect(Collectors.toSet());
+
+        if (failed.size() > 0){
+            throw new WriteOperationException(String.format("Failed to add keys %s", String.join(",", failed)));
         }
+        return true;
     }
 
-    private Boolean removeUnassignedTupleFromAllNodes(String... tupleIds){
+    private boolean removeUnassignedTupleFromAllNodes(String... tupleIds){
         var nodes = readCommandHandler.getNodes();
         try(var jedis = _redisConnection.getRedisCommands()) {
             try(var p = jedis.pipelined()) {
@@ -96,7 +109,7 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
     }
 
     @Override
-    protected void runCompleteTupleDeletion(String tupleId) throws UnknownEntityIdException, WriteOperationException {
+    protected boolean runCompleteTupleDeletion(String tupleId) throws UnknownEntityIdException, WriteOperationException {
         var fragmentId = readCommandHandler.getTupleFragment(tupleId);
         if(fragmentId == null){
             if(!removeUnassignedTupleFromAllNodes(tupleId)){
@@ -110,10 +123,11 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
                         tupleId, fragmentId));
             }
         }
+        return true;
     }
 
     @Override
-    protected String runFormFragment(final Set<String> tupleIds, String fragmentId, String nodeId) throws WriteOperationException {
+    protected boolean runFormFragment(final Set<String> tupleIds, String fragmentId, String nodeId) throws WriteOperationException {
         final String keyFragment = Constants.FRAGMENT_PREFIX + fragmentId;
         Map<String, Response<Long>> responses = new HashMap<>();
         try(var jedis = _redisConnection.getRedisCommands()) {
@@ -134,25 +148,28 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
                 throw new WriteOperationException(String.format("Failed to add %s", r.getKey()));
             }
         }
-        return "";
+        return true;
     }
 
     @Override
-    protected void runAppendTupleToFragment(String tupleId, String fragmentId) throws WriteOperationException {
+    protected boolean runAppendTupleToFragment(String tupleId, String fragmentId) throws WriteOperationException {
         try(var jedis = _redisConnection.getRedisCommands()) {
             var added = jedis.sadd(Constants.FRAGMENT_PREFIX + fragmentId, tupleId);
             if (added < 1) {
                 throw new WriteOperationException(String.format("Failed to add tuple %s to fragment %s", tupleId, fragmentId));
             }
         }
+        return true;
     }
 
     @Override
-    protected void runReplicateFragment(String fragmentId, String sourceNodeId, String destinationNodeId) throws WriteOperationException {
+    protected boolean runReplicateFragment(String fragmentId, String sourceNodeId, String destinationNodeId) throws WriteOperationException {
         try(var jedis = _redisConnection.getRedisCommands()) {
             var key = Constants.NODE_PREFIX + destinationNodeId;
-            var metaKeySource = CommandHandlerRedisHelper.getInstance().genExemplarFragmentMetaFieldName(fragmentId, sourceNodeId);
-            var metaKeyDest = CommandHandlerRedisHelper.getInstance().genExemplarFragmentMetaFieldName(fragmentId, destinationNodeId);
+            var metaKeySource = CommandHandlerRedisHelper
+                    .getInstance().genExemplarFragmentMetaFieldName(fragmentId, sourceNodeId);
+            var metaKeyDest = CommandHandlerRedisHelper
+                    .getInstance().genExemplarFragmentMetaFieldName(fragmentId, destinationNodeId);
             var sourceMeta = jedis.hgetAll(metaKeySource);
             Response<Long> added;
             Response<Long> addedMeta;
@@ -164,13 +181,15 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
                 t.exec();
             }
             if (added.get() < 1) {
-                throw new WriteOperationException(String.format("Failed to add fragment exemplar %s to node %s", fragmentId, destinationNodeId));
+                throw new WriteOperationException(String.format("Failed to add fragment exemplar %s to node %s",
+                        fragmentId, destinationNodeId));
             }
         }
+        return true;
     }
 
     @Override
-    protected void runDeleteFragmentExemplar(String fragmentId, String nodeId) throws WriteOperationException {
+    protected boolean runDeleteFragmentExemplar(String fragmentId, String nodeId) throws WriteOperationException {
         try(var jedis = _redisConnection.getRedisCommands()) {
             var fragmentERemoved = jedis.srem(Constants.NODE_PREFIX + nodeId, fragmentId);
             if (fragmentERemoved < 1) {
@@ -180,6 +199,7 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
             var metaKey = CommandHandlerRedisHelper.getInstance().genExemplarFragmentMetaFieldName(fragmentId, nodeId);
             jedis.del(metaKey);
         }
+        return true;
     }
 
     @Override
@@ -209,7 +229,7 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
     }
 
     @Override
-    protected void runAddMetaToFragmentGlobal(String fragmentId, String metaField, String metaValue)
+    protected boolean runAddMetaToFragmentGlobal(String fragmentId, String metaField, String metaValue)
             throws WriteOperationException {
         try(var jedis = _redisConnection.getRedisCommands()) {
             var key = CommandHandlerRedisHelper.getInstance().genGlobalFragmentMetaFieldName(fragmentId);
@@ -222,50 +242,62 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
                 }
             }
             else{
-                var removed = jedis.hdel(key, metaField);
-                if (removed < 1) {
-                    logger.info(String.format("Failed to remove a global meta field %s to fragment %s", metaField, fragmentId));
+                if(jedis.hexists(key, metaField)) {
+                    var removed = jedis.hdel(key, metaField);
+                    if (removed < 1) {
+                        logger.info(String.format("Failed to remove a global meta field %s to fragment %s",
+                                metaField, fragmentId));
+                    }
+                    return false;
                 }
             }
         }
+        return true;
     }
 
     @Override
-    protected void runAddMetaToFragmentExemplar(String fragmentId, String nodeId, String metaField, String metaValue)
+    protected boolean runAddMetaToFragmentExemplar(String fragmentId, String nodeId, String metaField, String metaValue)
             throws WriteOperationException {
 
         var key = CommandHandlerRedisHelper.getInstance().genExemplarFragmentMetaFieldName(fragmentId, nodeId);
         try(var jedis = _redisConnection.getRedisCommands()) {
-
             if (metaValue != null) {
                 var added = jedis.hset(key, metaField, metaValue);
                 if (added < 1) {
                     throw new WriteOperationException(
-                            String.format("Failed to add a meta field %s to fragment %s located on node %s", metaField, fragmentId, nodeId)
+                            String.format("Failed to add a meta field %s to fragment %s located on node %s",
+                                    metaField, fragmentId, nodeId)
                     );
                 }
             }
             else{
-                var removed = jedis.hdel(key, metaField);
-                if (removed < 1) {
-                    logger.info(String.format("Failed to remove a meta field %s to fragment %s located on node %s", metaField, fragmentId, nodeId));
+                if(jedis.hexists(key, metaField)){
+                    var removed = jedis.hdel(key, metaField);
+                    if (removed < 1) {
+                        logger.info(String.format("Failed to remove a meta field %s to fragment %s located on node %s",
+                                metaField, fragmentId, nodeId));
+                        return false;
+                    }
                 }
             }
         }
+        return true;
     }
 
     @Override
-    protected void runResetFragmentsMeta() {
+    protected boolean runResetFragmentsMeta() {
         try(var jedis = _redisConnection.getRedisCommands()) {
             jedis.del(Constants.FRAGMENT_GLOBAL_META_PREFIX + "*");
             jedis.del(Constants.FRAGMENT_EXEMPLAR_META_PREFIX + "*");
         }
+        return true;
     }
 
     @Override
-    protected void runFlush() {
+    protected boolean runFlush() {
         try(var jedis = _redisConnection.getRedisCommands()) {
             jedis.flushAll();
         }
+        return true;
     }
 }

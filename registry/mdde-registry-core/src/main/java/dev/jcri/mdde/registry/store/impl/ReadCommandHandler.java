@@ -225,7 +225,7 @@ public abstract class ReadCommandHandler implements IReadCommandHandler {
         return runGetAllFragmentIds();
     }
 
-    public String getFragmentGlobalMeta(String fragmentId, String metaName){
+    public String getMetaFragmentGlobal(String fragmentId, String metaName){
         if(fragmentId == null || fragmentId.isEmpty()){
             throw new IllegalArgumentException("Fragment ID can't be null or empty");
         }
@@ -236,7 +236,7 @@ public abstract class ReadCommandHandler implements IReadCommandHandler {
         return runGetGlobalFragmentMeta(fragmentId, metaName);
     }
 
-    public String getFragmentExemplarMeta(String fragmentId, String nodeId, String metaName){
+    public String getMetaFragmentExemplar(String fragmentId, String nodeId, String metaName){
         if(fragmentId == null || fragmentId.isEmpty()){
             throw new IllegalArgumentException("Fragment ID can't be null or empty");
         }

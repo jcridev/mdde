@@ -31,14 +31,14 @@ public enum  EStateControlCommand implements ICommand {
      * Set Registry into the data shuffle mode.
      * Benchmark interface is disabled.
      */
-    SET_SHUFFLE("SHUFFLE"),
+    SET_SHUFFLE("PREPSHUFFLE"),
     /**
      * Execute the current shuffle query on the actual data nodes.
      * All of the actions that were performed in the registry must've been placed in the data shuffle queue, when this
      * command is executed operations from the shuffle queue are executed one by one in the data nodes, thus
      * synchronizing the state of the data nodes with the registry.
      */
-    RUN_SHUFFLE("SYNCNODES"),
+    RUN_SHUFFLE("RUNSHUFFLE"),
     /**
      * Reset the state of the environment.
      * Following must happen after this command is executed:

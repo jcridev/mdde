@@ -9,6 +9,10 @@ import org.apache.logging.log4j.Logger;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * Top responder for the incoming parsed READ commands.
+ * Any global (implementation independent) behaviour for any of the commands should be specified here.
+ */
 public class ReadCommandResponder {
     private static final Logger logger = LogManager.getLogger(ReadCommandResponder.class);
     private final  IReadCommandHandler _readHandler;
@@ -48,5 +52,21 @@ public class ReadCommandResponder {
 
     public Set<String> getNodes(){
         return _readHandler.getNodes();
+    }
+
+    public String getMetaFragmentGlobal(String fragmentId, String metaName){
+        return _readHandler.getMetaFragmentGlobal(fragmentId, metaName);
+    }
+
+    public String getMetaFragmentExemplar(String fragmentId, String nodeId, String metaName){
+        return _readHandler.getMetaFragmentExemplar(fragmentId, nodeId, metaName);
+    }
+
+    public Set<String> getNodeUnassignedTuples(String nodeId){
+        return _readHandler.getUnassignedTuples(nodeId);
+    }
+
+    public Set<String> getNodeFragments(String nodeId){
+        return _readHandler.getNodeFragments(nodeId);
     }
 }

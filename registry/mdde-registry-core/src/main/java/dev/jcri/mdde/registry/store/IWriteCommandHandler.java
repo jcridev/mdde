@@ -10,13 +10,14 @@ import java.util.Set;
 public interface IWriteCommandHandler {
     /**
      * Insert tuple id to the specified node, optionally assigning it to a fragment
-     * @param tupleId
-     * @param nodeId
+     * @param tupleId Tuple ID to be assigned to the specified node
+     * @param nodeId Destination node
      * @return
      * @throws DuplicateEntityRecordException
      * @throws UnknownEntityIdException
+     * @throws WriteOperationException
      */
-    void insertTuple(final String tupleId, final String nodeId)
+    boolean insertTuple(final String tupleId, final String nodeId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException;
 
     /**
@@ -27,7 +28,7 @@ public interface IWriteCommandHandler {
      * @throws UnknownEntityIdException
      * @throws WriteOperationException
      */
-    void insertTuple(final Set<String> tupleIds, final String nodeId)
+    boolean insertTuple(final Set<String> tupleIds, final String nodeId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException;
 
     /**
@@ -36,7 +37,7 @@ public interface IWriteCommandHandler {
      * @throws UnknownEntityIdException
      * @throws WriteOperationException
      */
-    void deleteTuple(final String tupleId) throws UnknownEntityIdException, WriteOperationException;
+    boolean deleteTuple(final String tupleId) throws UnknownEntityIdException, WriteOperationException;
 
 
     /**
@@ -47,12 +48,20 @@ public interface IWriteCommandHandler {
      * @throws UnknownEntityIdException
      * @throws WriteOperationException
      */
-    String formFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
+    boolean formFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
             throws UnknownEntityIdException, WriteOperationException, DuplicateEntityRecordException,
             IllegalRegistryActionException;
 
 
-    void appendTupleToFragment(final String tupleId, final String fragmentId)
+    /**
+     * Append an unassigned tuple ID to existing fragment.
+     * @param tupleId
+     * @param fragmentId
+     * @throws DuplicateEntityRecordException
+     * @throws UnknownEntityIdException
+     * @throws WriteOperationException
+     */
+    boolean appendTupleToFragment(final String tupleId, final String fragmentId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException;
 
     /**
@@ -64,7 +73,7 @@ public interface IWriteCommandHandler {
      * @throws WriteOperationException
      * @throws IllegalRegistryActionException
      */
-    void replicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
+    boolean replicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
             throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException;
 
     /**
@@ -74,7 +83,7 @@ public interface IWriteCommandHandler {
      * @throws UnknownEntityIdException
      * @throws WriteOperationException
      */
-    void deleteFragmentExemplar(final String fragmentId, final String nodeId)
+    boolean deleteFragmentExemplar(final String fragmentId, final String nodeId)
             throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException;
 
     /**
@@ -101,7 +110,7 @@ public interface IWriteCommandHandler {
      * @param metaField Name of the meta field (while specific length constraints depend on your backend implementation, better keep it short)
      * @param metaValue Vale of the meta serialized as string
      */
-    void addMetaToFragmentGlobal(final String fragmentId, final String metaField, final String metaValue) throws UnknownEntityIdException, WriteOperationException;
+    boolean addMetaToFragmentGlobal(final String fragmentId, final String metaField, final String metaValue) throws UnknownEntityIdException, WriteOperationException;
 
     /**
      * Add meta value to the specific fragment exemplar
@@ -110,15 +119,15 @@ public interface IWriteCommandHandler {
      * @param metaField Name of the meta field (while specific length constraints depend on your backend implementation, better keep it short)
      * @param metaValue Vale of the meta serialized as string
      */
-    void addMetaToFragmentExemplar(final String fragmentId, final String nodeId, final String metaField, final String metaValue) throws UnknownEntityIdException, WriteOperationException;
+    boolean addMetaToFragmentExemplar(final String fragmentId, final String nodeId, final String metaField, final String metaValue) throws UnknownEntityIdException, WriteOperationException;
 
     /**
      * Remove all meta values for all fragments
      */
-    void resetFragmentsMeta();
+    boolean resetFragmentsMeta();
 
     /**
      * Clear all meta, fragments and tuples from the registry, leaving only empty nodes
      */
-    void reset() throws WriteOperationException;
+    boolean reset() throws WriteOperationException;
 }

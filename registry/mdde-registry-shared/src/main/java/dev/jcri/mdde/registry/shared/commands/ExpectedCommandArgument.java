@@ -4,16 +4,30 @@ package dev.jcri.mdde.registry.shared.commands;
  * Class containing the description of an argument expected by a command
  */
 public enum ExpectedCommandArgument{
-    ARG_TUPLE_ID("Tuple ID", Constants.ArgTupleIdField, ExpectedCommandArgument.ArgumentType.STRING),
-    ARG_TUPLE_IDs("Tuple IDs", Constants.ArgTupleIdsField, ExpectedCommandArgument.ArgumentType.SET_STRINGS),
-    ARG_NODE_ID("Node ID", Constants.ArgNodeIdField, ExpectedCommandArgument.ArgumentType.STRING),
-    ARG_NODE_IDs("Node IDs", Constants.ArgNodeIdsField, ExpectedCommandArgument.ArgumentType.SET_STRINGS),
-    ARG_NODE_ID_B("2nd Node ID", Constants.ArgSecondNodeIdFiled, ExpectedCommandArgument.ArgumentType.STRING),
-    ARG_FRAGMENT_ID("Fragment ID", Constants.ArgFragmentIdField, ExpectedCommandArgument.ArgumentType.STRING),
+    ARG_TUPLE_ID("Tuple ID",
+            Constants.ArgTupleIdField, ExpectedCommandArgument.ArgumentType.STRING),
+    ARG_TUPLE_IDs("Tuple IDs",
+            Constants.ArgTupleIdsField, ExpectedCommandArgument.ArgumentType.SET_STRINGS),
+    ARG_NODE_ID("Node ID",
+            Constants.ArgNodeIdField, ExpectedCommandArgument.ArgumentType.STRING),
+    ARG_NODE_IDs("Node IDs",
+            Constants.ArgNodeIdsField, ExpectedCommandArgument.ArgumentType.SET_STRINGS),
+    ARG_NODE_ID_B("2nd Node ID", // Typically used as a destination node (example: COPY)
+            Constants.ArgSecondNodeIdFiled, ExpectedCommandArgument.ArgumentType.STRING),
+    ARG_FRAGMENT_ID("Fragment ID",
+            Constants.ArgFragmentIdField, ExpectedCommandArgument.ArgumentType.STRING),
 
-    ARG_WORKLOAD_ID("Benchmark workload ID", Constants.ArgWorkloadIdField, ExpectedCommandArgument.ArgumentType.STRING),
-    ARG_DEFAULT_SNAPSHOT_FLAG("Snapshot ID assigned as default", Constants.ArgSnapshotDefaultField, ArgumentType.BOOLEAN),
-    ARG_SNAPSHOT_ID("Snapshot ID", Constants.ArgSnapshotIdField, ArgumentType.STRING);
+    ARG_FRAGMENT_META_TAG("Fragment meta tag",
+            Constants.ArgFragmentMetaTag, ExpectedCommandArgument.ArgumentType.STRING),
+    ARG_FRAGMENT_META_VALUE("Fragment meta value",
+            Constants.ArgFragmentMetaValue, ExpectedCommandArgument.ArgumentType.STRING),
+
+    ARG_WORKLOAD_ID("Benchmark workload ID",
+            Constants.ArgWorkloadIdField, ExpectedCommandArgument.ArgumentType.STRING),
+    ARG_DEFAULT_SNAPSHOT_FLAG("Snapshot ID assigned as default",
+            Constants.ArgSnapshotDefaultField, ArgumentType.BOOLEAN),
+    ARG_SNAPSHOT_ID("Snapshot ID",
+            Constants.ArgSnapshotIdField, ArgumentType.STRING);
 
     private final String _title;
     private final ArgumentType _argumentType;

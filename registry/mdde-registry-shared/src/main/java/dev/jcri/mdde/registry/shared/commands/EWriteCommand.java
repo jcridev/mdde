@@ -10,15 +10,76 @@ import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
  * Registry manipulation commands available
  */
 public enum EWriteCommand implements ICommand {
-    INSERT_TUPLE("INSERT", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID); add(ARG_NODE_ID);}}),
-    INSERT_TUPLE_BULK("INSERTMANY", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_IDs); add(ARG_NODE_ID);}}),
+    /**
+     * Insert a new tuple ID into the registry
+     */
+    INSERT_TUPLE("INSERT",
+            new ArrayList<ExpectedCommandArgument>(){
+                {add(ARG_TUPLE_ID); add(ARG_NODE_ID);}
+            }),
+    /**
+     * Insert a set of tuple IDs into the registry
+     */
+    INSERT_TUPLE_BULK("INSERTMANY",
+            new ArrayList<ExpectedCommandArgument>(){
+                {add(ARG_TUPLE_IDs); add(ARG_NODE_ID);}
+            }),
+    /**
+     * Remove tuple ID from the registry
+     */
     DELETE_TUPLE("DELTUPLE", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID); }}),
-    FORM_FRAGMENT("GROUP", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_IDs); add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}}),
-    APPEND_TO_FRAGMENT("APPEND", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID); add(ARG_FRAGMENT_ID);}}),
-    REPLICATE_FRAGMENT("REPLICATE", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID); add(ARG_NODE_ID); add(ARG_NODE_ID_B);}}),
-    DELETE_FRAGMENT("DELFRAGCOPY", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}}),
-    DESTROY_FRAGMENT("ERASE", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID);}}),
-    POPULATE_NODES("ADDNODES", new ArrayList<ExpectedCommandArgument>(){{add(ARG_NODE_IDs);}});
+    /**
+     * Create a new fragment
+     */
+    FORM_FRAGMENT("FRAGMAKE",
+            new ArrayList<ExpectedCommandArgument>(){
+                {add(ARG_TUPLE_IDs); add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}
+            }),
+    /**
+     * Append tuple to an existing fragment
+     */
+    APPEND_TO_FRAGMENT("FRAGAPPEND",
+            new ArrayList<ExpectedCommandArgument>(){
+                {add(ARG_TUPLE_ID); add(ARG_FRAGMENT_ID);}
+            }),
+    /**
+     * Copy an existing fragment from one data node to another.
+     * The action affects both the registry and data nodes
+     */
+    REPLICATE_FRAGMENT_DATA("DCOPYFRAG",
+            new ArrayList<ExpectedCommandArgument>(){
+                {add(ARG_FRAGMENT_ID); add(ARG_NODE_ID); add(ARG_NODE_ID_B);}
+            }),
+    /**
+     * Delete an exemplar of a fragment from a specific node
+     * The action affects both the registry and data nodes
+     */
+    DELETE_FRAGMENT_DATA("DDELFRAGEX",
+            new ArrayList<ExpectedCommandArgument>(){
+                {add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}
+            }),
+    /**
+     * Completely deleter the fragment from the registry
+     */
+    DESTROY_FRAGMENT("ERASEFRAG",
+            new ArrayList<ExpectedCommandArgument>(){
+        {add(ARG_FRAGMENT_ID);}
+    }),
+    /**
+     * Add a set of nodes IDs to the registry
+     */
+    POPULATE_NODES("ADDNODES", new ArrayList<ExpectedCommandArgument>(){{add(ARG_NODE_IDs);}}),
+
+    META_FRAGMENT_EXEMPLAR("PUTMETAFRAGEXM",
+            new ArrayList<ExpectedCommandArgument>(){
+                {add(ARG_FRAGMENT_ID); add(ARG_NODE_ID); add(ARG_FRAGMENT_META_TAG); add(ARG_FRAGMENT_META_VALUE);}
+            }),
+
+    META_FRAGMENT_GLOBAL("PUTMETAFRAGGLB",
+            new ArrayList<ExpectedCommandArgument>(){
+                {add(ARG_FRAGMENT_ID); add(ARG_FRAGMENT_META_TAG); add(ARG_FRAGMENT_META_VALUE);}
+            });
+
 
     private final String _command;
     private final List<ExpectedCommandArgument> _expectedArguments;

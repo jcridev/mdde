@@ -9,14 +9,61 @@ import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
  * Enum of the available READ commands
  */
 public enum EReadCommand implements ICommand {
-    GET_REGISTRY("GETALL", new ArrayList<ExpectedCommandArgument>()),
+    /**
+     * Get overview of the entire registry
+     */
+    GET_REGISTRY("GETALL", new ArrayList<>()),
+    /**
+     * Get nodes where the specific tuple is located
+     */
     FIND_TUPLE("FINDTUPLE", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID);}}),
+    /**
+     * Get all tuples that are located on the specific node but not assigned to any fragment
+     */
+    NODE_TUPLES_UNASSIGNED("NTUPLESU", new ArrayList<ExpectedCommandArgument>(){{add(ARG_NODE_ID);}}),
+    /**
+     * Get all fragments that are located on the specific node
+     */
+    NODE_FRAGMENTS("NFRAGS", new ArrayList<ExpectedCommandArgument>(){{add(ARG_NODE_ID);}}),
+    /**
+     * Find the fragment to which the tuple is assigned
+     */
     FIND_TUPLE_FRAGMENT("TUPLEFRAGMENT", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID);}}),
+    /**
+     * Find all of the nodes where the fragment is located
+     */
     FIND_FRAGMENT("FINDFRAGMENT", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID);}}),
+    /**
+     * Get all of the tuple IDs assigned to the fragment
+     */
     GET_FRAGMENT_TUPLES("GETFRAGTUPLES", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID);}}),
+    /**
+     * Get the total number of tuple fragment exemplars
+     */
     COUNT_FRAGMENT("COUNTFRAGMENT", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID);}}),
+    /**
+     * Get the total number of the tuple exemplars
+     */
     COUNT_TUPLE("COUNTTUPLE", new ArrayList<ExpectedCommandArgument>(){{add(ARG_TUPLE_ID);}}),
-    GET_NODES("NODES", new ArrayList<>());
+    /**
+     * Get the list of data nodes IDs
+     */
+    GET_NODES("NODES", new ArrayList<>()),
+    /**
+     * Get the a meta value assigned to a specific fragment exemplar
+     */
+    META_FRAGMENT_EXEMPLAR("GETMETAFRAGEXM",
+            new ArrayList<ExpectedCommandArgument>(){
+                {add(ARG_FRAGMENT_ID); add(ARG_NODE_ID); add(ARG_FRAGMENT_META_TAG);}
+            }),
+    /**
+     * Get the a meta value assigned to the fragment globally
+     */
+    META_FRAGMENT_GLOBAL("GETMETAFRAGGLB",
+            new ArrayList<ExpectedCommandArgument>(){
+                {add(ARG_FRAGMENT_ID); add(ARG_FRAGMENT_META_TAG);}
+            });
+
 
     private final String _command;
     private final List<ExpectedCommandArgument> _expectedArguments;

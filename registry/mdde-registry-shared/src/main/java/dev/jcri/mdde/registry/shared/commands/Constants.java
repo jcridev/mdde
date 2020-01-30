@@ -14,7 +14,7 @@ public final class Constants {
     public static final String ArgumentsField = "args";
 
 
-    public static final String ArgTupleIdField = "tip";
+    public static final String ArgTupleIdField = "tid";
     public static final String ArgTupleIdsField = "tids";
     public static final String ArgNodeIdField = "nid";
     public static final String ArgNodeIdsField = "nids";
@@ -23,11 +23,12 @@ public final class Constants {
 
     public static final String ArgWorkloadIdField = "workload";
 
+    public static final String ArgFragmentMetaTag = "fmtag";
+    public static final String ArgFragmentMetaValue = "fmval";
+
     public static final String ArgSnapshotIdField = "snapid";
     public static final String ArgSnapshotDefaultField = "snapisdef";
 
     public static final String ResultPayload = "result";
     public static final String ResultError = "error";
-
-
 }

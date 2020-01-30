@@ -38,11 +38,11 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * @throws DuplicateEntityRecordException
      * @throws UnknownEntityIdException
      */
-    public final void insertTuple(final String tupleId, final String nodeId)
+    public final boolean insertTuple(final String tupleId, final String nodeId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
         _commandExecutionLock.lock();
         try {
-            verifyAndRunInsertTuple(tupleId, nodeId);
+            return verifyAndRunInsertTuple(tupleId, nodeId);
         }
         finally {
            _commandExecutionLock.unlock();
@@ -57,11 +57,11 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * @throws UnknownEntityIdException
      * @throws WriteOperationException
      */
-    public final void insertTuple(final Set<String> tupleIds, final String nodeId)
+    public final boolean insertTuple(final Set<String> tupleIds, final String nodeId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException{
         _commandExecutionLock.lock();
         try {
-            verifyAndRunInsertTuple(tupleIds, nodeId);
+            return verifyAndRunInsertTuple(tupleIds, nodeId);
         }
         finally {
             _commandExecutionLock.unlock();
@@ -74,10 +74,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * @throws UnknownEntityIdException
      * @throws WriteOperationException
      */
-    public final void deleteTuple(final String tupleId) throws UnknownEntityIdException, WriteOperationException {
+    public final boolean deleteTuple(final String tupleId) throws UnknownEntityIdException, WriteOperationException {
         _commandExecutionLock.lock();
         try {
-            runCompleteTupleDeletion(tupleId);
+            return runCompleteTupleDeletion(tupleId);
         }
         finally {
             _commandExecutionLock.unlock();
@@ -92,7 +92,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * @throws UnknownEntityIdException
      * @throws WriteOperationException
      */
-    public final String formFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
+    public final boolean formFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
             throws UnknownEntityIdException, WriteOperationException, DuplicateEntityRecordException, IllegalRegistryActionException {
         _commandExecutionLock.lock();
         try {
@@ -103,22 +103,22 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
         }
     }
 
-    public final void appendTupleToFragment(final String tupleId, final String fragmentId)
+    public final boolean appendTupleToFragment(final String tupleId, final String fragmentId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
         _commandExecutionLock.lock();
         try {
-            verifyAndRunAppendTupleToFragment(tupleId, fragmentId);
+            return verifyAndRunAppendTupleToFragment(tupleId, fragmentId);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
 
-    public final void replicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
+    public final boolean replicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
             throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException {
         _commandExecutionLock.lock();
         try {
-            verifyAndRunReplicateFragment(fragmentId, sourceNodeId, destinationNodeId);
+            return verifyAndRunReplicateFragment(fragmentId, sourceNodeId, destinationNodeId);
         }
         finally {
             _commandExecutionLock.unlock();
@@ -132,11 +132,11 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * @throws UnknownEntityIdException
      * @throws WriteOperationException
      */
-    public final void deleteFragmentExemplar(final String fragmentId, final String nodeId)
+    public final boolean deleteFragmentExemplar(final String fragmentId, final String nodeId)
             throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException {
         _commandExecutionLock.lock();
         try {
-            verifyAndRunDeleteFragmentExemplar(fragmentId, nodeId);
+            return verifyAndRunDeleteFragmentExemplar(fragmentId, nodeId);
         }
         finally {
             _commandExecutionLock.unlock();
@@ -177,7 +177,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
         }
     }
 
-    public final void addMetaToFragmentGlobal(final String fragmentId, final String metaField, final String metaValue)
+    public final boolean addMetaToFragmentGlobal(final String fragmentId, final String metaField, final String metaValue)
             throws UnknownEntityIdException, WriteOperationException {
         _commandExecutionLock.lock();
         try {
@@ -191,14 +191,14 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             if(!readCommandHandler.getIsFragmentExists(fragmentId)){
                 throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
             }
-            runAddMetaToFragmentGlobal(fragmentId, metaField, metaValue);
+            return runAddMetaToFragmentGlobal(fragmentId, metaField, metaValue);
         }
         finally {
             _commandExecutionLock.unlock();
         }
     }
 
-    public final void addMetaToFragmentExemplar(final String fragmentId, final String nodeId, final String metaField, final String metaValue)
+    public final boolean addMetaToFragmentExemplar(final String fragmentId, final String nodeId, final String metaField, final String metaValue)
             throws UnknownEntityIdException, WriteOperationException {
         _commandExecutionLock.lock();
         try {
@@ -215,7 +215,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             if(!readCommandHandler.getIsNodeContainsFragment(nodeId, fragmentId)){
                 throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
             }
-            runAddMetaToFragmentExemplar(fragmentId, nodeId, metaField, metaValue);
+            return runAddMetaToFragmentExemplar(fragmentId, nodeId, metaField, metaValue);
         }
         finally {
             _commandExecutionLock.unlock();
@@ -226,10 +226,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * Remove all meta values for all fragments
      */
     @Override
-    public final void resetFragmentsMeta(){
+    public final boolean resetFragmentsMeta(){
         _commandExecutionLock.lock();
         try {
-            runResetFragmentsMeta();
+            return runResetFragmentsMeta();
         }
         finally {
             _commandExecutionLock.unlock();
@@ -240,10 +240,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * Clear the registry
      */
     @Override
-    public final void reset() throws WriteOperationException {
+    public final boolean reset() throws WriteOperationException {
         _commandExecutionLock.lock();
         try {
-            runFlush();
+            return runFlush();
         }
         finally {
             _commandExecutionLock.unlock();
@@ -252,7 +252,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
 
 //endregion
 //region Verify the correctness and validity of the invoked operation
-    private void verifyAndRunInsertTuple(final String tupleId, final String nodeId)
+    private boolean verifyAndRunInsertTuple(final String tupleId, final String nodeId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
         if (readCommandHandler.getIsTupleExists(tupleId)) {
             throw new DuplicateEntityRecordException(RegistryEntityType.Tuple, tupleId);
@@ -261,10 +261,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
         }
 
-        runInsertTupleToNode(tupleId, nodeId);
+        return runInsertTupleToNode(tupleId, nodeId);
     }
 
-    private String verifyAndRunFormFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
+    private boolean verifyAndRunFormFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
             throws WriteOperationException, DuplicateEntityRecordException, IllegalRegistryActionException {
         if(!readCommandHandler.getIsTuplesUnassigned(nodeId, tupleIds)){
             throw new IllegalRegistryActionException("Fragments can only be formed from colocated exiting tuples",
@@ -277,7 +277,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
         return runFormFragment(tupleIds, fragmentId, nodeId);
     }
 
-    private void verifyAndRunInsertTuple(final Set<String> tupleIds, final String nodeId)
+    private boolean verifyAndRunInsertTuple(final Set<String> tupleIds, final String nodeId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
 
         for(String tupleId: tupleIds){
@@ -289,10 +289,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
         }
 
-        runInsertTupleToNode(tupleIds, nodeId);
+        return runInsertTupleToNode(tupleIds, nodeId);
     }
 
-    private void verifyAndRunAppendTupleToFragment(final String tupleId, final String fragmentId)
+    private boolean verifyAndRunAppendTupleToFragment(final String tupleId, final String fragmentId)
             throws UnknownEntityIdException, WriteOperationException {
         if (!readCommandHandler.getIsTupleExists(tupleId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Tuple, tupleId);
@@ -301,10 +301,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
         }
 
-        runAppendTupleToFragment(tupleId, fragmentId);
+        return runAppendTupleToFragment(tupleId, fragmentId);
     }
 
-    private void verifyAndRunReplicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
+    private boolean verifyAndRunReplicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
             throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException {
         if (!readCommandHandler.getIsFragmentExists(fragmentId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
@@ -323,10 +323,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             throw new IllegalRegistryActionException(String.format("Destination node %s already contains fragment %s",
                     destinationNodeId, fragmentId), IllegalRegistryActionException.IllegalActions.DuplicateFragmentReplication);
         }
-        runReplicateFragment(fragmentId, sourceNodeId, destinationNodeId);
+        return runReplicateFragment(fragmentId, sourceNodeId, destinationNodeId);
     }
 
-    private void verifyAndRunDeleteFragmentExemplar(final String fragmentId, final String nodeId)
+    private boolean verifyAndRunDeleteFragmentExemplar(final String fragmentId, final String nodeId)
             throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException {
         var fragmentCount = readCommandHandler.getCountFragment(fragmentId);
         if(fragmentCount == 0){
@@ -338,7 +338,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
         if (!readCommandHandler.getIsNodeExists(nodeId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
         }
-        runDeleteFragmentExemplar(fragmentId, nodeId);
+        return runDeleteFragmentExemplar(fragmentId, nodeId);
     }
 
     private String verifyAndRunCompleteFragmentDeletion(final String fragmentId)
@@ -355,48 +355,48 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * @param tupleId Tuple ID
      * @param nodeId Destination node
      */
-    protected abstract void runInsertTupleToNode(final String tupleId, final String nodeId) throws UnknownEntityIdException, WriteOperationException;
+    protected abstract boolean runInsertTupleToNode(final String tupleId, final String nodeId) throws UnknownEntityIdException, WriteOperationException;
 
     /**
      * Bulk insert tuple to the registry, optionally attaching it to a fragment right away
      * @param tupleIds Tuple IDs
      * @param nodeId Destination node
      */
-    protected abstract void runInsertTupleToNode(final Set<String> tupleIds, String nodeId) throws WriteOperationException, UnknownEntityIdException;
+    protected abstract boolean runInsertTupleToNode(final Set<String> tupleIds, String nodeId) throws WriteOperationException, UnknownEntityIdException;
 
     /**
      * Insert tuple to a specific fragment
      * @param tupleId Tuple ID
      * @param fragmentId Destination fragment ID
      */
-    protected abstract void runInsertTupleToFragment(final String tupleId, String fragmentId) throws WriteOperationException;
+    protected abstract boolean runInsertTupleToFragment(final String tupleId, String fragmentId) throws WriteOperationException;
     /**
      * Bulk insertion to a specific fragment
      * @param tupleIds
      * @param fragmentId
      */
-    protected abstract void runInsertTupleToFragment(final Set<String> tupleIds, String fragmentId) throws WriteOperationException;
+    protected abstract boolean runInsertTupleToFragment(final Set<String> tupleIds, String fragmentId) throws WriteOperationException;
 
     /**
      * Deleter tuple and exclude from all of the fragments it's in
      * @param tupleId
      * @return
      */
-    protected abstract void runCompleteTupleDeletion(final String tupleId) throws UnknownEntityIdException, WriteOperationException;
+    protected abstract boolean runCompleteTupleDeletion(final String tupleId) throws UnknownEntityIdException, WriteOperationException;
 
     /**
      * Create fragment including the specified tuples. A tuple can belong to only one fragment at a time
      * @param tupleIds IDs of Tuples that will be placed into the same fragment
      * @return
      */
-    protected abstract String runFormFragment(final Set<String> tupleIds, String fragmentId, String nodeId) throws WriteOperationException;
+    protected abstract boolean runFormFragment(final Set<String> tupleIds, String fragmentId, String nodeId) throws WriteOperationException;
 
     /**
      * Attach tuple to a fragment. If a fragment is already part of a tuple, exclude it from the current fragment.
      * @param tupleId Tuple Id that should be added to the specified fragment
      * @param fragmentId Destination fragment Id
      */
-    protected abstract void runAppendTupleToFragment(final String tupleId, final String fragmentId) throws WriteOperationException;
+    protected abstract boolean runAppendTupleToFragment(final String tupleId, final String fragmentId) throws WriteOperationException;
 
     /**
      * Create a copy of a fragment
@@ -404,7 +404,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * @param sourceNodeId ID of the source node from where the fragment is copied
      * @param destinationNodeId ID of the destination node where the copy is placed
      */
-    protected abstract void runReplicateFragment(final String fragmentId,
+    protected abstract boolean runReplicateFragment(final String fragmentId,
                                                    final String sourceNodeId,
                                                    final String destinationNodeId) throws WriteOperationException;
 
@@ -413,7 +413,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * @param fragmentId Fragment Id
      * @param nodeId Node from which the fragment must be erased
      */
-    protected abstract void runDeleteFragmentExemplar(final String fragmentId, final String nodeId) throws WriteOperationException;
+    protected abstract boolean runDeleteFragmentExemplar(final String fragmentId, final String nodeId) throws WriteOperationException;
 
     /**
      * **Destructive operation**, removes the fragment completely from the registry.
@@ -429,21 +429,21 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      */
     protected abstract boolean runPopulateNodes(final Set<String> nodeIds) throws WriteOperationException;
 
-    protected abstract void runAddMetaToFragmentGlobal(final String fragmentId,
+    protected abstract boolean runAddMetaToFragmentGlobal(final String fragmentId,
                                                        final String metaField,
                                                        final String metaValue)
             throws WriteOperationException;
 
-    protected abstract void runAddMetaToFragmentExemplar(final String fragmentId,
+    protected abstract boolean runAddMetaToFragmentExemplar(final String fragmentId,
                                                          final String nodeId,
                                                          final String metaField,
                                                          final String metaValue)
             throws WriteOperationException;
 
 
-    protected abstract void runResetFragmentsMeta();
+    protected abstract boolean runResetFragmentsMeta();
 
-    protected abstract void runFlush();
+    protected abstract boolean runFlush();
 //endregion
 
 }

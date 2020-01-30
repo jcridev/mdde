@@ -32,65 +32,65 @@ public class SequentialWriteCommandParser<T> extends BaseSequentialCommandParser
         try {
             switch (EWriteCommand) {
                 case INSERT_TUPLE:
-                    processInsertTupleCommand(arguments);
-                    break;
+                    return processInsertTupleCommand(arguments);
                 case INSERT_TUPLE_BULK:
-                    processInsertTupleInBulkCommand(arguments);
-                    break;
+                    return processInsertTupleInBulkCommand(arguments);
                 case DELETE_TUPLE:
-                    processDeleteTupleCommand(arguments);
-                    break;
+                    return processDeleteTupleCommand(arguments);
                 case FORM_FRAGMENT:
                     return processFormFragmentCommand(arguments);
                 case APPEND_TO_FRAGMENT:
-                    processAppendToFragmentCommand(arguments);
-                    break;
-                case REPLICATE_FRAGMENT:
-                    processReplicateFragmentCommand(arguments);
-                    break;
-                case DELETE_FRAGMENT:
-                    processDeleteFragmentExemplar(arguments);
-                    break;
+                    return processAppendToFragmentCommand(arguments);
+                case REPLICATE_FRAGMENT_DATA:
+                    return processReplicateFragmentCommand(arguments);
+                case DELETE_FRAGMENT_DATA:
+                    return processDeleteFragmentExemplar(arguments);
                 case DESTROY_FRAGMENT:
                     return processDestroyFragment(arguments);
                 case POPULATE_NODES:
                     return processPopulateNodes(arguments);
+                case META_FRAGMENT_EXEMPLAR:
+                    return processAttachMetaToFragmentExemplar(arguments);
+                case META_FRAGMENT_GLOBAL:
+                    return processAttachMetaToFragmentGlobally(arguments);
                 default:
                     throw new UnknownRegistryCommandExceptions(EWriteCommand.toString());
             }
-            return _serializer.serialize("ok");
         }catch (Exception ex){
             return _serializer.serializeException(ex);
         }
     }
 
-    private void processInsertTupleCommand(final List<Object> arguments)
-            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException {
+    private T processInsertTupleCommand(final List<Object> arguments)
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException,
+            IllegalCommandArgumentException, ResponseSerializationException {
         final var thisCommand = EWriteCommand.INSERT_TUPLE;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
         var nodeId = getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
-        _writeCommandHandler.insertTuple(tupleId, nodeId);
+        return _serializer.serialize(_writeCommandHandler.insertTuple(tupleId, nodeId));
     }
 
-    private void processInsertTupleInBulkCommand(final List<Object> arguments)
-            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException {
+    private T processInsertTupleInBulkCommand(final List<Object> arguments)
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException,
+            IllegalCommandArgumentException, ResponseSerializationException {
         final var thisCommand = EWriteCommand.INSERT_TUPLE_BULK;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var tupleIdsArg = getPositionalArgumentAsSet(arguments, thisCommand, ARG_TUPLE_IDs);
         var nodeId = getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
-        _writeCommandHandler.insertTuple(tupleIdsArg, nodeId);
+        return _serializer.serialize(_writeCommandHandler.insertTuple(tupleIdsArg, nodeId));
     }
 
-    private void processDeleteTupleCommand(final List<Object> arguments)
-            throws UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException {
+    private T processDeleteTupleCommand(final List<Object> arguments)
+            throws UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException,
+            ResponseSerializationException {
         final var thisCommand = EWriteCommand.DELETE_TUPLE;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
-        _writeCommandHandler.deleteTuple(tupleId);
+        return _serializer.serialize(_writeCommandHandler.deleteTuple(tupleId));
     }
 
     private T processFormFragmentCommand(final List<Object> arguments)
@@ -105,39 +105,41 @@ public class SequentialWriteCommandParser<T> extends BaseSequentialCommandParser
         return _serializer.serialize(_writeCommandHandler.formFragment(tupleIdsArg, fragmentId, nodeId));
     }
 
-    private void processAppendToFragmentCommand(final List<Object> arguments)
-            throws WriteOperationException, DuplicateEntityRecordException, UnknownEntityIdException, IllegalCommandArgumentException {
+    private T processAppendToFragmentCommand(final List<Object> arguments)
+            throws WriteOperationException, DuplicateEntityRecordException, UnknownEntityIdException, IllegalCommandArgumentException, ResponseSerializationException {
         final var thisCommand = EWriteCommand.APPEND_TO_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
         var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
-        _writeCommandHandler.appendTupleToFragment(tupleId, fragmentId);
+        return _serializer.serialize(_writeCommandHandler.appendTupleToFragment(tupleId, fragmentId));
     }
 
-    private void processReplicateFragmentCommand(final List<Object> arguments)
-            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException, ReadOperationException {
-        final var thisCommand = EWriteCommand.REPLICATE_FRAGMENT;
+    private T processReplicateFragmentCommand(final List<Object> arguments)
+            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException, ReadOperationException, ResponseSerializationException {
+        final var thisCommand = EWriteCommand.REPLICATE_FRAGMENT_DATA;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
         var nodeIdA = getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
         var nodeIdB = getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID_B);
-        _writeCommandHandler.replicateFragment(fragmentId, nodeIdA, nodeIdB);
+        return _serializer.serialize(_writeCommandHandler.replicateFragment(fragmentId, nodeIdA, nodeIdB));
     }
 
-    private void processDeleteFragmentExemplar(final List<Object> arguments)
-            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException, ReadOperationException {
-        final var thisCommand = EWriteCommand.DELETE_FRAGMENT;
+    private T processDeleteFragmentExemplar(final List<Object> arguments)
+            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException,
+            IllegalCommandArgumentException, ReadOperationException, ResponseSerializationException {
+        final var thisCommand = EWriteCommand.DELETE_FRAGMENT_DATA;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
         var nodeId =  getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
-        _writeCommandHandler.deleteFragmentExemplar(fragmentId, nodeId);
+        return _serializer.serialize(_writeCommandHandler.deleteFragmentExemplar(fragmentId, nodeId));
     }
 
     private T processDestroyFragment(final List<Object> arguments)
-            throws ResponseSerializationException, UnknownEntityIdException, IllegalCommandArgumentException, WriteOperationException, ReadOperationException {
+            throws ResponseSerializationException, UnknownEntityIdException, IllegalCommandArgumentException,
+            WriteOperationException, ReadOperationException {
         final var thisCommand = EWriteCommand.DESTROY_FRAGMENT;
         validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -146,11 +148,39 @@ public class SequentialWriteCommandParser<T> extends BaseSequentialCommandParser
     }
 
     private T processPopulateNodes(final List<Object> arguments)
-            throws IllegalRegistryActionException, ResponseSerializationException, WriteOperationException, IllegalCommandArgumentException {
+            throws IllegalRegistryActionException, ResponseSerializationException, WriteOperationException,
+            IllegalCommandArgumentException {
         final var thisCommand = EWriteCommand.POPULATE_NODES;
         validateNotNullArguments(arguments, thisCommand.toString());
 
         var nodeIdsArg = getPositionalArgumentAsSet(arguments, thisCommand, ARG_NODE_IDs);
         return _serializer.serialize(_writeCommandHandler.populateNodes(nodeIdsArg));
+    }
+
+    private T processAttachMetaToFragmentExemplar(final List<Object> arguments)
+            throws IllegalCommandArgumentException, UnknownEntityIdException, WriteOperationException,
+            ResponseSerializationException {
+        final var thisCommand = EWriteCommand.META_FRAGMENT_EXEMPLAR;
+        validateNotNullArguments(arguments, thisCommand.toString());
+
+        var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
+        var nodeId =  getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
+        var metaTag = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_META_TAG);
+        var metaValue =  getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_META_VALUE);
+        return _serializer.serialize(
+                _writeCommandHandler.addMetaToFragmentExemplar(fragmentId, nodeId, metaTag, metaValue));
+    }
+
+    private T processAttachMetaToFragmentGlobally(final List<Object> arguments)
+            throws IllegalCommandArgumentException, UnknownEntityIdException, WriteOperationException,
+            ResponseSerializationException {
+        final var thisCommand = EWriteCommand.META_FRAGMENT_EXEMPLAR;
+        validateNotNullArguments(arguments, thisCommand.toString());
+
+        var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
+        var metaTag = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_META_TAG);
+        var metaValue =  getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_META_VALUE);
+        return _serializer.serialize(
+                _writeCommandHandler.addMetaToFragmentGlobal(fragmentId, metaTag, metaValue));
     }
 }
