@@ -19,6 +19,12 @@ public enum ExpectedCommandArgument{
 
     ARG_FRAGMENT_META_TAG("Fragment meta tag",
             Constants.ArgFragmentMetaTag, ExpectedCommandArgument.ArgumentType.STRING),
+
+    ARG_FRAGMENT_META_TAGS_LOCAL("Set of local meta tags",
+            Constants.ArgFragmentLocalMetaTags, ArgumentType.SET_STRINGS),
+    ARG_FRAGMENT_META_TAGS_GLOBAL("Set of global meta tags",
+            Constants.ArgFragmentGlobalMetaTags, ArgumentType.SET_STRINGS),
+
     ARG_FRAGMENT_META_VALUE("Fragment meta value",
             Constants.ArgFragmentMetaValue, ExpectedCommandArgument.ArgumentType.STRING),
 

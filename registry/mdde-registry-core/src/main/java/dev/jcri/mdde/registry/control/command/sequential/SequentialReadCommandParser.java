@@ -47,6 +47,8 @@ public class SequentialReadCommandParser<T>
                     return processFindFragmentNodesCommand(arguments);
                 case GET_FRAGMENT_TUPLES:
                     return processGetFragmentTuplesCommand(arguments);
+                case GET_ALL_FRAGMENTS_NODES_WITH_META:
+                    return processGetFragmentCatalog(arguments);
                 case COUNT_FRAGMENT:
                     return processCountFragmentsCommand(arguments);
                 case COUNT_TUPLE:
@@ -173,5 +175,16 @@ public class SequentialReadCommandParser<T>
         var nodeId = getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
         var fragments = _readCommandHandler.getNodeFragments(nodeId);
         return _serializer.serialize(fragments);
+    }
+
+    private T processGetFragmentCatalog(List<Object> arguments)
+            throws IllegalCommandArgumentException, ResponseSerializationException {
+        final EReadCommand thisCommand = EReadCommand.GET_ALL_FRAGMENTS_NODES_WITH_META;
+        validateNotNullArguments(arguments, thisCommand.toString());
+
+        var metaTagsLocal = getPositionalArgumentAsSet(arguments, thisCommand, ARG_FRAGMENT_META_TAGS_LOCAL);
+        var metaTagsGlobal = getPositionalArgumentAsSet(arguments, thisCommand, ARG_FRAGMENT_META_TAGS_GLOBAL);
+        var catalog = _readCommandHandler.getFragmentCatalog(metaTagsLocal, metaTagsGlobal);
+        return _serializer.serialize(catalog);
     }
 }

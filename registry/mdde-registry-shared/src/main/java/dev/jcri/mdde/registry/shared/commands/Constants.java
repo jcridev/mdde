@@ -24,6 +24,8 @@ public final class Constants {
     public static final String ArgWorkloadIdField = "workload";
 
     public static final String ArgFragmentMetaTag = "fmtag";
+    public static final String ArgFragmentLocalMetaTags = "fmtagsloc";
+    public static final String ArgFragmentGlobalMetaTags = "fmtagsglb";
     public static final String ArgFragmentMetaValue = "fmval";
 
     public static final String ArgSnapshotIdField = "snapid";

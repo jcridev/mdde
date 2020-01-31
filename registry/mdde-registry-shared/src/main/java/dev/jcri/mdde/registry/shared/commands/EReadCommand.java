@@ -38,6 +38,13 @@ public enum EReadCommand implements ICommand {
      */
     GET_FRAGMENT_TUPLES("GETFRAGTUPLES", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID);}}),
     /**
+     * Get all fragments with locations, specified meta tags
+     */
+    GET_ALL_FRAGMENTS_NODES_WITH_META("GETFRAGSWMETA",
+            new ArrayList<ExpectedCommandArgument>(){
+        {add(ARG_FRAGMENT_META_TAGS_LOCAL); add(ARG_FRAGMENT_META_TAGS_GLOBAL);}
+    }),
+    /**
      * Get the total number of tuple fragment exemplars
      */
     COUNT_FRAGMENT("COUNTFRAGMENT", new ArrayList<ExpectedCommandArgument>(){{add(ARG_FRAGMENT_ID);}}),

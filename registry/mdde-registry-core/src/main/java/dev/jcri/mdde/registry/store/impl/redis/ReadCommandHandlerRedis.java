@@ -1,10 +1,12 @@
 package dev.jcri.mdde.registry.store.impl.redis;
 
+import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
 import dev.jcri.mdde.registry.store.impl.ReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
 
 import java.util.*;
@@ -52,6 +54,90 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
             result.addAll(runGetFragmentTuples(fragmentId));
         }
         return result;
+    }
+
+    @Override
+    protected FragmentCatalog runGetFragmentCatalog(Set<String> metaTagsExemplar, Set<String> metaTagsGlobal) {
+        final var nodes = runGetNodes();
+
+        List<String> resultLocalMetaTags = new ArrayList<>(metaTagsExemplar);
+        List<String> resultGlobalMetaTags = new ArrayList<>(metaTagsGlobal);
+        // <local fragment key map value, array of expected
+        Map<Integer, List<String>> resultGlobalFragmentTagValues= new HashMap<>();
+        // <Node local Id, <Fragment local id, Meta values>>
+        Map<Integer, Map<Integer, List<String>>> resultLocalFragmentTagValues = new HashMap<>();
+
+        Map<String, Integer> resultNodes = new HashMap<>();
+        Map<String, Integer> resultFragments = new HashMap<>();
+        Map<Integer, List<Integer>> resultNodesFragments = new HashMap<>();
+
+        try(var jedis = _redisConnection.getRedisCommands()) {
+            // Retrieve fragments
+            HashMap<String, Response<Set<String>>> nodeFragmentsQRes = new HashMap<>();
+            try(Pipeline p = jedis.pipelined()){
+                for(var nodeId: nodes) {
+                    nodeFragmentsQRes.put(nodeId, p.smembers(Constants.NODE_PREFIX + nodeId));
+                }
+                p.sync();
+            }
+
+            int nodeIdMappingKey = 0;
+            int fragmentIdMappingKey = 0;
+            for(var nodeFragments: nodeFragmentsQRes.entrySet()){
+                int currentNodeIde = nodeIdMappingKey;
+                resultNodes.put(nodeFragments.getKey(), nodeIdMappingKey++);
+                List<Integer> nodeFragmentLocalKeyMap = new ArrayList<>();
+                var fragments = nodeFragments.getValue().get();
+                if(fragments.size() == 0){
+                    continue;
+                }
+                for (String fragId : fragments) {
+                    Integer localId = resultFragments.get(fragId);
+                    if (localId == null) {
+                        localId = fragmentIdMappingKey++;
+                        resultFragments.put(fragId, localId);
+                    }
+                    nodeFragmentLocalKeyMap.add(localId);
+                }
+                resultNodesFragments.put(currentNodeIde, nodeFragmentLocalKeyMap);
+                // <Fragment local id, Meta values>
+                HashMap<Integer, List<String>> fragmentMeta = new HashMap<>();
+                resultLocalFragmentTagValues.put(currentNodeIde, fragmentMeta);
+                if(resultLocalMetaTags.size() > 0) {
+                    // Get exemplar meta
+                    for (String fragId : fragments) {
+                        var currentFragmentMetaValues = new ArrayList<String>();
+                        fragmentMeta.put(resultFragments.get(fragId), currentFragmentMetaValues);
+                        var fragMetaKey = CommandHandlerRedisHelper.sharedInstance()
+                                .genExemplarFragmentMetaFieldName(fragId, nodeFragments.getKey());
+                        // TODO: Batch pipelining
+                        for(var localTag: resultLocalMetaTags){
+                            currentFragmentMetaValues.add(jedis.hget(fragMetaKey, localTag));
+                        }
+                    }
+                }
+            }
+
+            if(resultGlobalMetaTags.size() > 0) {
+                // Global fragments // TODO: Batch pipelining
+                for (var fragIdAndLocalKey : resultFragments.entrySet()) {
+                    var gMetaKeyFrag = CommandHandlerRedisHelper.sharedInstance()
+                            .genGlobalFragmentMetaFieldName(fragIdAndLocalKey.getKey());
+                    List<String> currentFragGMeta = new ArrayList<>();
+                    resultGlobalFragmentTagValues.put(fragIdAndLocalKey.getValue(), currentFragGMeta);
+                    for (var globalTag : resultGlobalMetaTags) {
+                        currentFragGMeta.add(jedis.hget(gMetaKeyFrag, globalTag));
+                    }
+                }
+            }
+        }
+        return new FragmentCatalog(resultNodes,
+                resultFragments,
+                resultNodesFragments,
+                resultLocalMetaTags,
+                resultGlobalMetaTags,
+                resultGlobalFragmentTagValues,
+                resultLocalFragmentTagValues);
     }
 
     private Set<String> getUnassignedTupleNodes(String tupleId){
@@ -183,14 +269,14 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
     @Override
     protected String runGetGlobalFragmentMeta(String fragmentId, String metaName) {
         try (var jedis = _redisConnection.getRedisCommands()) {
-            return jedis.hget(CommandHandlerRedisHelper.getInstance().genGlobalFragmentMetaFieldName(fragmentId), metaName);
+            return jedis.hget(CommandHandlerRedisHelper.sharedInstance().genGlobalFragmentMetaFieldName(fragmentId), metaName);
         }
     }
 
     @Override
     protected String runGetExemplarFragmentMeta(String fragmentId, String nodeId, String metaName) {
         try (var jedis = _redisConnection.getRedisCommands()) {
-            return jedis.hget(CommandHandlerRedisHelper.getInstance().genExemplarFragmentMetaFieldName(fragmentId, nodeId), metaName);
+            return jedis.hget(CommandHandlerRedisHelper.sharedInstance().genExemplarFragmentMetaFieldName(fragmentId, nodeId), metaName);
         }
     }
 

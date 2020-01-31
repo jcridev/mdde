@@ -167,9 +167,9 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
         try(var jedis = _redisConnection.getRedisCommands()) {
             var key = Constants.NODE_PREFIX + destinationNodeId;
             var metaKeySource = CommandHandlerRedisHelper
-                    .getInstance().genExemplarFragmentMetaFieldName(fragmentId, sourceNodeId);
+                    .sharedInstance().genExemplarFragmentMetaFieldName(fragmentId, sourceNodeId);
             var metaKeyDest = CommandHandlerRedisHelper
-                    .getInstance().genExemplarFragmentMetaFieldName(fragmentId, destinationNodeId);
+                    .sharedInstance().genExemplarFragmentMetaFieldName(fragmentId, destinationNodeId);
             var sourceMeta = jedis.hgetAll(metaKeySource);
             Response<Long> added;
             Response<Long> addedMeta;
@@ -196,7 +196,7 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
                 throw new WriteOperationException(String.format("Failed to remove fragment %s from node %s", fragmentId, nodeId));
             }
             // Remove meta
-            var metaKey = CommandHandlerRedisHelper.getInstance().genExemplarFragmentMetaFieldName(fragmentId, nodeId);
+            var metaKey = CommandHandlerRedisHelper.sharedInstance().genExemplarFragmentMetaFieldName(fragmentId, nodeId);
             jedis.del(metaKey);
         }
         return true;
@@ -232,7 +232,7 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
     protected boolean runAddMetaToFragmentGlobal(String fragmentId, String metaField, String metaValue)
             throws WriteOperationException {
         try(var jedis = _redisConnection.getRedisCommands()) {
-            var key = CommandHandlerRedisHelper.getInstance().genGlobalFragmentMetaFieldName(fragmentId);
+            var key = CommandHandlerRedisHelper.sharedInstance().genGlobalFragmentMetaFieldName(fragmentId);
             if (metaValue != null) {
                 var added = jedis.hset(key, metaField, metaValue);
                 if (added < 1) {
@@ -259,7 +259,7 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
     protected boolean runAddMetaToFragmentExemplar(String fragmentId, String nodeId, String metaField, String metaValue)
             throws WriteOperationException {
 
-        var key = CommandHandlerRedisHelper.getInstance().genExemplarFragmentMetaFieldName(fragmentId, nodeId);
+        var key = CommandHandlerRedisHelper.sharedInstance().genExemplarFragmentMetaFieldName(fragmentId, nodeId);
         try(var jedis = _redisConnection.getRedisCommands()) {
             if (metaValue != null) {
                 var added = jedis.hset(key, metaField, metaValue);

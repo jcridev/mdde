@@ -2,6 +2,7 @@ package dev.jcri.mdde.registry.control.serialization;
 
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
+import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 
@@ -50,6 +51,11 @@ public class ResponseSerializerPassThrough implements IResponseSerializer<Object
 
     @Override
     public Object serialize(BenchmarkStatus value) throws ResponseSerializationException {
+        return value;
+    }
+
+    @Override
+    public Object serialize(FragmentCatalog value) throws ResponseSerializationException {
         return value;
     }
 

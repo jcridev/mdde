@@ -11,7 +11,7 @@ public class CommandHandlerRedisHelper {
         static final CommandHandlerRedisHelper _instance = new CommandHandlerRedisHelper();
     }
 
-    public static CommandHandlerRedisHelper getInstance(){
+    public static CommandHandlerRedisHelper sharedInstance(){
         return LazyHolder._instance;
     }
 

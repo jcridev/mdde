@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.server.responders;
 
+import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
 import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
@@ -68,5 +69,9 @@ public class ReadCommandResponder {
 
     public Set<String> getNodeFragments(String nodeId){
         return _readHandler.getNodeFragments(nodeId);
+    }
+
+    public FragmentCatalog getFragmentCatalog(Set<String> metaTagsExemplar, Set<String> metaTagsGlobal){
+        return _readHandler.getFragmentCatalog(metaTagsExemplar, metaTagsGlobal);
     }
 }

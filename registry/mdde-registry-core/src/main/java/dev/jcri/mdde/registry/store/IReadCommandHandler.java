@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.store;
 
+import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
 import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
@@ -21,6 +22,12 @@ public interface IReadCommandHandler {
      * @throws ReadOperationException
      */
     TupleCatalog getTupleCatalog() throws ReadOperationException;
+
+    /**
+     * Retrieve the full fragment catalog, optionally with meta values
+     * @return
+     */
+    FragmentCatalog getFragmentCatalog(Set<String> metaTagsExemplar, Set<String> metaTagsGlobal);
 
     /**
      * Get node IDs where the tuple is located

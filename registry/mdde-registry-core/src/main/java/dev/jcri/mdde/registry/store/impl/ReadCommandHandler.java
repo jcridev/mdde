@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.store.impl;
 
+import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.RegistryEntityType;
@@ -35,6 +36,11 @@ public abstract class ReadCommandHandler implements IReadCommandHandler {
         } catch (InterruptedException e) {
             throw new ReadOperationException(e);
         }
+    }
+
+    @Override
+    public FragmentCatalog getFragmentCatalog(Set<String> metaTagsExemplar, Set<String> metaTagsGlobal) {
+        return runGetFragmentCatalog(metaTagsExemplar, metaTagsGlobal);
     }
 
     /**
@@ -373,5 +379,7 @@ public abstract class ReadCommandHandler implements IReadCommandHandler {
     protected abstract String runGetGlobalFragmentMeta(String fragmentId, String metaName);
 
     protected abstract String runGetExemplarFragmentMeta(String fragmentId, String nodeId, String metaName);
+
+    protected abstract FragmentCatalog runGetFragmentCatalog(Set<String> metaTagsExemplar, Set<String> metaTagsGlobal);
 //endregion
 }

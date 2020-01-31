@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Protocol, List, Set
+from typing import Protocol, List, Set, Dict
 
 from mdde.registry.RegistryResponse import RegistryResponse
 
@@ -27,12 +27,12 @@ class PRegistryClient(Protocol):
         raise NotImplementedError()
 
     @abstractmethod
-    def ctrl_start_benchmark(self, workload_id: str) -> RegistryResponse[{}]:  # TODO: Explicit result type
+    def ctrl_start_benchmark(self, workload_id: str) -> RegistryResponse[Dict]:  # TODO: Explicit result type
         """Run benchmark and retrieve the result"""
         raise NotImplementedError()
 
     @abstractmethod
-    def ctrl_get_benchmark(self) -> RegistryResponse[{}]:
+    def ctrl_get_benchmark(self) -> RegistryResponse[Dict]:
         """Get the latest benchmark run state"""
         raise NotImplementedError()
 
@@ -94,6 +94,16 @@ class PRegistryClient(Protocol):
         """
         Get nodes where the fragment is located
         :param fragment_id: Fragment ID
+        :return:
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def read_get_all_fragments_with_meta(self, local_meta: Set[str], global_meta: Set[str]) -> RegistryResponse[Dict]:  # TODO: Explicit type
+        """
+        A complete catalog of fragments with optional meta values
+        :param local_meta: Exemplar bound meta values for fragments
+        :param global_meta: Global meta values for fragments
         :return:
         """
         raise NotImplementedError()
