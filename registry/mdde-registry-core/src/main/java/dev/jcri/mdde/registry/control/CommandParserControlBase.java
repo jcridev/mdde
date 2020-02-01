@@ -10,6 +10,11 @@ import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * Basic abstract router for the CONTROL commands
+ * @param <TOut> Expected result type
+ * @param <TArgs> Arguments container type
+ */
 public abstract class CommandParserControlBase<TOut, TArgs>
         implements ICommandParser<TOut, EStateControlCommand, TArgs> {
 

@@ -29,22 +29,37 @@ public class CommandParserHelper {
 
     /**
      * Generate error message for IllegalCommandArgumentPosition
-     * @param commandTitle
-     * @param argument
-     * @param position
-     * @return
+     * @param command Command object
+     * @param argument Out of place argument
+     * @return Text describing the out of place error
      */
-    public String getPositionalArgumentError(final String commandTitle, final ExpectedCommandArgument argument, final int position){
-        return String.format("%s must be invoked with %s at position %d", commandTitle, argument.toString(), position);
+    public String getPositionalArgumentError(final ICommand command,
+                                             final ExpectedCommandArgument argument){
+        return getPositionalArgumentError(command, argument, command.getExpectedArguments().indexOf(argument));
+    }
+
+    /**
+     * Generate error message for IllegalCommandArgumentPosition
+     * @param command Command object
+     * @param argument Out of place argument
+     * @param position Real position in the sequence
+     * @return Text describing the out of place error
+     */
+    public String getPositionalArgumentError(final ICommand command,
+                                             final ExpectedCommandArgument argument,
+                                             final int position){
+        return String.format("%s must be invoked with %s at position %d",
+                command.getCommand(), argument.toString(), position);
     }
 
     /**
      * Generate an error message for IllegalCommandArgument
-     * @param command
-     * @param argument
-     * @return
+     * @param command Command
+     * @param argument Argument
+     * @return Text describing illegal argument
      */
-    private String getIllegalArgumentError(ICommand command, ExpectedCommandArgument argument){
+    private String getIllegalArgumentError(ICommand command,
+                                           ExpectedCommandArgument argument){
         return String.format("%s invoked with an illegal argument %s", command.getCommand(), argument.toString());
     }
 
@@ -55,15 +70,16 @@ public class CommandParserHelper {
      * @param argument Argument description object
      * @return Argument value
      */
-    public String getPositionalArgumentAsString(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
+    public String getPositionalArgumentAsString(List<Object> arguments,
+                                                ICommand command,
+                                                ExpectedCommandArgument argument)
             throws IllegalCommandArgumentException {
         var argIndex = command.getExpectedArguments().indexOf(argument);
         if(argIndex < 0){
             throw new IllegalCommandArgumentException(getIllegalArgumentError(command, argument));
         }
         return (String) Objects.requireNonNull(arguments.get(argIndex),
-                                                getPositionalArgumentError(command.toString(),
-                                                        argument, argIndex));
+                                                getPositionalArgumentError(command, argument, argIndex));
     }
 
     /**
@@ -74,15 +90,16 @@ public class CommandParserHelper {
      * @return Argument value
      * @throws IllegalCommandArgumentException
      */
-    public Boolean getPositionalArgumentAsBoolean(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
+    public Boolean getPositionalArgumentAsBoolean(List<Object> arguments,
+                                                  ICommand command,
+                                                  ExpectedCommandArgument argument)
             throws IllegalCommandArgumentException {
         var argIndex = command.getExpectedArguments().indexOf(argument);
         if(argIndex < 0){
             throw new IllegalCommandArgumentException(getIllegalArgumentError(command, argument));
         }
         return (Boolean) Objects.requireNonNull(arguments.get(argIndex),
-                                                getPositionalArgumentError(command.toString(),
-                                                        argument, argIndex));
+                                                getPositionalArgumentError(command, argument, argIndex));
     }
 
     /**
@@ -92,7 +109,9 @@ public class CommandParserHelper {
      * @param argument Argument description object
      * @return Argument value
      */
-    public Set<String> getPositionalArgumentAsSet(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
+    public Set<String> getPositionalArgumentAsSet(List<Object> arguments,
+                                                  ICommand command,
+                                                  ExpectedCommandArgument argument)
             throws IllegalCommandArgumentException {
         if(argument.getArgumentType() != ExpectedCommandArgument.ArgumentType.SET_STRINGS){
             throw new IllegalArgumentException(String.format("Argument %s is not a set of strings", argument.toString()));
@@ -103,9 +122,9 @@ public class CommandParserHelper {
             throw new IllegalCommandArgumentException(getIllegalArgumentError(command, argument));
         }
         var tupleIdsArg = Objects.requireNonNull(arguments.get(argIndex),
-                getPositionalArgumentError(command.toString(), argument, argIndex));
+                getPositionalArgumentError(command, argument, argIndex));
                 if(!(tupleIdsArg instanceof Set<?>)){
-                    throw new IllegalArgumentException(getPositionalArgumentError(command.toString(), argument, argIndex));
+                    throw new IllegalArgumentException(getPositionalArgumentError(command, argument, argIndex));
                 }
         return (Set<String>) tupleIdsArg;
     }

@@ -6,24 +6,27 @@ import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.store.RegistryStateCommandHandler;
 
-public class JsonControlCommandParser<T> extends JsonCommandParserBase
-        implements ICommandParser<T, EStateControlCommand, String> {
-
-    private final SequentialControlCommandParser<T> _sequentialCommandParser;
-    private final IResponseSerializer<T> _serializer;
+/**
+ * Parser for CONTROL commands that processes commands passed in a form of a JSON string.
+ * @param <TOut> Command execution result container type
+ */
+public class JsonControlCommandParser<TOut> extends JsonCommandParserBase
+        implements ICommandParser<TOut, EStateControlCommand, String> {
+    private final SequentialControlCommandParser<TOut> _sequentialCommandParser;
+    private final IResponseSerializer<TOut> _serializer;
 
     /**
      * Constructor
      * @param commandHandler Current instance of the RegistryStateCommandHandler
      * @param serializer Serializer instance
      */
-    public JsonControlCommandParser(RegistryStateCommandHandler commandHandler, IResponseSerializer<T> serializer){
+    public JsonControlCommandParser(RegistryStateCommandHandler commandHandler, IResponseSerializer<TOut> serializer){
         _sequentialCommandParser = new SequentialControlCommandParser<>(commandHandler, serializer);
         _serializer = serializer;
     }
 
     @Override
-    public T runCommand(EStateControlCommand command, String arguments) {
+    public TOut runCommand(EStateControlCommand command, String arguments) {
         try {
             var parsedArguments = parseArguments(command, arguments);
             return _sequentialCommandParser.runCommand(command, parsedArguments);

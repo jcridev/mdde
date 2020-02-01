@@ -51,7 +51,7 @@ class PRegistryClient(Protocol):
         raise NotImplementedError()
 
     @abstractmethod
-    def ctrl_get_mode(self) -> RegistryResponse[str]:  # TODO: Explicit result type
+    def ctrl_get_mode(self) -> RegistryResponse[Dict]:  # TODO: Explicit result type
         """Get the current Registry state (prepared for benchmark or data shuffle)"""
         raise NotImplementedError()
 

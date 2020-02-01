@@ -6,18 +6,22 @@ import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 import dev.jcri.mdde.registry.server.responders.ReadCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 
-public class JsonReadCommandParser<T> extends JsonCommandParserBase implements ICommandParser<T, EReadCommand, String> {
+/**
+ * Parser for READ commands that processes commands passed in a form of a JSON string.
+ * @param <TOut> Command execution result container type
+ */
+public class JsonReadCommandParser<TOut> extends JsonCommandParserBase
+        implements ICommandParser<TOut, EReadCommand, String> {
+    private final SequentialReadCommandParser<TOut> _sequentialCommandParser;
+    private final IResponseSerializer<TOut> _serializer;
 
-    private final SequentialReadCommandParser<T> _sequentialCommandParser;
-    private final IResponseSerializer<T> _serializer;
-
-    public JsonReadCommandParser(ReadCommandResponder readCommandHandler, IResponseSerializer<T> serializer){
+    public JsonReadCommandParser(ReadCommandResponder readCommandHandler, IResponseSerializer<TOut> serializer){
         _sequentialCommandParser = new SequentialReadCommandParser<>(readCommandHandler, serializer);
         _serializer = serializer;
     }
 
     @Override
-    public T runCommand(EReadCommand command, String arguments) {
+    public TOut runCommand(EReadCommand command, String arguments) {
         try {
             var parsedArguments = parseArguments(command, arguments);
             return _sequentialCommandParser.runCommand(command, parsedArguments);

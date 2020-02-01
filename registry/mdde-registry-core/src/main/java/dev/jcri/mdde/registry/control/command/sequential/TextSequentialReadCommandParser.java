@@ -10,24 +10,30 @@ import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TextSequentialReadCommandParser<T> implements ICommandParser<T, EReadCommand, String> {
+/**
+ * Parser for READ commands that processes commands passed in a form of a string line with argument sequences
+ * in accordance to the expected arguments lists of the EStateControlCommand entries.
+ * @param <TOut> Command execution result container type
+ */
+public class TextSequentialReadCommandParser<TOut> implements ICommandParser<TOut, EReadCommand, String> {
     private final ISequenceParser _stringParser = new SimpleSequenceParser();
-    private final SequentialReadCommandParser<T> _sequentialCommandParser;
-    private final IResponseSerializer<T> _serializer;
+    private final SequentialReadCommandParser<TOut> _sequentialCommandParser;
+    private final IResponseSerializer<TOut> _serializer;
 
-    public TextSequentialReadCommandParser(ReadCommandResponder readCommandHandler, IResponseSerializer<T> serializer) {
+    public TextSequentialReadCommandParser(ReadCommandResponder readCommandHandler,
+                                           IResponseSerializer<TOut> serializer) {
         _sequentialCommandParser = new SequentialReadCommandParser<>(readCommandHandler, serializer);
         _serializer = serializer;
     }
 
-    public T runCommand(EReadCommand EReadCommand, String arguments) {
+    public TOut runCommand(EReadCommand command, String arguments) {
         try{
             if(arguments == null || arguments.isEmpty()){
-                return _sequentialCommandParser.runCommand(EReadCommand, new ArrayList<>());
+                return _sequentialCommandParser.runCommand(command, new ArrayList<>());
             }
-            List<Object> parsedArguments = _stringParser.parseLineArguments(EReadCommand, arguments);
+            List<Object> parsedArguments = _stringParser.parseLineArguments(command, arguments);
 
-            return _sequentialCommandParser.runCommand(EReadCommand, parsedArguments);
+            return _sequentialCommandParser.runCommand(command, parsedArguments);
         } catch (Exception ex){
             return _serializer.serializeException(ex);
         }

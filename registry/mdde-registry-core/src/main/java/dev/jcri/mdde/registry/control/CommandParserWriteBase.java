@@ -7,6 +7,11 @@ import dev.jcri.mdde.registry.store.exceptions.*;
 
 import java.util.Objects;
 
+/**
+ * Basic abstract router for the WRITE commands
+ * @param <TOut> Expected result type
+ * @param <TArgs> Arguments container type
+ */
 public abstract class CommandParserWriteBase<TOut, TArgs>
         implements ICommandParser<TOut, EWriteCommand, TArgs> {
 

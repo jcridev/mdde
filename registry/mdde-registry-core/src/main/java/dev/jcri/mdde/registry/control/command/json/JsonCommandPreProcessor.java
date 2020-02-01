@@ -7,7 +7,9 @@ import dev.jcri.mdde.registry.control.ICommandPreProcessor;
 import dev.jcri.mdde.registry.control.command.CommandComponents;
 import dev.jcri.mdde.registry.control.exceptions.MalformedCommandStatementException;
 
-
+/**
+ * Incoming statement processor. Splits the statement into the command tag string and JSON string containing arguments
+ */
 public class JsonCommandPreProcessor implements ICommandPreProcessor<String, String> {
     public static final String COMMAND_FIELD = "cmd";
     public static final String ARGUMENTS_FIELD = "args";
