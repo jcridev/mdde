@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.server.responders;
 
+import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.IWriteCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.*;
@@ -8,7 +9,6 @@ import dev.jcri.mdde.registry.store.queue.actions.DataCopyAction;
 import dev.jcri.mdde.registry.store.queue.actions.DataDeleteAction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.appender.rolling.action.IfAll;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -36,32 +36,38 @@ public class WriteCommandResponder {
 
     public boolean insertTuple(final String tupleId, final String nodeId)
             throws WriteOperationException, UnknownEntityIdException, DuplicateEntityRecordException {
+        logger.trace("Responding to WRITE: {}", EWriteCommand.INSERT_TUPLE.toString());
         return _writeHandler.insertTuple(tupleId, nodeId);
     }
 
     public boolean insertTuple(final Set<String> tupleIds, final String nodeId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException {
+        logger.trace("Responding to WRITE: {}", EWriteCommand.INSERT_TUPLE_BULK.toString());
         return _writeHandler.insertTuple(tupleIds, nodeId);
     }
 
     public boolean deleteTuple(final String tupleId) throws UnknownEntityIdException, WriteOperationException{
+        logger.trace("Responding to WRITE: {}", EWriteCommand.DELETE_TUPLE.toString());
         return _writeHandler.deleteTuple(tupleId);
     }
 
     public boolean formFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
             throws UnknownEntityIdException, WriteOperationException, DuplicateEntityRecordException,
             IllegalRegistryActionException{
+        logger.trace("Responding to WRITE: {}", EWriteCommand.FORM_FRAGMENT.toString());
         return _writeHandler.formFragment(tupleIds, fragmentId, nodeId);
     }
 
     public boolean appendTupleToFragment(final String tupleId, final String fragmentId)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException{
+        logger.trace("Responding to WRITE: {}", EWriteCommand.APPEND_TO_FRAGMENT.toString());
         return _writeHandler.appendTupleToFragment(tupleId, fragmentId);
     }
 
     public boolean replicateFragment(final String fragmentId, final String sourceNodeId, final String destinationNodeId)
             throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException,
             ReadOperationException {
+        logger.trace("Responding to WRITE: {}", EWriteCommand.REPLICATE_FRAGMENT_DATA.toString());
         // Get fragment tuples
         var tuples = _readHandler.getFragmentTuples(fragmentId);
         // Adjust registry
@@ -83,6 +89,7 @@ public class WriteCommandResponder {
     public boolean deleteFragmentExemplar(final String fragmentId, final String nodeId)
             throws UnknownEntityIdException, WriteOperationException, IllegalRegistryActionException,
             ReadOperationException {
+        logger.trace("Responding to WRITE: {}", EWriteCommand.DELETE_FRAGMENT_DATA.toString());
         // Get fragment tuples
         var tuples = _readHandler.getFragmentTuples(fragmentId);
         // Adjust registry
@@ -107,6 +114,7 @@ public class WriteCommandResponder {
 
     public String deleteFragmentCompletely(final String fragmentId) throws UnknownEntityIdException,
             ReadOperationException, WriteOperationException {
+        logger.trace("Responding to WRITE: {}", EWriteCommand.DESTROY_FRAGMENT.toString());
         var fragmentNodes = _readHandler.getFragmentNodes(fragmentId);
         var tuples = _readHandler.getFragmentTuples(fragmentId);
 
@@ -123,12 +131,13 @@ public class WriteCommandResponder {
 
     public boolean populateNodes(final Set<String> nodeIds)
             throws IllegalRegistryActionException, WriteOperationException{
+        logger.trace("Responding to WRITE: {}", EWriteCommand.POPULATE_NODES.toString());
         return _writeHandler.populateNodes(nodeIds);
     }
 
     public boolean addMetaToFragmentGlobal(final String fragmentId, final String metaField, final String metaValue)
             throws UnknownEntityIdException, WriteOperationException{
-
+        logger.trace("Responding to WRITE: {}", EWriteCommand.META_FRAGMENT_GLOBAL.toString());
         return _writeHandler.addMetaToFragmentGlobal(fragmentId, metaField, metaValue);
     }
 
@@ -137,15 +146,11 @@ public class WriteCommandResponder {
                                                final String metaField,
                                                final String metaValue)
             throws UnknownEntityIdException, WriteOperationException{
+        logger.trace("Responding to WRITE: {}", EWriteCommand.META_FRAGMENT_EXEMPLAR.toString());
         return _writeHandler.addMetaToFragmentExemplar(fragmentId, nodeId, metaField, metaValue);
     }
 
-    public void resetFragmentsMeta(){
+    private void resetFragmentsMeta(){
         _writeHandler.resetFragmentsMeta();
-    }
-
-    public boolean reset() throws WriteOperationException{
-        //TODO: Reset data store
-        return _writeHandler.reset();
     }
 }

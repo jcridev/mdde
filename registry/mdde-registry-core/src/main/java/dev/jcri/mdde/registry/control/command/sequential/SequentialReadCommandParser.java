@@ -1,10 +1,13 @@
 package dev.jcri.mdde.registry.control.command.sequential;
 
 
+import dev.jcri.mdde.registry.control.CommandParserReadBase;
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
 import dev.jcri.mdde.registry.server.responders.ReadCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
+import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
@@ -12,179 +15,131 @@ import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
 
-public class SequentialReadCommandParser<T>
-        extends BaseSequentialCommandParser
-        implements ICommandParser<T, EReadCommand, List<Object>> {
+public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, List<Object>> {
 
     private final ReadCommandResponder _readCommandHandler;
-    private final IResponseSerializer<T> _serializer;
 
     public SequentialReadCommandParser(ReadCommandResponder readCommandHandler, IResponseSerializer<T> serializer){
+        super(serializer);
         Objects.requireNonNull(readCommandHandler, "Read commands handlers can't be null");
-        Objects.requireNonNull(serializer, "Serializer can't be null");
-        _serializer = serializer;
         _readCommandHandler = readCommandHandler;
     }
 
-    public T runCommand(EReadCommand EReadCommand, List<Object> arguments) {
-        try {
-            switch (EReadCommand) {
-                case GET_REGISTRY:
-                    return processGetFullRegistryCommand();
-                case FIND_TUPLE:
-                    return processFindTupleCommand(arguments);
-                case NODE_TUPLES_UNASSIGNED:
-                    return processGetUnassignedTupledForNode(arguments);
-                case NODE_FRAGMENTS:
-                    return processGetNodeFragments(arguments);
-                case FIND_TUPLE_FRAGMENT:
-                    return processFindTupleFragmentCommand(arguments);
-                case FIND_FRAGMENT:
-                    return processFindFragmentNodesCommand(arguments);
-                case GET_FRAGMENT_TUPLES:
-                    return processGetFragmentTuplesCommand(arguments);
-                case GET_ALL_FRAGMENTS_NODES_WITH_META:
-                    return processGetFragmentCatalog(arguments);
-                case COUNT_FRAGMENT:
-                    return processCountFragmentsCommand(arguments);
-                case COUNT_TUPLE:
-                    return processCountTuplesCommand(arguments);
-                case GET_NODES:
-                    return processGetNodesCommand();
-                case META_FRAGMENT_EXEMPLAR:
-                    return processGetFragmentMetaExemplarValue(arguments);
-                case META_FRAGMENT_GLOBAL:
-                    return processGetFragmentMetaGlobalValue(arguments);
-                default:
-                    throw new UnknownRegistryCommandExceptions(EReadCommand.toString());
-            }
-        }
-        catch (Exception ex){
-            return _serializer.serializeException(ex);
-        }
+    protected FullRegistry processGetFullRegistryCommand() throws ReadOperationException {
+        return _readCommandHandler.getFullRegistry();
     }
 
-    private T processGetFullRegistryCommand() throws ResponseSerializationException, ReadOperationException {
-        return _serializer.serialize(_readCommandHandler.getFullRegistry());
-    }
-
-    private T processFindTupleCommand(List<Object> arguments)
-            throws ResponseSerializationException, IllegalCommandArgumentException {
+    protected Set<String> processFindTupleCommand(List<Object> arguments)
+            throws IllegalCommandArgumentException {
         final EReadCommand thisCommand = EReadCommand.FIND_TUPLE;
-        validateNotNullArguments(arguments, thisCommand.toString());
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
-        return _serializer.serialize(_readCommandHandler.getTupleNodes(tupleId));
+        var tupleId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
+        return _readCommandHandler.getTupleNodes(tupleId);
     }
 
-    private T processFindTupleFragmentCommand(List<Object> arguments)
-            throws ResponseSerializationException, IllegalCommandArgumentException {
+    protected String processFindTupleFragmentCommand(List<Object> arguments)
+            throws IllegalCommandArgumentException {
         final EReadCommand thisCommand = EReadCommand.FIND_TUPLE_FRAGMENT;
-        validateNotNullArguments(arguments, thisCommand.toString());
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
-        return _serializer.serialize(_readCommandHandler.getTupleFragment(tupleId));
+        var tupleId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
+        return _readCommandHandler.getTupleFragment(tupleId);
     }
 
-    private T processFindFragmentNodesCommand(List<Object> arguments)
-            throws ResponseSerializationException, IllegalCommandArgumentException {
+    protected Set<String> processFindFragmentNodesCommand(List<Object> arguments)
+            throws IllegalCommandArgumentException {
         final EReadCommand thisCommand = EReadCommand.FIND_FRAGMENT;
-        validateNotNullArguments(arguments, thisCommand.toString());
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
-        return _serializer.serialize(_readCommandHandler.getFragmentNodes(fragmentId));
+        var fragmentId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
+        return _readCommandHandler.getFragmentNodes(fragmentId);
     }
 
-    private T processGetFragmentTuplesCommand(List<Object> arguments)
-            throws ResponseSerializationException, ReadOperationException, IllegalCommandArgumentException {
+    protected Set<String> processGetFragmentTuplesCommand(List<Object> arguments)
+            throws ReadOperationException, IllegalCommandArgumentException {
         final EReadCommand thisCommand = EReadCommand.GET_FRAGMENT_TUPLES;
-        validateNotNullArguments(arguments, thisCommand.toString());
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
-        return _serializer.serialize(_readCommandHandler.getFragmentTuples(fragmentId));
+        var fragmentId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
+        return _readCommandHandler.getFragmentTuples(fragmentId);
     }
 
-    private T processCountFragmentsCommand(List<Object> arguments)
-            throws ResponseSerializationException, IllegalCommandArgumentException {
+    protected int processCountFragmentsCommand(List<Object> arguments)
+            throws IllegalCommandArgumentException {
         final EReadCommand thisCommand = EReadCommand.COUNT_FRAGMENT;
-        validateNotNullArguments(arguments, thisCommand.toString());
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
-        return _serializer.serialize(_readCommandHandler.getCountFragment(fragmentId));
+        var fragmentId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
+        return _readCommandHandler.getCountFragment(fragmentId);
     }
 
-    private T processCountTuplesCommand(List<Object> arguments)
-            throws ResponseSerializationException, IllegalCommandArgumentException {
+    protected int processCountTuplesCommand(List<Object> arguments)
+            throws IllegalCommandArgumentException {
         final EReadCommand thisCommand = EReadCommand.COUNT_TUPLE;
-        validateNotNullArguments(arguments, thisCommand.toString());
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        var tupleId = getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
-        return _serializer.serialize(_readCommandHandler.getCountTuple(tupleId));
+        var tupleId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_TUPLE_ID);
+        return _readCommandHandler.getCountTuple(tupleId);
     }
 
-    private T processGetNodesCommand()
-            throws ResponseSerializationException {
-        var nodesList = _readCommandHandler.getNodes();
-        return _serializer.serialize(nodesList);
+    protected Set<String> processGetNodesCommand(){
+        return _readCommandHandler.getNodes();
     }
 
-    private T processGetFragmentMetaGlobalValue(List<Object> arguments)
-            throws IllegalCommandArgumentException, ResponseSerializationException {
+    protected String processGetFragmentMetaGlobalValue(List<Object> arguments)
+            throws IllegalCommandArgumentException {
         final EReadCommand thisCommand = EReadCommand.META_FRAGMENT_GLOBAL;
-        validateNotNullArguments(arguments, thisCommand.toString());
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
-        var metaTag = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_META_TAG);
+        var fragmentId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
+        var metaTag = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_META_TAG);
 
-        var metaValue = _readCommandHandler.getMetaFragmentGlobal(fragmentId, metaTag);
-        return _serializer.serialize(metaValue);
+        return _readCommandHandler.getMetaFragmentGlobal(fragmentId, metaTag);
     }
 
-    private T processGetFragmentMetaExemplarValue(List<Object> arguments)
-            throws IllegalCommandArgumentException, ResponseSerializationException {
+    protected String processGetFragmentMetaExemplarValue(List<Object> arguments)
+            throws IllegalCommandArgumentException {
         final EReadCommand thisCommand = EReadCommand.META_FRAGMENT_EXEMPLAR;
-        validateNotNullArguments(arguments, thisCommand.toString());
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        var fragmentId = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
-        var nodeId = getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
-        var metaTag = getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_META_TAG);
+        var fragmentId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
+        var nodeId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
+        var metaTag = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_META_TAG);
 
-        var metaValue = _readCommandHandler.getMetaFragmentExemplar(fragmentId, nodeId, metaTag);
-        return _serializer.serialize(metaValue);
+        return _readCommandHandler.getMetaFragmentExemplar(fragmentId, nodeId, metaTag);
     }
 
-    private T processGetUnassignedTupledForNode(List<Object> arguments)
-            throws IllegalCommandArgumentException, ResponseSerializationException {
+    protected Set<String> processGetUnassignedTuplesForNode(List<Object> arguments)
+            throws IllegalCommandArgumentException {
         final EReadCommand thisCommand = EReadCommand.NODE_TUPLES_UNASSIGNED;
-        validateNotNullArguments(arguments, thisCommand.toString());
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        var nodeId = getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
-        var tuples = _readCommandHandler.getNodeUnassignedTuples( nodeId);
-        return _serializer.serialize(tuples);
+        var nodeId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
+        return _readCommandHandler.getNodeUnassignedTuples( nodeId);
     }
 
-    private T processGetNodeFragments(List<Object> arguments)
-            throws IllegalCommandArgumentException, ResponseSerializationException {
+    protected Set<String> processGetNodeFragments(List<Object> arguments)
+            throws IllegalCommandArgumentException {
         final EReadCommand thisCommand = EReadCommand.NODE_FRAGMENTS;
-        validateNotNullArguments(arguments, thisCommand.toString());
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        var nodeId = getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
-        var fragments = _readCommandHandler.getNodeFragments(nodeId);
-        return _serializer.serialize(fragments);
+        var nodeId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
+        return _readCommandHandler.getNodeFragments(nodeId);
     }
 
-    private T processGetFragmentCatalog(List<Object> arguments)
-            throws IllegalCommandArgumentException, ResponseSerializationException {
+    protected FragmentCatalog processGetFragmentCatalog(List<Object> arguments)
+            throws IllegalCommandArgumentException {
         final EReadCommand thisCommand = EReadCommand.GET_ALL_FRAGMENTS_NODES_WITH_META;
-        validateNotNullArguments(arguments, thisCommand.toString());
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        var metaTagsLocal = getPositionalArgumentAsSet(arguments, thisCommand, ARG_FRAGMENT_META_TAGS_LOCAL);
-        var metaTagsGlobal = getPositionalArgumentAsSet(arguments, thisCommand, ARG_FRAGMENT_META_TAGS_GLOBAL);
-        var catalog = _readCommandHandler.getFragmentCatalog(metaTagsLocal, metaTagsGlobal);
-        return _serializer.serialize(catalog);
+        var metaTagsLocal = CommandParserHelper.sharedInstance().getPositionalArgumentAsSet(arguments, thisCommand, ARG_FRAGMENT_META_TAGS_LOCAL);
+        var metaTagsGlobal = CommandParserHelper.sharedInstance().getPositionalArgumentAsSet(arguments, thisCommand, ARG_FRAGMENT_META_TAGS_GLOBAL);
+        return _readCommandHandler.getFragmentCatalog(metaTagsLocal, metaTagsGlobal);
     }
 }

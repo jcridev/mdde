@@ -28,6 +28,16 @@ public final class CommandProcessor<TIn, TArgs, TOut> {
     private final ICommandParser<TOut, EWriteCommand, TArgs> _writeCommandParser;
     private final IResponseExceptionSerializer<TOut> _errorSerializer;
 
+    /**
+     * Constructor
+     * @param commandPreProcessor Pre-processor of the incoming statement. Splits the statement into the keyword and
+     *                            arguments object. The split statement is them processed by the appropriate parser.
+     * @param controlCommandParser Initialized implementation of the registry state control statement parser.
+     * @param readCommandParser Initialized implementation of the registry read statement parser.
+     * @param writeCommandParser Initialized implementation of the registry write statement parser.
+     * @param errorSerializer Appropriate response serialize used to return a parsing or statement processing error in
+     *                        the appropriate format.
+     */
     public CommandProcessor(ICommandPreProcessor<TArgs, TIn> commandPreProcessor,
                             ICommandParser<TOut, EStateControlCommand, TArgs> controlCommandParser,
                             ICommandParser<TOut, EReadCommand, TArgs> readCommandParser,
@@ -50,30 +60,33 @@ public final class CommandProcessor<TIn, TArgs, TOut> {
     public TOut processIncomingStatement(TIn statement){
         try {
             Objects.requireNonNull(statement, "statement can't be null");
-            logger.trace("Incoming statement: '{}'", statement);
+            logger.trace("Incoming statement: '{}'", statement.toString());
 
             // Split the statement (get keyword separately from the arguments)
             CommandComponents<TArgs> components = null;
             components = _commandPreProcessor.splitIncoming(statement);
 
             // Determine type of the command
-            EStateControlCommand stateCommand = null;
             EReadCommand readCommand = null;
             EWriteCommand writeCommand = null;
             EStateControlCommand stateControlCommand = null;
 
             TOut result = null;
             if((stateControlCommand = components.tryGetIsStateControlCommandKeyword()) != null){
+                logger.trace("Incoming statement is CONTROL");
                 // Is state control command
                 result = _controlCommandParser.runCommand(stateControlCommand, components.getArgs());
             }
             else if ((readCommand = components.tryGetIsReadCommandKeyword()) != null) {
+                logger.trace("Incoming statement is READ");
                 // It's read command
                 result = _readCommandParser.runCommand(readCommand, components.getArgs());
             } else if (((writeCommand = components.tryGetIsWriteCommandKeyword())) != null) {
+                logger.trace("Incoming statement is WRITE");
                 // It's write command
                 result = _writeCommandParser.runCommand(writeCommand, components.getArgs());
             } else {
+                logger.trace("Incoming statement is UNKNOWN");
                 // It's unknown command
                 throw new UnknownRegistryCommandExceptions(String.format("Command %s was not found in the registry",
                         components.getKeyword()));

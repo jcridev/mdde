@@ -8,9 +8,22 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * Common methods for working with the ICommands definitions
+ */
+public class CommandParserHelper {
 
-public abstract class BaseSequentialCommandParser {
-    protected void validateNotNullArguments(final List<Object> arguments, final String commandTitle){
+    private CommandParserHelper() {}
+
+    private static class LazyHolder {
+        static final CommandParserHelper INSTANCE = new CommandParserHelper();
+    }
+
+    public static CommandParserHelper sharedInstance() {
+        return LazyHolder.INSTANCE;
+    }
+
+    public void validateNotNullArguments(final List<Object> arguments, final String commandTitle){
         Objects.requireNonNull(arguments, String.format("%s can't be invoked without arguments", commandTitle));
     }
 
@@ -21,7 +34,7 @@ public abstract class BaseSequentialCommandParser {
      * @param position
      * @return
      */
-    protected String getPositionalArgumentError(final String commandTitle, final ExpectedCommandArgument argument, final int position){
+    public String getPositionalArgumentError(final String commandTitle, final ExpectedCommandArgument argument, final int position){
         return String.format("%s must be invoked with %s at position %d", commandTitle, argument.toString(), position);
     }
 
@@ -42,7 +55,7 @@ public abstract class BaseSequentialCommandParser {
      * @param argument Argument description object
      * @return Argument value
      */
-    protected String getPositionalArgumentAsString(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
+    public String getPositionalArgumentAsString(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
             throws IllegalCommandArgumentException {
         var argIndex = command.getExpectedArguments().indexOf(argument);
         if(argIndex < 0){
@@ -61,7 +74,7 @@ public abstract class BaseSequentialCommandParser {
      * @return Argument value
      * @throws IllegalCommandArgumentException
      */
-    protected Boolean getPositionalArgumentAsBoolean(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
+    public Boolean getPositionalArgumentAsBoolean(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
             throws IllegalCommandArgumentException {
         var argIndex = command.getExpectedArguments().indexOf(argument);
         if(argIndex < 0){
@@ -79,7 +92,7 @@ public abstract class BaseSequentialCommandParser {
      * @param argument Argument description object
      * @return Argument value
      */
-    protected Set<String> getPositionalArgumentAsSet(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
+    public Set<String> getPositionalArgumentAsSet(List<Object> arguments, ICommand command, ExpectedCommandArgument argument)
             throws IllegalCommandArgumentException {
         if(argument.getArgumentType() != ExpectedCommandArgument.ArgumentType.SET_STRINGS){
             throw new IllegalArgumentException(String.format("Argument %s is not a set of strings", argument.toString()));
