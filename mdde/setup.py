@@ -2,7 +2,7 @@ from setuptools import setup, find_namespace_packages
 import sys
 
 CURRENT_PYTHON = sys.version_info[:2]
-REQUIRED_PYTHON = (3, 8)
+REQUIRED_PYTHON = (3, 7)
 
 # Check the current python version
 if CURRENT_PYTHON < REQUIRED_PYTHON:
@@ -19,5 +19,7 @@ setup(
    author_email='andrey.kharitonov@ovgu.de',
 
    license='MIT Licence',
-   packages=find_namespace_packages(include=['mdde.*'])
+   packages=find_namespace_packages(include=['mdde.*']),
+
+   installs_requires=['typing-extensions; python_version<"3.8"']
 )

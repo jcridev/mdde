@@ -1,1 +1,6 @@
+from mdde.registry.p_registry_client_control import PRegistryControlClient
+from mdde.registry.p_registry_client_read import PRegistryReadClient
+from mdde.registry.p_registry_client_write import PRegistryWriteClient
+from mdde.registry.registry_response import RegistryResponse
+
 __import__('pkg_resources').declare_namespace(__name__)

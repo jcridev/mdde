@@ -1,12 +1,12 @@
 import socket
 from typing import Set, Dict
 
-from mdde.registry.PRegistryClient import PRegistryClient
-from mdde.registry.RegistryResponse import RegistryResponse
-from mdde.registry.tcp.Serializer import Serializer
+from mdde.registry import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient, RegistryResponse
+
+from .serializer import Serializer
 
 
-class RegistryClientTCP(PRegistryClient):
+class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryControlClient):
     """Registry client utilizing TCP Socket connection for communication with the registry"""
 
     _default_encoding = "utf-8"
