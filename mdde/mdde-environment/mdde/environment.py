@@ -4,7 +4,9 @@ import logging
 
 
 class Environment:
-
+    """
+    Entry point to MDDE. Reinforcement learning frameworks should be wrapped around this class to function
+    """
     def __init__(self,
                  scenario: ABCScenario,
                  registry_ctrl: PRegistryControlClient,

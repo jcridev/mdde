@@ -10,8 +10,9 @@
       <sourceFolder url="file://$MODULE_DIR$/agents/mdde-redis" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/scenarios" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/mdde/mdde-registry-client-tcp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/mdde-extensions/integration-ray" isTestSource="false" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Python 3.7 (mdde-p37)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
