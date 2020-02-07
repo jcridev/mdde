@@ -92,11 +92,11 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * @throws UnknownEntityIdException
      * @throws WriteOperationException
      */
-    public final boolean formFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
+    public final boolean formFragment(final Set<String> tupleIds, final String fragmentId)
             throws UnknownEntityIdException, WriteOperationException, DuplicateEntityRecordException, IllegalRegistryActionException {
         _commandExecutionLock.lock();
         try {
-            return verifyAndRunFormFragment(tupleIds, fragmentId, nodeId);
+            return verifyAndRunFormFragment(tupleIds, fragmentId);
         }
         finally {
             _commandExecutionLock.unlock();
@@ -264,17 +264,26 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
         return runInsertTupleToNode(tupleId, nodeId);
     }
 
-    private boolean verifyAndRunFormFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
+    private boolean verifyAndRunFormFragment(final Set<String> tupleIds, final String fragmentId)
             throws WriteOperationException, DuplicateEntityRecordException, IllegalRegistryActionException {
-        if(!readCommandHandler.getIsTuplesUnassigned(nodeId, tupleIds)){
-            throw new IllegalRegistryActionException("Fragments can only be formed from colocated exiting tuples",
-                    IllegalRegistryActionException.IllegalActions.FormingFragmentFromNonColocatedTuples);
-        }
+
         if (readCommandHandler.getIsFragmentExists(fragmentId)) {
             throw new DuplicateEntityRecordException(RegistryEntityType.Fragment, fragmentId);
         }
+        Set<String> relevantNodes = new HashSet<>();
+        var nodes = readCommandHandler.getNodes();
+        for(var node: nodes){
+            if(readCommandHandler.getIsTuplesUnassigned(node, tupleIds)){
+                relevantNodes.add(node);
+            }
+        }
 
-        return runFormFragment(tupleIds, fragmentId, nodeId);
+        if(relevantNodes.size() == 0){
+            throw new IllegalRegistryActionException("Fragments can only be formed from colocated exiting tuples",
+                    IllegalRegistryActionException.IllegalActions.FormingFragmentFromNonColocatedTuples);
+        }
+
+        return runFormFragment(tupleIds, fragmentId, relevantNodes);
     }
 
     private boolean verifyAndRunInsertTuple(final Set<String> tupleIds, final String nodeId)
@@ -389,7 +398,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * @param tupleIds IDs of Tuples that will be placed into the same fragment
      * @return
      */
-    protected abstract boolean runFormFragment(final Set<String> tupleIds, String fragmentId, String nodeId) throws WriteOperationException;
+    protected abstract boolean runFormFragment(final Set<String> tupleIds, String fragmentId, Set<String> nodeIds) throws WriteOperationException;
 
     /**
      * Attach tuple to a fragment. If a fragment is already part of a tuple, exclude it from the current fragment.

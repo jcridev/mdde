@@ -51,11 +51,11 @@ public class WriteCommandResponder {
         return _writeHandler.deleteTuple(tupleId);
     }
 
-    public boolean formFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
+    public boolean formFragment(final Set<String> tupleIds, final String fragmentId)
             throws UnknownEntityIdException, WriteOperationException, DuplicateEntityRecordException,
             IllegalRegistryActionException{
         logger.trace("Responding to WRITE: {}", EWriteCommand.FORM_FRAGMENT.toString());
-        return _writeHandler.formFragment(tupleIds, fragmentId, nodeId);
+        return _writeHandler.formFragment(tupleIds, fragmentId);
     }
 
     public boolean appendTupleToFragment(final String tupleId, final String fragmentId)

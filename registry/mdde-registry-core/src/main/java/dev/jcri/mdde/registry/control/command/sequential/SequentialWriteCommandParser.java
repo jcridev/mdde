@@ -60,9 +60,8 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
 
 
         var tupleIdsArg = CommandParserHelper.sharedInstance().getPositionalArgumentAsSet(arguments, thisCommand, ARG_TUPLE_IDs);
-        var nodeId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_NODE_ID);
         var fragmentId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_FRAGMENT_ID);
-        return _writeCommandHandler.formFragment(tupleIdsArg, fragmentId, nodeId);
+        return _writeCommandHandler.formFragment(tupleIdsArg, fragmentId);
     }
 
     protected boolean processAppendToFragmentCommand(final List<Object> arguments)

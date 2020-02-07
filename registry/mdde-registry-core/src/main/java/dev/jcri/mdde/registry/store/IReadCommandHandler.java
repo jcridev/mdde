@@ -111,7 +111,7 @@ public interface IReadCommandHandler {
      * @param nodeId Node ID
      * @return
      */
-    public Set<String> getUnassignedTuples(String nodeId);
+    Set<String> getUnassignedTuples(String nodeId);
 
     /**
      * Check if a specific tuple is in the unassigned heap on a specific node

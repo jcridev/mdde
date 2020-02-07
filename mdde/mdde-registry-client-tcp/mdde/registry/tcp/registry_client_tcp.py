@@ -1,7 +1,8 @@
 import socket
 from typing import Set, Dict
 
-from mdde.registry import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient, RegistryResponse
+from mdde.registry.protocol import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient
+from mdde.registry import RegistryResponse
 
 from .serializer import Serializer
 
@@ -160,7 +161,7 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
         response = self._serialize_and_run_command('COUNTFRAGMENT', fid=fragment_id)
         return RegistryResponse[int](response['result'], response['error'])
 
-    def read_nodes(self) -> RegistryResponse[str]:
+    def read_nodes(self) -> RegistryResponse[Set[str]]:
         response = self._serialize_and_run_command('NODES')
         return RegistryResponse[str](response['result'], response['error'])
 
@@ -182,8 +183,8 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
 
     # WRITE commands
 
-    def write_fragment_create(self, fragment_id: str, tuple_ids: Set[str], node_id: str) -> RegistryResponse[str]:
-        response = self._serialize_and_run_command('FRAGMAKE', fid=fragment_id, tids=tuple_ids, nid=node_id)
+    def write_fragment_create(self, fragment_id: str, tuple_ids: Set[str]) -> RegistryResponse[str]:
+        response = self._serialize_and_run_command('FRAGMAKE', fid=fragment_id, tids=tuple_ids)
         return RegistryResponse[str](response['result'], response['error'])
 
     def write_fragment_append_tuple(self, fragment_id: str, tuple_id: str) -> RegistryResponse[bool]:

@@ -1,3 +1,4 @@
 from mdde.core.exception.actor_init_error import ActorInitializationError
-from mdde.core.exception.benchmark_init_error import BenchmarkInitializationError
+from mdde.core.exception.fragment_meta_missing import FragmentInstanceMissingMetaError
+from mdde.core.exception.fragment_property_missing import FragmentInstanceMissingPropertyError
 from mdde.core.exception.env_init_error import EnvironmentInitializationError

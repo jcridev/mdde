@@ -14,10 +14,9 @@ class PRegistryWriteClient(Protocol):
     """
 
     @abstractmethod
-    def write_fragment_create(self, fragment_id: str, tuple_ids: Set[str], node_id: str) -> RegistryResponse[str]:
+    def write_fragment_create(self, fragment_id: str, tuple_ids: Set[str]) -> RegistryResponse[str]:
         """
         Form a new fragment containing unassigned tuples on a specific node
-        :param node_id: Node ID where the fragment is allocated
         :param fragment_id:  Id of a newly created fragment
         :param tuple_ids: Tuple IDs that should be included in the fragment
         :return:

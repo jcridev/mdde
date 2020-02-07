@@ -33,7 +33,7 @@ public enum EWriteCommand implements ICommand {
      */
     FORM_FRAGMENT("FRAGMAKE",
             new ArrayList<ExpectedCommandArgument>(){
-                {add(ARG_TUPLE_IDs); add(ARG_FRAGMENT_ID); add(ARG_NODE_ID);}
+                {add(ARG_TUPLE_IDs); add(ARG_FRAGMENT_ID);}
             }),
     /**
      * Append tuple to an existing fragment

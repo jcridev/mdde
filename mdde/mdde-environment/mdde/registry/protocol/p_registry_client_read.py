@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import Set, Dict
+
 try:
     from typing import Protocol
 except ImportError:
@@ -19,7 +20,6 @@ class PRegistryReadClient(Protocol):
         """
         raise NotImplementedError()
 
-
     @abstractmethod
     def read_find_fragment(self, fragment_id: str) -> RegistryResponse[str]:  # TODO: Explicit type
         """
@@ -29,10 +29,9 @@ class PRegistryReadClient(Protocol):
         """
         raise NotImplementedError()
 
-
     @abstractmethod
-    def read_get_all_fragments_with_meta(self, local_meta: Set[str], global_meta: Set[str]) -> RegistryResponse[
-        Dict]:  # TODO: Explicit type
+    def read_get_all_fragments_with_meta(self, local_meta: Set[str], global_meta: Set[str]) -> RegistryResponse[Dict]:
+        # TODO: Explicit return type
         """
         A complete catalog of fragments with optional meta values
         :param local_meta: Exemplar bound meta values for fragments
@@ -40,7 +39,6 @@ class PRegistryReadClient(Protocol):
         :return:
         """
         raise NotImplementedError()
-
 
     @abstractmethod
     def read_count_fragment(self, fragment_id: str) -> RegistryResponse[int]:
@@ -51,14 +49,12 @@ class PRegistryReadClient(Protocol):
         """
         raise NotImplementedError()
 
-
     @abstractmethod
-    def read_nodes(self) -> RegistryResponse[str]:  # TODO: Explicit type
+    def read_nodes(self) -> RegistryResponse[Set[str]]:  # TODO: Explicit type
         """
         Retrieve nodes IDs from the registry
         """
         raise NotImplementedError()
-
 
     @abstractmethod
     def read_node_unassigned_tuples(self, node_id: str) -> RegistryResponse[Set[str]]:
@@ -69,7 +65,6 @@ class PRegistryReadClient(Protocol):
         """
         raise NotImplementedError()
 
-
     @abstractmethod
     def read_node_fragments(self, node_id: str) -> RegistryResponse[Set[str]]:
         """
@@ -78,7 +73,6 @@ class PRegistryReadClient(Protocol):
         :return: Set of fragment IDs
         """
         raise NotImplementedError()
-
 
     @abstractmethod
     def read_fragment_meta_on_exemplar(self, fragment_id: str, node_id: str, meta_tag: str) -> RegistryResponse[str]:
@@ -90,7 +84,6 @@ class PRegistryReadClient(Protocol):
         :return:
         """
         raise NotImplementedError()
-
 
     @abstractmethod
     def read_fragment_meta_global(self, fragment_id: str, meta_tag: str) -> RegistryResponse[str]:

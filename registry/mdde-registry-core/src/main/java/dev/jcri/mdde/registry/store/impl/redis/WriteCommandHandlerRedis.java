@@ -127,13 +127,15 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
     }
 
     @Override
-    protected boolean runFormFragment(final Set<String> tupleIds, String fragmentId, String nodeId) throws WriteOperationException {
+    protected boolean runFormFragment(final Set<String> tupleIds, String fragmentId, Set<String> nodeIds) throws WriteOperationException {
         final String keyFragment = Constants.FRAGMENT_PREFIX + fragmentId;
         Map<String, Response<Long>> responses = new HashMap<>();
         try(var jedis = _redisConnection.getRedisCommands()) {
             try(var t = _redisConnection.getTransaction(jedis, Collections.singleton(keyFragment))) {
                 t.sadd(Constants.FRAGMENT_SET, fragmentId);
-                t.sadd(Constants.NODE_PREFIX + nodeId, fragmentId);
+                for (var nodeId: nodeIds){
+                    t.sadd(Constants.NODE_PREFIX + nodeId, fragmentId);
+                }
 
                 for (String tupleId : tupleIds) {
                     Response<Long> r = t.sadd(keyFragment, tupleId);
@@ -148,6 +150,9 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
                 throw new WriteOperationException(String.format("Failed to add %s", r.getKey()));
             }
         }
+        // Clear out tuples that were assigned to fragments
+        this.removeUnassignedTupleFromAllNodes(tupleIds.toArray(new String[0]));
+
         return true;
     }
 

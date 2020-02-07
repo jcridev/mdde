@@ -87,7 +87,7 @@ public class TestReadWriteCombinedOperations {
             final String randFragmentId = UUID.randomUUID().toString();
 
             try {
-                redisWriter.formFragment(Collections.singleton(randTupleId), randFragmentId, randNodeId);
+                redisWriter.formFragment(Collections.singleton(randTupleId), randFragmentId);
             } catch (MddeRegistryException e) {
                 fail("Failed to form a fragment", e);
             }
@@ -182,7 +182,7 @@ public class TestReadWriteCombinedOperations {
                     var randFragmentId = "Fragment_" + UUID.randomUUID().toString();
                     fragments.put(randFragmentId, tupleSubRangeSet);
                     try {
-                        redisWriter.formFragment(tupleSubRangeSet, randFragmentId, node.getKey());
+                        redisWriter.formFragment(tupleSubRangeSet, randFragmentId);
                     } catch (MddeRegistryException e) {
                         fail("Failed to form a fragment", e);
                     }

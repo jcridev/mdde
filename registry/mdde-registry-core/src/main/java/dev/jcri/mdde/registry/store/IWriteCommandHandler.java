@@ -48,7 +48,7 @@ public interface IWriteCommandHandler {
      * @throws UnknownEntityIdException
      * @throws WriteOperationException
      */
-    boolean formFragment(final Set<String> tupleIds, final String fragmentId, final String nodeId)
+    boolean formFragment(final Set<String> tupleIds, final String fragmentId)
             throws UnknownEntityIdException, WriteOperationException, DuplicateEntityRecordException,
             IllegalRegistryActionException;
 
