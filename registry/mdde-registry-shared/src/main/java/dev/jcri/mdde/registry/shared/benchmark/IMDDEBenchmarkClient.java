@@ -1,6 +1,7 @@
 package dev.jcri.mdde.registry.shared.benchmark;
 
 import dev.jcri.mdde.registry.shared.benchmark.commands.LocateTuple;
+import dev.jcri.mdde.registry.shared.benchmark.commands.ReleaseCapacity;
 import dev.jcri.mdde.registry.shared.benchmark.responses.TupleLocation;
 
 import java.io.Closeable;
@@ -22,4 +23,11 @@ public interface IMDDEBenchmarkClient extends Closeable {
      * @return Response
      */
     TupleLocation locateTuple(LocateTuple tupleParam) throws InterruptedException;
+
+    /**
+     * Release capacity on the node after an operation
+     * @param nodeParam
+     * @throws InterruptedException
+     */
+    void releaseCapacity(ReleaseCapacity nodeParam) throws InterruptedException;
 }

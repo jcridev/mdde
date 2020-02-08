@@ -8,6 +8,7 @@ import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkContainerOut;
 import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkResultCodes;
 import dev.jcri.mdde.registry.shared.benchmark.IMDDEBenchmarkClient;
 import dev.jcri.mdde.registry.shared.benchmark.commands.LocateTuple;
+import dev.jcri.mdde.registry.shared.benchmark.commands.ReleaseCapacity;
 import dev.jcri.mdde.registry.shared.benchmark.responses.TupleLocation;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -91,6 +92,16 @@ public class BenchmarkClient implements IMDDEBenchmarkClient {
             return CommandArgsConverter.unmarshalTupleLocation(response);
         }
         return null;
+    }
+
+    @Override
+    public void releaseCapacity(ReleaseCapacity nodeParam) throws InterruptedException {
+        if(_clientChannel == null){
+            throw new IllegalStateException("The client is not initialized");        }
+
+        BenchmarkContainerIn marshalReleaseCapacity = CommandArgsConverter.marshal(nodeParam);
+        ChannelFuture messageFuture = _clientChannel.writeAndFlush(marshalReleaseCapacity).sync();
+        BenchmarkContainerOut response = _messagingHandler.getResponse();
     }
 
     /**

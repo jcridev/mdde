@@ -5,6 +5,7 @@ import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkContainerOut;
 import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkOperationCodes;
 import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkResultCodes;
 import dev.jcri.mdde.registry.shared.benchmark.commands.LocateTuple;
+import dev.jcri.mdde.registry.shared.benchmark.commands.ReleaseCapacity;
 import dev.jcri.mdde.registry.shared.benchmark.responses.TupleLocation;
 
 import java.lang.reflect.MalformedParametersException;
@@ -20,6 +21,12 @@ public class CommandArgsConverter {
         List<byte[]> properties = new ArrayList<>();
         properties.add(getBytesFromStringArgument(args.getTupleId()));
         return new BenchmarkContainerIn(BenchmarkOperationCodes.LOCATE_TUPLE, properties);
+    }
+
+    public static BenchmarkContainerIn marshal(ReleaseCapacity args){
+        List<byte[]> properties = new ArrayList<>();
+        properties.add(getBytesFromStringArgument(args.getNodeId()));
+        return new BenchmarkContainerIn(BenchmarkOperationCodes.RELEASE_CAPACITY, properties);
     }
 
     public static LocateTuple unmarshalLocateTuple(BenchmarkContainerIn response){
