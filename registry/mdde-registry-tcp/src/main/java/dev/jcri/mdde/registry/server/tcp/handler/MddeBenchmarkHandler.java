@@ -45,13 +45,16 @@ public class MddeBenchmarkHandler extends ChannelInboundHandlerAdapter {
     protected BenchmarkContainerOut processCommand(BenchmarkContainerIn command){
         var commandTag = command.getOperation();
         try {
+            var runner = BenchmarkRunnerSingleton.getDefaultInstance().getRunner();
             switch (commandTag) {
                 case LOCATE_TUPLE:
-                    var runner = BenchmarkRunnerSingleton.getDefaultInstance().getRunner();
                     var runnerArg = CommandArgsConverter.unmarshalLocateTuple(command);
                     var result = runner.getTupleLocation(runnerArg);
-                    return CommandArgsConverter.marshalResponse(BenchmarkResultCodes.OK, result);
+                    return CommandArgsConverter.marshalTupleLocatorResponse(BenchmarkResultCodes.OK, result);
                 case RELEASE_CAPACITY:
+                    var nodeIdArg = CommandArgsConverter.unmarshalString(command);
+                    runner.notifyNodeAccessFinished(nodeIdArg);
+                    return CommandArgsConverter.marshalStringResponse(BenchmarkResultCodes.OK, "ok");
                 default:
                     throw new IllegalArgumentException(
                             String.format("Unhandled benchmark command command '%s'",

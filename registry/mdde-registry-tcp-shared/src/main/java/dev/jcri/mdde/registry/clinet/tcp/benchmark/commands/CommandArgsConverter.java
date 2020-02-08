@@ -31,9 +31,24 @@ public class CommandArgsConverter {
         return new LocateTuple(getStringFromBytesProperty(properties.get(0)));
     }
 
-    public static BenchmarkContainerOut marshalResponse(BenchmarkResultCodes result, TupleLocation args){
+    public static String unmarshalString(BenchmarkContainerIn response){
+        List<byte[]> properties =response.getParameter();
+        if(properties.size() != 1){
+            throw new MalformedParametersException(
+                    String.format("Expected number of properties is 1, passed %d", properties.size()));
+        }
+        return getStringFromBytesProperty(properties.get(0));
+    }
+
+    public static BenchmarkContainerOut marshalTupleLocatorResponse(BenchmarkResultCodes result, TupleLocation args){
         List<byte[]> properties = new ArrayList<>();
         properties.add(getBytesFromStringArgument(args.getNodeId()));
+        return new BenchmarkContainerOut(result, properties);
+    }
+
+    public static BenchmarkContainerOut marshalStringResponse(BenchmarkResultCodes result, String args){
+        List<byte[]> properties = new ArrayList<>();
+        properties.add(getBytesFromStringArgument(args));
         return new BenchmarkContainerOut(result, properties);
     }
 

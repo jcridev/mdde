@@ -4,6 +4,7 @@ import dev.jcri.mdde.registry.benchmark.cluster.IReadOnlyTupleLocator;
 import dev.jcri.mdde.registry.benchmark.cluster.ITupleLocatorFactory;
 import dev.jcri.mdde.registry.benchmark.ycsb.EYCSBWorkloadCatalog;
 import dev.jcri.mdde.registry.benchmark.ycsb.YCSBRunner;
+import dev.jcri.mdde.registry.data.exceptions.KeyNotFoundException;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.benchmark.commands.LocateTuple;
 import dev.jcri.mdde.registry.shared.benchmark.responses.TupleLocation;
@@ -181,6 +182,11 @@ public class BenchmarkRunner {
         verifyState();
         var result = _tmpTupleLocator.getNodeForRead(tupleParams.getTupleId());
         return new TupleLocation(result);
+    }
+
+    public void notifyNodeAccessFinished(String nodeId) throws KeyNotFoundException {
+        verifyState();
+        _tmpTupleLocator.notifyReadFinished(nodeId);
     }
 
     /**
