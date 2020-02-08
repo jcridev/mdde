@@ -93,9 +93,8 @@ class DefaultFragmenter(PFragmenter):
 
         return False  # We don't modify the registry outside of formation of fragments
 
-
-
-    def _find_nodes_containing(self, nodes: Dict[str, Set[str]], items: [str]) -> []:
+    @staticmethod
+    def _find_nodes_containing(nodes: Dict[str, Set[str]], items: [str]) -> []:
         items_found_at = []
         for node_key, node_tuples in nodes.items():
             intersection = node_tuples.intersection(items)
@@ -106,12 +105,13 @@ class DefaultFragmenter(PFragmenter):
                 items_found_at.append(node_key)
         return items_found_at
 
-    def _clear_out_processed(self, nodes: Dict[str, Set[str]], items: [str]):
+    @staticmethod
+    def _clear_out_processed(nodes: Dict[str, Set[str]], items: [str]):
         for node_key, node_values in nodes.items():
             node_values.discard(items)
 
-    def _form_fragment(self,
-                       registry_writer: PRegistryWriteClient,
+    @staticmethod
+    def _form_fragment(registry_writer: PRegistryWriteClient,
                        new_frag_id: str,
                        tuples: Set[str],
                        optimal_fragment_size: int):
@@ -119,7 +119,8 @@ class DefaultFragmenter(PFragmenter):
                         "of {} instead of the optimal {}".format(len(tuples), optimal_fragment_size))
         registry_writer.write_fragment_create(new_frag_id, tuples)
 
-    def _split_list(self, items: [], target_splits: int) -> Sequence[Sequence[str]]:
+    @staticmethod
+    def _split_list(items: [], target_splits: int) -> Sequence[Sequence[str]]:
         result = []
         for i in reversed(range(1, target_splits + 1)):
             split_point = len(items) // i

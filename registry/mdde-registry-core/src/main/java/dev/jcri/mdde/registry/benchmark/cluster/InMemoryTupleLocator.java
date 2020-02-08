@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.benchmark.cluster;
 
+import dev.jcri.mdde.registry.data.exceptions.KeyNotFoundException;
 import dev.jcri.mdde.registry.shared.store.response.TupleCatalog;
 import dev.jcri.mdde.registry.utility.MapTools;
 
@@ -14,6 +15,12 @@ import java.util.*;
  * We want to eliminate the possibility of the specifics of the registry implementation in benchmark metrics.
  */
 public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
+    private final ICapacityCounter<String> _capacityCounter;
+
+    public InMemoryTupleLocator(ICapacityCounter<String> capacityCounter){
+        Objects.requireNonNull(capacityCounter, "Capacity counter object can't be null");
+        _capacityCounter = capacityCounter;
+    }
 
     /**
      * Simple binary array storing the state of the registry
@@ -25,11 +32,12 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
      * Nodes: Integer value is the internal ID (corresponds to the snapshot row number)
      */
     private Map<Integer, String> _nodes=null;
+    private Map<String, Integer> _nodesInverse=null;
     /**
      * Tuples: Integer value is the internal ID (corresponds to the snapshot column number)
      */
     private Map<String, Integer> _tuples=null;
-    private Random randomNodeGen = new Random();
+
     @Override
     public String getNodeForRead(String tupleId) {
         if(_registrySnapshot == null){
@@ -48,10 +56,30 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
                 containingNodes.add(i);
             }
         }
+        if(containingNodes.size() > 1){
+            var consumedCapacity = _capacityCounter.read(containingNodes.toArray(new Integer[0]));
+            var result = consumedCapacity[containingNodes.get(0)];
+            var sIdx = containingNodes.get(0);
+            for(var idx: containingNodes){
+                if(containingNodes.get(idx) < result){
+                    result = containingNodes.get(idx);
+                    sIdx = idx;
+                }
+            }
+            return _nodes.get(containingNodes.get(sIdx));
+        }
+        else{
+            return _nodes.get(containingNodes.get(containingNodes.get(0)));
+        }
+    }
 
-        // TODO: Implement "capacity" logic instead of a Random node return
-        var randomIndex = randomNodeGen.nextInt(containingNodes.size());
-        return _nodes.get(containingNodes.get(randomIndex));
+    @Override
+    public void notifyReadFinished(String nodeId) throws KeyNotFoundException {
+        var nodeIdx = _nodesInverse.get(nodeId);
+        if(nodeIdx == null){
+            throw new KeyNotFoundException(nodeId);
+        }
+        _capacityCounter.decrement(nodeIdx);
     }
 
     /**
@@ -61,18 +89,41 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
     @Override
     public void initializeDataLocator(TupleCatalog tupleCatalog) {
         Objects.requireNonNull(tupleCatalog);
-
+        _nodes.clear();
+        _tuples.clear();
+        _nodesInverse.clear();
         _registrySnapshot = new boolean[tupleCatalog.getNodes().size()][tupleCatalog.getTuples().size()];
-        _nodes = tupleCatalog.getNodes();
-        _tuples = MapTools.invert(tupleCatalog.getTuples());
-
-        for(Map.Entry<Integer, List<Integer>> entry: tupleCatalog.getNodeContents().entrySet()){
-            var nodeIdx = entry.getKey();
-            for (var tupleIdx: entry.getValue()){
-                _registrySnapshot[nodeIdx][tupleIdx] = true;
+        // "Reindex" tuples, in case the catalog indexes are for some reason aren't sequential 0-N values
+        int tupleIdx = 0;
+        Map<Integer, Integer> tmpKeyTupleMapping = new HashMap<>();
+        for (Map.Entry<Integer, String> tuple : tupleCatalog.getTuples().entrySet()) {
+            _tuples.put(tuple.getValue(), tupleIdx);
+            tmpKeyTupleMapping.put(tuple.getKey(), tupleIdx);
+            tupleIdx++;
+        }
+        // "Reindex" nodes, in case the catalog indexes are for some reason aren't sequential 0-N values
+        int nodeIdx = 0;
+        Map<Integer, Integer> tmpKeyNodeMapping = new HashMap<>();
+        for (Map.Entry<Integer, String> node : tupleCatalog.getNodes().entrySet()) {
+            _nodes.put(nodeIdx, node.getValue());
+            tmpKeyNodeMapping.put(node.getKey(), nodeIdx);
+            nodeIdx++;
+        }
+        // Create a binary map for all node-tuple relationships
+        for (Map.Entry<Integer, List<Integer>> entry : tupleCatalog.getNodeContents().entrySet()) {
+            var rowIdx = tmpKeyNodeMapping.get(entry.getKey());
+            for (var columnIdx : entry.getValue()) {
+                _registrySnapshot[rowIdx][tmpKeyTupleMapping.get(columnIdx)] = true;
             }
         }
+        _nodesInverse = MapTools.invert(_nodes);
+        // Initialize capacity counter
+        String[] nodeIndexes = new String[_nodes.size()];
+        for (Map.Entry<Integer, String> node : tupleCatalog.getNodes().entrySet()){
+            nodeIndexes[node.getKey()] = node.getValue();
+        }
 
+        _capacityCounter.initialize(Arrays.asList(nodeIndexes));
     }
 
     /**

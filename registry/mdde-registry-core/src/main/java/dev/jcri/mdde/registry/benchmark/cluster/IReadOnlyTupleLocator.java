@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.benchmark.cluster;
 
+import dev.jcri.mdde.registry.data.exceptions.KeyNotFoundException;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.store.response.TupleCatalog;
 
@@ -17,6 +18,13 @@ public interface IReadOnlyTupleLocator extends Closeable {
      * @return Node Id
      */
     String getNodeForRead(String tupleId);
+
+    /**
+     * When the read operation is complete from a node Id, notify the locator by calling this functions.
+     * It can be used for statistics gathering purposes or internal load balancing purposes
+     * @param nodeId
+     */
+    void notifyReadFinished(String nodeId) throws KeyNotFoundException;
 
     /**
      * Data locator is not necessarily relying on the same registry storage implementation but instead might construct
