@@ -171,7 +171,7 @@ public class YCSBRunner implements Closeable {
 
         return runWorkload(pathToTempWorkload.toString(),
                 getTempClientConfigFilePath().toString(),
-                _defaultClient.getClientName());
+                _defaultClient.getClientName(), _ycsbConfig.getYcsbWorkerThreads());
     }
 
     /**
@@ -181,12 +181,14 @@ public class YCSBRunner implements Closeable {
      */
     private YCSBOutput runWorkload(String pathToWorkloadFile,
                                   String pathToMDDENodesConfig,
-                                  String ycsbClient) throws IOException {
-        // Example ycsb.bat run mdde.redis -P ..\workloads\workloada -p mdde.redis.configfile=.\\test-config.yml
-        var command = String.format("%s run %s -P %s -p%s.configfile=%s",
+                                  String ycsbClient,
+                                  int threads) throws IOException {
+        // Example ycsb.bat run mdde.redis -P ..\workloads\workloada -threads 10 -p mdde.redis.configfile=.\\test-config.yml
+        var command = String.format("%s run %s -P %s -threads %d -p%s.configfile=%s",
                 getYCSBExecutableName(),
                 ycsbClient,
                 pathToWorkloadFile,
+                threads,
                 ycsbClient,
                 pathToMDDENodesConfig);
 

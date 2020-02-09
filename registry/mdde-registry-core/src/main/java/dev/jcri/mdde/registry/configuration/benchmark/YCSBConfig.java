@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 public class YCSBConfig {
     public static final String YCSB_BIN_FIELD = "bin";
     public static final String YCSB_CLIENT_FILED = "client";
+    public static final String YCSB_CLIENT_THREADS_FIELD = "workers";
     public static final String REGISTRY_TEMP_FOLDER_FIELD = "temp";
     /**
      * Folder where MDDE-registry creates its temporary files (such as temp YCSB configs)
@@ -28,6 +29,8 @@ public class YCSBConfig {
      * YCSB client used for benchmark
      */
     private String _ycsbClient;
+
+    private Integer _ycsbWorkerThreads = 1;
 
     @JsonGetter(YCSB_BIN_FIELD)
     public String getYcsbBin() {
@@ -63,5 +66,14 @@ public class YCSBConfig {
     @JsonSetter(REGISTRY_TEMP_FOLDER_FIELD)
     public void setTemp(String temp) {
         this.temp = temp;
+    }
+
+    @JsonGetter(YCSB_CLIENT_THREADS_FIELD)
+    public Integer getYcsbWorkerThreads() {
+        return _ycsbWorkerThreads;
+    }
+    @JsonSetter(YCSB_CLIENT_THREADS_FIELD)
+    public void setYcsbWorkerThreads(Integer ycsbWorkerThreads) {
+        this._ycsbWorkerThreads = ycsbWorkerThreads;
     }
 }
