@@ -1,0 +1,109 @@
+version: '3.7'
+services:
+  registry_store:
+  # Registry storage DB
+    image: "redis:5"
+    container_name: mdde_registrystore
+    ports:
+      - "16379:6379"
+    networks:
+      back:
+        ipv4_address: 172.42.0.5
+        aliases:
+          - mdderegs
+  redis_node_0:
+  # Data storage node 0
+    image: "redis:5"
+    container_name: mdde_data0
+    ports:
+      - "16480:6379"
+    networks:
+      back:
+        ipv4_address: 172.42.0.100
+        aliases:
+          - mddedt0
+  redis_node_1:
+  # Data storage node 1
+    image: "redis:5"
+    container_name: mdde_data1
+    ports:
+      - "16481:6379"
+    networks:
+      back:
+        ipv4_address: 172.42.0.101
+        aliases:
+          - mddedt1
+  redis_node_2:
+  # Data storage node 2
+    image: "redis:5"
+    container_name: mdde_data2
+    ports:
+      - "16482:6379"
+    networks:
+      back:
+        ipv4_address: 172.42.0.102
+        aliases:
+          - mddedt2
+  redis_node_3:
+  # Data storage node 3
+    image: "redis:5"
+    container_name: mdde_data3
+    ports:
+      - "16483:6379"
+    networks:
+      back:
+        ipv4_address: 172.42.0.103
+        aliases:
+          - mddedt3
+  zookeeper0:
+  # Zookeeper required for kafka https://hub.docker.com/_/zookeeper
+    image: "zookeeper:3.5"
+    hostname: mddezoo
+    ports:
+      - 12181:2181
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888;2181
+    networks:
+      back:
+        ipv4_address: 172.42.0.20
+        aliases:
+          - mddezoo
+  kafka0:
+  # Kafka for gathering statistics
+    build: 
+        context: ./docker/kafka
+    image: mdde-kafka:latest
+    container_name: mdde_kafka0
+    ports:
+      - 19092:9092
+    environment:
+      BROKER_ID: 0
+      PORT: 9092
+      ZOO_CONNECT: 172.42.0.20:2181 # zookeeper service IP:port
+    depends_on:
+      - zookeeper0
+    networks:
+      back:
+        ipv4_address: 172.42.0.30
+        aliases:
+          - mddekafka0
+    volumes:
+    - kafka0:/kafka
+networks:
+  front:
+  # Front facing network 
+    name: mdde
+    driver: bridge
+    internal: false
+  back:
+  # Network wiring up the MDDE containers
+    name: mddeback
+    internal: false
+    driver: bridge  
+    ipam:    
+      config:
+        - subnet: "172.42.0.0/16" 
+volumes:
+  kafka0:
+    name: kafka0
