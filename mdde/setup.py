@@ -11,15 +11,16 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
     sys.exit(1)
 
 setup(
-   name='MDDE',
-   version='0.1',
-   description='Multi-agent Data Distribution Environment',
+    name='MDDE',
+    version='0.1',
+    description='Multi-agent Data Distribution Environment',
 
-   author='Andrey Kharitonov',
-   author_email='andrey.kharitonov@ovgu.de',
+    author='Andrey Kharitonov',
+    author_email='andrey.kharitonov@ovgu.de',
 
-   license='MIT Licence',
-   packages=find_namespace_packages(include=['mdde.*']),
+    license='MIT Licence',
+    packages=find_namespace_packages(include=['mdde.*']),
 
-   installs_requires=['typing-extensions; python_version<"3.8"']
+    installs_requires=['typing-extensions; python_version<"3.8"'],
+    zip_safe=False,
 )

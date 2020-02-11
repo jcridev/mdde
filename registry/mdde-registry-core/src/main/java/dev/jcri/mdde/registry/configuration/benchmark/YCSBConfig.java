@@ -8,7 +8,9 @@ import java.nio.file.Paths;
 
 @JsonPropertyOrder({
         YCSBConfig.YCSB_BIN_FIELD,
-        YCSBConfig.YCSB_CLIENT_FILED
+        YCSBConfig.YCSB_CLIENT_FILED,
+        YCSBConfig.YCSB_CLIENT_THREADS_FIELD,
+        YCSBConfig.REGISTRY_TEMP_FOLDER_FIELD
 })
 public class YCSBConfig {
     public static final String YCSB_BIN_FIELD = "bin";

@@ -2,7 +2,7 @@ import socket
 from typing import Set, Dict
 
 from mdde.registry.protocol import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient
-from mdde.registry import RegistryResponse
+from mdde.registry.container import RegistryResponse
 
 from .serializer import Serializer
 

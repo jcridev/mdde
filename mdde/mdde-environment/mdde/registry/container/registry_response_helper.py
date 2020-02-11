@@ -1,5 +1,5 @@
 from . import RegistryResponse
-from .exceptions import RegistryResponseError
+from mdde.registry.exceptions import RegistryResponseError
 
 
 class RegistryResponseHelper:

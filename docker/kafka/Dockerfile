@@ -42,6 +42,7 @@ RUN mv /opt/$KAFKA_FOLDER /opt/kafka
 WORKDIR /opt/kafka
 
 
-VOLUME ["/kafka"]
+ENV LOGS_DIR="/kafka"
+VOLUME [ "${LOGS_DIR}" ]
 
-ENTRYPOINT /usr/bin/entrypoint.sh $BROKER_ID $ZOO_CONNECT $PORT
+ENTRYPOINT /usr/bin/entrypoint.sh $BROKER_ID $ZOO_CONNECT $PORT $LOGS_DIR

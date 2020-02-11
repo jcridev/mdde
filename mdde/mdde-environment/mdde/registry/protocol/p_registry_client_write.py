@@ -5,7 +5,7 @@ try:
 except ImportError:
     from typing_extensions import Protocol
 
-from mdde.registry.registry_response import RegistryResponse
+from mdde.registry.container import RegistryResponse
 
 
 class PRegistryWriteClient(Protocol):

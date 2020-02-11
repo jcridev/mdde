@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.configuration;
 
+import dev.jcri.mdde.registry.configuration.benchmark.StatsConfig;
 import dev.jcri.mdde.registry.configuration.benchmark.YCSBConfig;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
 
@@ -23,6 +24,7 @@ public class RegistryConfig<TStore> {
     public static final String REGISTRY_STORE_FIELD = "store";
     public static final String DATA_NODES_FIELD = "nodes";
     public static final String BENCHMARK_YCSB_FIELD = "bench_ycsb";
+    public static final String BENCHMARK_STATS_CONFIG = "bench_stats";
     public static final String SNAPSHOTS_FOLDER_FIELD = "snapshot_dir";
      /**
      * Configuration for the registry storage
@@ -40,6 +42,10 @@ public class RegistryConfig<TStore> {
      * Directory where the registry and data node snapshots should be placed
      */
     private String _snapshotsDir;
+    /**
+     * Configuration of the statistics gathering
+     */
+    private StatsConfig statsConfig;
 
     @JsonGetter(REGISTRY_STORE_FIELD)
     public TStore getRegistryStore() {
@@ -77,5 +83,14 @@ public class RegistryConfig<TStore> {
     @JsonSetter(SNAPSHOTS_FOLDER_FIELD)
     public void setSnapshotsDir(String snapshotsDir) {
         this._snapshotsDir = snapshotsDir;
+    }
+
+    @JsonGetter(BENCHMARK_STATS_CONFIG)
+    public StatsConfig getStatsConfig() {
+        return statsConfig;
+    }
+    @JsonSetter(BENCHMARK_STATS_CONFIG)
+    public void setStatsConfig(StatsConfig statsConfig) {
+        this.statsConfig = statsConfig;
     }
 }
