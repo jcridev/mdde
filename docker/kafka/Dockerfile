@@ -3,6 +3,7 @@ FROM openjdk:8u242-jre
 # Required ENV variables:
 # $BROKER_ID=0
 # $ZOO_CONNECT=localhost:2181
+# $HOST=192.168.0.1
 # $PORT=9092
 
 # https://www.apache.org/dyn/closer.cgi?path=/kafka/2.4.0/kafka_2.12-2.4.0.tgz
@@ -45,4 +46,4 @@ WORKDIR /opt/kafka
 ENV LOGS_DIR="/kafka"
 VOLUME [ "${LOGS_DIR}" ]
 
-ENTRYPOINT /usr/bin/entrypoint.sh $BROKER_ID $ZOO_CONNECT $PORT $LOGS_DIR
+ENTRYPOINT /usr/bin/entrypoint.sh $BROKER_ID $ZOO_CONNECT $HOST $PORT $LOGS_DIR

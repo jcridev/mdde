@@ -79,6 +79,7 @@ services:
       - 19092:9092
     environment:
       BROKER_ID: 0
+      HOST: 172.42.0.30
       PORT: 9092
       ZOO_CONNECT: 172.42.0.20:2181 # zookeeper service IP:port
     depends_on:

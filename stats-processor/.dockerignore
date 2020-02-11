@@ -1,5 +1,7 @@
 conda-win.yml
 conda.yml
+**/.idea
+**/.code
 __pycache__
 *.pyc
 *.pyo

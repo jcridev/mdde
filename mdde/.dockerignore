@@ -1,4 +1,6 @@
 support
+**/.idea
+**/.code
 __pycache__
 *.pyc
 *.pyo
