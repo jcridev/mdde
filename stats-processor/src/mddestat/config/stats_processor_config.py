@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import List
 import configparser
 
 
@@ -6,8 +6,10 @@ class StatsProcessorConfig:
     _kafka_section = 'kafka'
     _kafka_servers_value = 'servers'
     _kafka_topics_value = 'topics'
+    _kafka_ctrl_topic_value = 'topic-ctrl'
+    _kafka_ctrl_response_topic_value = 'topic-response'
     _kafka_client_id_value = 'client-id'
-    _service_section = 'service'
+    _service_section_value = 'service'
     _data_dir_value = 'dir'
 
     def __init__(self):
@@ -15,6 +17,8 @@ class StatsProcessorConfig:
         self._client_id = None
         self._servers = None
         self._data_dir = None
+        self._ctrl_topic = 'mdde-stats-ctrl'
+        self._ctrl_response_topic = 'mdde-stats-response'
 
     def read(self, file: str):
         """
@@ -24,7 +28,7 @@ class StatsProcessorConfig:
         config = configparser.ConfigParser()
         config.read(file)
         self.client_id = config[StatsProcessorConfig._kafka_section][StatsProcessorConfig._kafka_client_id_value]
-        self.data_dir = config[StatsProcessorConfig._service_section][StatsProcessorConfig._data_dir_value]
+        self.data_dir = config[StatsProcessorConfig._service_section_value][StatsProcessorConfig._data_dir_value]
 
         servers_str = config[StatsProcessorConfig._kafka_section][StatsProcessorConfig._kafka_servers_value]
         self.servers = servers_str.split(',')
@@ -39,7 +43,7 @@ class StatsProcessorConfig:
         """
         config = configparser.ConfigParser()
         config[StatsProcessorConfig._kafka_section][StatsProcessorConfig._kafka_client_id_value] = self.client_id
-        config[StatsProcessorConfig._service_section][StatsProcessorConfig._data_dir_value] = self.data_dir
+        config[StatsProcessorConfig._service_section_value][StatsProcessorConfig._data_dir_value] = self.data_dir
 
         if self.servers is not None:
             servers_str = ','.join(self.servers)
@@ -57,19 +61,19 @@ class StatsProcessorConfig:
             config.write(configfile)
 
     @property
-    def servers(self) -> Iterable[str]:
+    def servers(self) -> List[str]:
         return self._servers
 
     @servers.setter
-    def servers(self, value: Iterable[str]):
+    def servers(self, value: List[str]):
         self._servers = value
 
     @property
-    def topics(self) -> Iterable[str]:
+    def topics(self) -> List[str]:
         return self._topics
 
     @topics.setter
-    def topics(self, value: Iterable[str]):
+    def topics(self, value: List[str]):
         self._topics = value
 
     @property
@@ -92,3 +96,19 @@ class StatsProcessorConfig:
     @data_dir.setter
     def data_dir(self, value: str):
         self._data_dir = value
+
+    @property
+    def request_topic(self) -> str:
+        return self._ctrl_topic
+
+    @request_topic.setter
+    def request_topic(self, value: str):
+        self._ctrl_topic = value
+
+    @property
+    def response_topic(self) -> str:
+        return self._ctrl_response_topic
+
+    @response_topic.setter
+    def response_topic(self, value: str):
+        self._ctrl_response_topic = value
