@@ -14,18 +14,32 @@ requires = [
     "kafka-python==2.0.0"
 ]
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(
-    name='MDDE Stats',
+    name='mdde_stats',
     version='0.1',
     description='Benchmark statistics processor for Multi-agent Data Distribution Environment',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/jcridev/mdde",
+
     keywords="mdde data-distribution reinforcement-learning deep-learning python",
+    classifiers=[
+            "Programming Language :: Python :: 3",
+            "License :: OSI Approved :: MIT License",
+            "Operating System :: OS Independent",
+        ],
+    python_requires='>=3.7',
 
     author='Andrey Kharitonov',
     author_email='andrey.kharitonov@ovgu.de',
 
     license='MIT Licence',
-    packages=find_packages(where='./src'),
+    packages=['mdde_stats'],
+    package_dir={'': 'src'},
+    #packages=find_packages(where='./src'),
 
     install_requires=requires,
     zip_safe=False,

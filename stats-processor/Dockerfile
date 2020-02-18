@@ -9,4 +9,4 @@ COPY . .
 
 VOLUME [ "/stats" ]
 
-CMD [ "python", "./your-daemon-or-script.py" ]
+CMD [ "python", "./src/mdde_stats/main.py" ]

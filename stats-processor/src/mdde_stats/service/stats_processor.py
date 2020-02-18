@@ -6,14 +6,20 @@ from kafka.admin import KafkaAdminClient, NewTopic
 from kafka import KafkaConsumer
 import traceback
 
-from src.mddestat.helper import Helper
+from mdde_stats.service import Util
+from mdde_stats.service.data import LogEvent
+from mdde_stats.service.data.manager import LocalDataManager
 
 
 class StatsProcessor(multiprocessing.Process):
     """
     Listens to the incoming MDDE events and catalogs them
     """
-    def __init__(self, kafka_servers: List[str], topics: List[str], client_id: str = None):
+    def __init__(self,
+                 local_data_folder: str,
+                 kafka_servers: List[str],
+                 topics: List[str],
+                 client_id: str = None):
         multiprocessing.Process.__init__(self)
         self._cancellation_token = multiprocessing.Event()
 
@@ -22,7 +28,7 @@ class StatsProcessor(multiprocessing.Process):
 
         if topics is None:
             raise TypeError('topics can\'t be None')
-
+        self._local_data_folder = local_data_folder
         self._servers = kafka_servers
         self._topics = topics
 
@@ -48,7 +54,7 @@ class StatsProcessor(multiprocessing.Process):
         """
         admin_client = KafkaAdminClient(bootstrap_servers=self._servers, client_id=self._client_id)
         existing_topics = admin_client.list_topics()
-        if Helper.is_sequence_not_string(self._topics):
+        if Util.is_sequence_not_string(self._topics):
             non_existing_topics = set(self._topics).difference(existing_topics)
             if len(non_existing_topics) > 0:
                 topic_list = []
@@ -68,13 +74,21 @@ class StatsProcessor(multiprocessing.Process):
                                  value_deserializer=self._relaxed_json_msg_deserializer)
         consumer.subscribe(self._topics)
 
-        while not self._cancellation_token.is_set():
-            for message in consumer:
-                print(message)
-                if self._cancellation_token.is_set():
-                    break
+        local_data_manager = LocalDataManager(self._local_data_folder)
+        with local_data_manager as local_bench_data:
+            while not self._cancellation_token.is_set():
+                for message in consumer:
+                    try:
+                        event = LogEvent()
+                        event.from_json_obj(message.value)
+                        local_bench_data.insert_event(event)
+                        local_bench_data.commit()  # TODO: Not as frequent commits or batch insertions
+                    except:
+                        print('Error processing incoming stats message: %s', traceback.format_exc(), file=sys.stderr)
+                    if self._cancellation_token.is_set():
+                        break
 
-        consumer.close()
+            consumer.close()
 
     @staticmethod
     def _relaxed_json_msg_deserializer(value):

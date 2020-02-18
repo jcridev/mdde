@@ -1,18 +1,19 @@
-from src.mddestat import StatsProcessor, ControlProcessor
-from src.mddestat.config import StatsProcessorConfig
+from mdde_stats.service import StatsProcessor, ControlProcessor
+from mdde_stats.config import StatsProcessorConfig
 
 
 class StatsCollectorRunner:
 
-    def __init__(self, config: StatsProcessorConfig):
+    def __init__(self, data_folder: str, config: StatsProcessorConfig):
         if config is None:
             raise TypeError("configuration is not set")
         self._config = config
         self._processes = None
+        self._data_folder = data_folder
 
     def initialize_runner(self):
         config = self._config
-        stats_p = StatsProcessor(config.servers, config.topics, config.client_id)
+        stats_p = StatsProcessor(self._data_folder, config.servers, config.topics, config.client_id)
         stats_p.initialize_kafka_topics()
         control_p = ControlProcessor(config.servers, config.request_topic, config.response_topic, config.client_id)
         control_p.initialize_kafka_topics()

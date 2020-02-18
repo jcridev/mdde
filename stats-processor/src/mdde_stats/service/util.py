@@ -1,8 +1,7 @@
-import sys
 from collections import Sequence
 
 
-class Helper:
+class Util:
     """
     Common methods used across the application but not  falling into any specific category
     """
