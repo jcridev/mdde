@@ -33,7 +33,7 @@ nodes:
   dir: null
   default: true
 bench_ycsb:
-  bin: "/test/folder/somewhere/bin"
+  bin: "./ycsb/bin"
   client: "mdde.redis"
   temp: "./temp"
 snapshot_dir: "./snapshots"

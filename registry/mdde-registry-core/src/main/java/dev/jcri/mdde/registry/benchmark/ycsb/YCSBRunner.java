@@ -35,7 +35,7 @@ public class YCSBRunner implements Closeable {
     /**
      * Bash executable for YCSB
      */
-    private static final String YCSB_NIX = "ycsb.sh";
+    private static final String YCSB_NIX = "sh ycsb.sh";
 
     private static final String TEMP_CLIENT_CONFIG_FILE = "mddeClientConfig." + MDDEClientConfigurationWriter.FILE_EXTENSION;
 
@@ -148,7 +148,7 @@ public class YCSBRunner implements Closeable {
         }
 
         // Example ycsb.bat load mdde.redis -P ..\workloads\workloada -p mdde.redis.configfile=.\\test-config.yml
-        var command = String.format("%s load %s -P %s -p%s.configfile=%s",
+        var command = String.format("%s load %s -P %s -p %s.configfile=%s",
                 getYCSBExecutableName(),
                 ycsbClient,
                 pathToWorkloadFile,
@@ -186,7 +186,7 @@ public class YCSBRunner implements Closeable {
                                   String ycsbClient,
                                   int threads) throws IOException {
         // Example ycsb.bat run mdde.redis -P ..\workloads\workloada -threads 10 -p mdde.redis.configfile=.\\test-config.yml
-        var command = String.format("%s run %s -P %s -threads %d -p%s.configfile=%s",
+        var command = String.format("%s run %s -P %s -threads %d -p %s.configfile=%s",
                 getYCSBExecutableName(),
                 ycsbClient,
                 pathToWorkloadFile,
@@ -216,8 +216,11 @@ public class YCSBRunner implements Closeable {
     }
 
     private String executeYCSBCommand(String pathToYCSBFolder, String command) throws IOException {
-        ProcessBuilder pb = new ProcessBuilder(command).redirectErrorStream(true);
-        pb.directory(new File(pathToYCSBFolder));
+        var pbArgs = command.split(" ");
+        ProcessBuilder pb = new ProcessBuilder(pbArgs).redirectErrorStream(true);
+        var ycsbAbsolutePath = Paths.get(pathToYCSBFolder).normalize().toAbsolutePath().toString();
+        logger.trace("Looking fot YCSB bin in {}", ycsbAbsolutePath);
+        pb.directory(new File(ycsbAbsolutePath));
         Process process = pb.start();
         StringBuilder result = new StringBuilder(700);
         try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream())))

@@ -28,8 +28,9 @@ public class WriteCommandHandlerRedis extends WriteCommandHandler {
     protected boolean runInsertTupleToNode(String tupleId, String nodeId) throws WriteOperationException {
         try(Jedis jedis = _redisConnection.getRedisCommands()) {
             var added = jedis.sadd(Constants.NODE_HEAP_PREFIX + nodeId, tupleId);
+            logger.trace("Inserted keys: {}", added);
             if (added == 0) {
-                return false;
+                //return false;
             }
         }
         return true;

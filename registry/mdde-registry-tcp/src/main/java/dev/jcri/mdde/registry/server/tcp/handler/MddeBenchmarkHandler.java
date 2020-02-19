@@ -30,11 +30,13 @@ public class MddeBenchmarkHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         try {
-            ctx.write(processCommand(_lastReceivedMessage));
+            if(_lastReceivedMessage != null) {
+                ctx.write(processCommand(_lastReceivedMessage));
+            }
             ctx.flush();
         }
         catch (Exception ex){
-            logger.error(ex);
+            logger.error("channelReadComplete error", ex);
         }
         finally {
             _lastReceivedMessage = null;
@@ -63,7 +65,7 @@ public class MddeBenchmarkHandler extends ChannelInboundHandlerAdapter {
 
         }
         catch (Exception e){
-            logger.error(e);
+            logger.error("processCommand error", e);
             return new BenchmarkContainerOut(BenchmarkResultCodes.ERROR, null);
         }
     }
