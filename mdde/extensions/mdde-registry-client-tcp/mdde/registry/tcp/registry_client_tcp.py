@@ -1,5 +1,5 @@
 import socket
-from typing import Set, Dict
+from typing import Set, Dict, Union
 
 from mdde.registry.protocol import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient
 from mdde.registry.container import RegistryResponse
@@ -149,7 +149,9 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
         response = self._serialize_and_run_command('GETALL')
         return RegistryResponse[str](response['result'], response['error'])
 
-    def read_get_all_fragments_with_meta(self, local_meta: Set[str], global_meta: Set[str]) -> RegistryResponse[Dict]:
+    def read_get_all_fragments_with_meta(self,
+                                         local_meta: Union[Set[str], None],
+                                         global_meta: Union[Set[str], None]) -> RegistryResponse[Dict]:
         response = self._serialize_and_run_command('GETFRAGSWMETA', fmtagsloc=local_meta, fmtagsglb=global_meta)
         return RegistryResponse[Dict](response['result'], response['error'])
 

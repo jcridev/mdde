@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Set, List
+from typing import Set, Sequence, Union
+import numpy as np
 
-from mdde.registry import PRegistryReadClient
+from mdde.registry.protocol import PRegistryReadClient, PRegistryWriteClient
 
 
 class ABCAgent(ABC):
@@ -30,7 +31,11 @@ class ABCAgent(ABC):
             raise ValueError("The agent must be associated with at lest one data node")
         self._data_node_id = frozenset(data_node_ids)
 
-        self._registry_read = None
+        # Read and write access to the registry.
+        # These properties will have the implementation of the protocols assigned to them at the time of execution,
+        # Use these to create actions affecting the registry (write) and the agent observation space (read).
+        self._registry_read: Union[PRegistryReadClient, None] = None
+        self._registry_write: Union[PRegistryReadClient, None] = None
 
     def id(self) -> str:
         """
@@ -39,19 +44,29 @@ class ABCAgent(ABC):
         """
         return self._agent_id
 
-    def attach_registry(self, registry: PRegistryReadClient):
+    def attach_registry(self, registry_read: PRegistryReadClient, registry_write: PRegistryWriteClient):
         """
         Method is used by the environment to provide agent access to the registry
-        :param registry: Read-only access to the registry.
-                         Use the read-only client to
+        :param registry_write: Write access to the registry
+        :param registry_read: Read-only access to the registry.
         """
-        self._registry_read = registry
+        self._registry_read = registry_read
+        self._registry_write = registry_write
 
     @abstractmethod
-    def get_actions(self) -> List[int]:
+    def get_actions(self) -> np.array:
         """
         Get the list of action ids available to the agent
         :return:
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def filter_observation(self, full_observation: np.array) -> np.array:
+        """
+        Get observation space for the specific agent
+        :param full_observation: full_observation: Full observation space provided by the environment
+        :return: agents can have full or limited observation spaces. In case of the latter, provide the filtering logic
+                 within this function and return a filtered out observation space
+        """
+        raise NotImplementedError

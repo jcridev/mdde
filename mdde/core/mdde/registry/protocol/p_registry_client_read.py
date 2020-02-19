@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Set, Dict
+from typing import Set, Dict, Union
 
 try:
     from typing import Protocol
@@ -30,7 +30,9 @@ class PRegistryReadClient(Protocol):
         raise NotImplementedError()
 
     @abstractmethod
-    def read_get_all_fragments_with_meta(self, local_meta: Set[str], global_meta: Set[str]) -> RegistryResponse[Dict]:
+    def read_get_all_fragments_with_meta(self,
+                                         local_meta: Union[Set[str], None],
+                                         global_meta: Union[Set[str], None]) -> RegistryResponse[Dict]:
         # TODO: Explicit return type
         """
         A complete catalog of fragments with optional meta values

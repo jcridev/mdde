@@ -6,7 +6,7 @@ from functools import reduce
 
 from mdde.fragmentation.exceptions import FragmentationError
 from mdde.fragmentation.protocol import PFragmenter
-from mdde.registry import RegistryResponseHelper
+from mdde.registry.container import RegistryResponseHelper
 from mdde.registry.protocol import PRegistryReadClient, PRegistryWriteClient
 
 

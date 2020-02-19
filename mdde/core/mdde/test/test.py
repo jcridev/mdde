@@ -1,5 +1,5 @@
 from mdde.registry.tcp import RegistryClientTCP
-
+from mdde.registry.protocol import PRegistryReadClient
 
 def test_client_run():
     tcp_client = RegistryClientTCP("localhost", 8942)
