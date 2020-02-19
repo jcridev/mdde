@@ -70,9 +70,9 @@ public class YCSBRunner implements Closeable {
         }
 
         _tempSubfolder = Paths.get(ycsbConfig.getTemp(),
-                            UUID.randomUUID().toString().replace("-", ""))
-                        .toAbsolutePath()
-                        .normalize();
+                                   UUID.randomUUID().toString().replace("-", ""))
+                            .toAbsolutePath()
+                            .normalize();
         // Create temp folder if needed
         final boolean tempFolderCreated = new File(_tempSubfolder.toString()).mkdirs();
         logger.trace("Created temporary directory {}", tempFolderCreated);
@@ -124,6 +124,8 @@ public class YCSBRunner implements Closeable {
      * @throws IOException
      */
     public YCSBOutput loadWorkload(EYCSBWorkloadCatalog workload) throws IOException {
+        Objects.requireNonNull(workload, "Workload id is not supplied");
+
         var pathToTempWorkload = Paths.get(_tempSubfolder.toString(), workload.getResourceBaseFileName());
         ResourcesTools.copyResourceToFileSystem(workload.getResourceFileName(), pathToTempWorkload);
 
@@ -203,8 +205,13 @@ public class YCSBRunner implements Closeable {
     @Override
     public void close() throws IOException {
         // Remove temp folder
-        if(Files.exists(_tempSubfolder)){
-            Files.delete(_tempSubfolder);
+        try {
+            if (Files.exists(_tempSubfolder)) {
+                Files.delete(_tempSubfolder);
+            }
+        }
+        catch (Exception e){
+            logger.error("Unable to delete temporary folder {}", _tempSubfolder, e);
         }
     }
 

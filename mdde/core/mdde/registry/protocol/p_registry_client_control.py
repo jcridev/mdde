@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict
+from typing import Dict, Set
 try:
     from typing import Protocol
 except ImportError:
@@ -24,7 +24,12 @@ class PRegistryControlClient(Protocol):
         raise NotImplementedError()
 
     @abstractmethod
-    def ctrl_generate_data(self) -> RegistryResponse[bool]:
+    def ctrl_populate_default_nodes(self) -> RegistryResponse[Set[str]]:
+        """Populate nodes that are marked as default in the empty registry"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def ctrl_generate_data(self, workload_id: str) -> RegistryResponse[bool]:
         """Generate the data tuples and populate Registry and data nodes"""
         raise NotImplementedError()
 

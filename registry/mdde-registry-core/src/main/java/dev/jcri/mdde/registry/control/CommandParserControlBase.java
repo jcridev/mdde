@@ -9,6 +9,7 @@ import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Basic abstract router for the CONTROL commands
@@ -38,6 +39,8 @@ public abstract class CommandParserControlBase<TOut, TArgs>
                     return _serializer.serialize(processSetShuffleState());
                 case RUN_SHUFFLE:
                     return _serializer.serialize(syncDataFromRegistryToNodes());
+                case INIT_NODES:
+                    return _serializer.serialize(processInitDefaultNodes());
                 case RESET:
                     return _serializer.serialize(processReset());
                 case FLUSHALL:
@@ -56,6 +59,8 @@ public abstract class CommandParserControlBase<TOut, TArgs>
             return _serializer.serializeException(ex);
         }
     }
+
+    protected abstract Set<String> processInitDefaultNodes() throws MddeRegistryException;
 
     protected abstract Boolean processSetBenchmarkState() throws MddeRegistryException;
 

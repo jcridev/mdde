@@ -107,8 +107,12 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
         response = self._serialize_and_run_command('PREPSHUFFLE')
         return RegistryResponse[bool](response['result'], response['error'])
 
-    def ctrl_generate_data(self) -> RegistryResponse[bool]:
-        response = self._serialize_and_run_command('BENCHLOAD')
+    def ctrl_populate_default_nodes(self) -> RegistryResponse[Set[str]]:
+        response = self._serialize_and_run_command('INITNODES')
+        return RegistryResponse[bool](response['result'], response['error'])
+
+    def ctrl_generate_data(self, workload_id: str) -> RegistryResponse[bool]:
+        response = self._serialize_and_run_command('BENCHLOAD', workload=workload_id)
         return RegistryResponse[bool](response['result'], response['error'])
 
     def ctrl_reset(self) -> RegistryResponse[bool]:

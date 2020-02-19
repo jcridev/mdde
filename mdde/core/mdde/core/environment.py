@@ -16,9 +16,7 @@ class Environment:
                  registry_read: PRegistryReadClient):
         """
         Environment constructor
-        :param scenario: Scenario object implementing ABCScenario. If any initialization of the scenario is required,
-        such as generating data, definition of the agents and their actions, etc., it must be done prior passing the
-        object to the constructor
+        :param scenario: Scenario object implementing ABCScenario.
         :param registry_ctrl: Control commands for the MDDE registry implementation
         :param registry_write: Write commands for the MDDE registry implementation
         :param registry_read: Read commands for the MDDE registry implementation
@@ -34,9 +32,33 @@ class Environment:
             raise TypeError("registry read client can't be None")
 
         self._scenario = scenario
-        self.registry_ctrl = registry_ctrl
-        self.registry_write = registry_write
-        self.registry_read = registry_read
+        self._registry_ctrl = registry_ctrl
+        self._registry_write = registry_write
+        self._registry_read = registry_read
+
+    def initialize_registry(self):
+        """
+        Initialize or re-initialize the registry. All existing data will be removed, all data generated anew.
+        """
+        # Flush existing data
+        flush_result = self._registry_ctrl.ctrl_flush()
+        if flush_result.failed:
+            raise RuntimeError(flush_result.error)
+        # Re-initialize nodes
+        nodes_populate_res = self._registry_ctrl.ctrl_populate_default_nodes()
+        if nodes_populate_res.failed:
+            raise RuntimeError(nodes_populate_res.error)
+        # Registry must be in the 'benchmark' mode, meaning not accepting any modification (write) commands
+        set_bench_result = self._registry_ctrl.ctrl_set_benchmark_mode()
+        if set_bench_result.failed:
+            raise RuntimeError(set_bench_result.error)
+        # Generate data
+        data_gen_result = self._registry_ctrl.ctrl_generate_data(self._scenario.get_datagenerator_workload())
+        if data_gen_result.failed:
+            raise RuntimeError(data_gen_result.error)
+        if not data_gen_result.result:
+            raise RuntimeError("Data was not generated, check the registry logs for more information")
+
 
     def reset(self):
         obs_n = []

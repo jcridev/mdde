@@ -12,6 +12,8 @@ import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.Benchm
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.shared.store.response.TupleCatalog;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -20,6 +22,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 
 public class BenchmarkRunner {
+    private static final Logger logger = LogManager.getLogger(BenchmarkRunner.class);
+
     private final ITupleLocatorFactory _tupleLocatorFactory;
     private final IReadCommandHandler _storeReader;
     private final YCSBRunner _ycsbRunner;
@@ -112,6 +116,7 @@ public class BenchmarkRunner {
         try{
             var ycsbRunOutput = this._ycsbRunner.loadWorkload(workload);
         } catch (IOException e) {
+            logger.error("Error loading workload", e);
             return false;
         } finally {
             _currentLoadState = EBenchmarkLoadStage.READY;
@@ -243,7 +248,7 @@ public class BenchmarkRunner {
         /**
          * Current state of the runner thread
          */
-        private EBenchmarkRunStage _state;
+        private EBenchmarkRunStage _state = EBenchmarkRunStage.READY;
         /**
          * Benchmark run has failed. Cause will be in the _result
          */

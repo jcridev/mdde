@@ -11,7 +11,7 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
     sys.exit(1)
 
 
-packages = find_namespace_packages(include=['mdde.*'], exclude=['test.*'])
+packages = find_namespace_packages(include=['mdde.*'], exclude=['mdde.test.*'])
 
 setup(
     name='mdde',

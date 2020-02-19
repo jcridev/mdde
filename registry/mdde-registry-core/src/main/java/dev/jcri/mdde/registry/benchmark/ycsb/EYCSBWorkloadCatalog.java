@@ -7,7 +7,7 @@ import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 public enum EYCSBWorkloadCatalog {
-    READ_10000("read10000", "benchmark/ycsb/workload_read_10000");
+    READ_10000("read10000", "/benchmark/ycsb/workload_read_10000");
 
     private final String _tag;
     private final String _resourceFile;

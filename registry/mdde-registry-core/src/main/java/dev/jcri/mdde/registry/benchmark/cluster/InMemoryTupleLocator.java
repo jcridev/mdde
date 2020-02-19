@@ -31,12 +31,12 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
     /**
      * Nodes: Integer value is the internal ID (corresponds to the snapshot row number)
      */
-    private Map<Integer, String> _nodes=null;
-    private Map<String, Integer> _nodesInverse=null;
+    private final Map<Integer, String> _nodes = new HashMap<>();
+    private Map<String, Integer> _nodesInverse = null;
     /**
      * Tuples: Integer value is the internal ID (corresponds to the snapshot column number)
      */
-    private Map<String, Integer> _tuples=null;
+    private Map<String, Integer> _tuples = new HashMap<>();
 
     @Override
     public String getNodeForRead(String tupleId) {
@@ -95,7 +95,9 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
         Objects.requireNonNull(tupleCatalog);
         _nodes.clear();
         _tuples.clear();
-        _nodesInverse.clear();
+        if(_nodesInverse != null) {
+            _nodesInverse.clear();
+        }
         _registrySnapshot = new boolean[tupleCatalog.getNodes().size()][tupleCatalog.getTuples().size()];
         // "Reindex" tuples, in case the catalog indexes are for some reason aren't sequential 0-N values
         int tupleIdx = 0;
@@ -155,7 +157,7 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
         // It's pointless in this implementation but Closable is part of the base interface for possible future
         // implementations
         _registrySnapshot = null; // Makes the runner "deinitialized"
-        _nodes = null;
+        _nodes.clear();
         _tuples = null;
     }
 }

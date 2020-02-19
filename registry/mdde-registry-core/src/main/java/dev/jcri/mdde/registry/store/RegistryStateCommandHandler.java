@@ -3,31 +3,28 @@ package dev.jcri.mdde.registry.store;
 import dev.jcri.mdde.registry.benchmark.BenchmarkRunner;
 import dev.jcri.mdde.registry.data.IDataShuffler;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
-import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
 import dev.jcri.mdde.registry.store.exceptions.IllegalRegistryActionException;
 import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
 import dev.jcri.mdde.registry.store.queue.IDataShuffleQueue;
-import dev.jcri.mdde.registry.store.queue.actions.DataAction;
 import dev.jcri.mdde.registry.store.queue.actions.DataCopyAction;
 import dev.jcri.mdde.registry.store.queue.actions.DataDeleteAction;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import javax.lang.model.element.UnknownElementException;
-import javax.xml.crypto.Data;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.NotDirectoryException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.text.MessageFormat;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 public final class RegistryStateCommandHandler {
+    private static final Logger logger = LogManager.getLogger(RegistryStateCommandHandler.class);
+
     private final ReentrantLock _commandExecutionLock = new ReentrantLock();
     private final BenchmarkRunner _benchmarkRunner;
     private final IWriteCommandHandler _writeCommandHandler;
@@ -81,12 +78,19 @@ public final class RegistryStateCommandHandler {
      */
     public synchronized boolean switchToBenchmark() throws MddeRegistryException {
         _commandExecutionLock.lock();
+        logger.trace("Switching to benchmark mode");
         try {
             if(_registryState ==  ERegistryState.benchmark){
                 throw new IllegalStateException("Registry is already in the benchmark mode");
             }
             _benchmarkRunner.prepareBenchmarkEnvironment();
+            logger.trace("Benchmark environment was prepared");
+            _registryState = ERegistryState.benchmark;
             return true;
+        }
+        catch (Exception ex){
+            logger.error("Failed switching to benchmark mode", ex);
+            throw ex;
         }
         finally {
             _commandExecutionLock.unlock();
@@ -99,12 +103,17 @@ public final class RegistryStateCommandHandler {
      */
     public synchronized boolean switchToShuffle() throws IOException {
         _commandExecutionLock.lock();
+        logger.trace("Switching to shuffle mode");
         try {
-            if(_registryState ==  ERegistryState.shuffle){
+            if(_registryState == ERegistryState.shuffle){
                 throw new IllegalStateException("Registry is already in the shuffle mode");
             }
             _benchmarkRunner.disposeBenchmarkEnvironment();
+            _registryState = ERegistryState.shuffle;
             return true;
+        } catch (Exception ex){
+            logger.error("Failed switching to shuffle mode", ex);
+            throw ex;
         }
         finally {
             _commandExecutionLock.unlock();
@@ -117,11 +126,54 @@ public final class RegistryStateCommandHandler {
      */
     public synchronized boolean generateData(String workloadId){
         _commandExecutionLock.lock();
+        logger.trace("Generate data was called");
         try {
-            if(_registryState ==  ERegistryState.shuffle){
-                throw new IllegalStateException("Registry is already in the shuffle mode");
+            if(_registryState == ERegistryState.shuffle){
+                logger.warn("Registry is in the shuffle mode, unable to execute data generation");
+                throw new IllegalStateException("Registry is in the shuffle mode, switch to benchmark");
             }
             return _benchmarkRunner.generateData(workloadId);
+        }
+        catch (Exception ex){
+            logger.error("Failed generating data", ex);
+            throw ex;
+        }
+        finally {
+            _commandExecutionLock.unlock();
+        }
+    }
+
+    /**
+     * Pre-populate default nodes in the registry
+     */
+    public synchronized Set<String> initializeDefaultNodes()
+            throws MddeRegistryException {
+        _commandExecutionLock.lock();
+        try {
+            var defaultNodesParam = new HashSet<String>();
+            for(var node: _dataNodes){
+                if(!node.getDefaultNode()){
+                    continue;
+                }
+                if(!defaultNodesParam.add(node.getNodeId())){
+                    throw new IllegalArgumentException(String.format("Duplicate node id: %s", node.getNodeId()));
+                }
+            }
+
+            if(defaultNodesParam.size() == 0){
+                logger.info("No default nodes to initialize");
+                return defaultNodesParam;
+            }
+            var success = _writeCommandHandler.populateNodes(defaultNodesParam);
+            logger.info(MessageFormat.format("Default nodes initialized: {0}", success));
+            if(success) {
+                logger.info(MessageFormat.format("Initialized default nodes: {0}", String.join(",", defaultNodesParam)));
+            }
+            return defaultNodesParam;
+        }
+        catch (Exception ex){
+            logger.error("Failed initializing default nodes", ex);
+            throw ex;
         }
         finally {
             _commandExecutionLock.unlock();
@@ -134,11 +186,17 @@ public final class RegistryStateCommandHandler {
      */
     public synchronized String executeBenchmark(String workloadId){
         _commandExecutionLock.lock();
+        logger.trace("Benchmark execution was called");
         try {
-            if(_registryState ==  ERegistryState.shuffle){
-                throw new IllegalStateException("Registry is already in the shuffle mode");
+            if(_registryState == ERegistryState.shuffle){
+                logger.warn("Registry is in the shuffle mode, unable to execute benchmark");
+                throw new IllegalStateException("Registry is in the shuffle mode, switch to benchmark");
             }
             return _benchmarkRunner.executeBenchmark(workloadId);
+        }
+        catch (Exception ex){
+            logger.error("Failed executing benchmark", ex);
+            throw ex;
         }
         finally {
             _commandExecutionLock.unlock();
@@ -160,8 +218,8 @@ public final class RegistryStateCommandHandler {
     public synchronized boolean reset() throws IOException{
         _commandExecutionLock.lock();
         try {
-            if(_registryState ==  ERegistryState.shuffle){
-                throw new IllegalStateException("Registry is already in the shuffle mode");
+            if(_registryState == ERegistryState.shuffle){
+                throw new IllegalStateException("Registry is in the shuffle mode, switch to benchmark");
             }
             final String defaultSnapshotId = _registryStoreManager.getDefaultSnapshotId();
             _dataShuffler.flushData();
@@ -184,11 +242,11 @@ public final class RegistryStateCommandHandler {
                 return loadSnapshot(defaultSnapshotId);
             }
         } catch (WriteOperationException | IllegalRegistryActionException e) {
-            e.printStackTrace();
+            logger.error("Failed flushing all", e);
+            throw new IOException(e);
         } finally {
             _commandExecutionLock.unlock();
         }
-        return false;
     }
 
     /**
@@ -196,13 +254,23 @@ public final class RegistryStateCommandHandler {
      * @return
      */
     public synchronized boolean flushAll(){
-        if(_registryState !=  ERegistryState.shuffle){
-            throw new IllegalStateException("Registry is must be in a shuffle mode to execute FLUSH");
-        }
+        _commandExecutionLock.lock();
+        try {
+            if (_registryState != ERegistryState.shuffle) {
+                throw new IllegalStateException("Registry is must be in a shuffle mode to execute FLUSH");
+            }
 
-        _dataShuffler.flushData();
-        _registryStoreManager.eraseAllData();
-        return true;
+            _dataShuffler.flushData();
+            _registryStoreManager.eraseAllData();
+            return true;
+        }
+        catch (Exception ex){
+            logger.error("Failed flushing all", ex);
+            throw ex;
+        }
+        finally {
+            _commandExecutionLock.unlock();
+        }
     }
 
     /**
@@ -236,6 +304,10 @@ public final class RegistryStateCommandHandler {
             }
             return true;
         }
+        catch (Exception ex){
+            logger.error("Failed during synchronization of registry and data nodes", ex);
+            throw ex;
+        }
         finally {
             _commandExecutionLock.unlock();
         }
@@ -257,26 +329,37 @@ public final class RegistryStateCommandHandler {
      * @throws IOException
      */
     public synchronized String createSnapshot(boolean isDefault) throws IOException {
-        // First check if the snapshots dir exits
-        var snapDirFile = new File(_snapshotsDirectory);
-        if(snapDirFile.exists() && snapDirFile.isFile()){
-            throw new NotDirectoryException(_snapshotsDirectory);
-        }
-        snapDirFile.mkdirs();
-        // Generate snapshot ID (used as filenames)
-        final String snapFilenamePrefix = UUID.randomUUID().toString().replace("-", "");
-        final String snapRegistryFile = Paths.get(_snapshotsDirectory, snapFilenamePrefix + _registryDumpFilePostfix)
-                                        .toAbsolutePath().normalize().toString();
-        final String snapDataNodesFile =  Paths.get(_snapshotsDirectory, snapFilenamePrefix + _dataNodeDumpFilePostfix)
-                                        .toAbsolutePath().normalize().toString();
+        _commandExecutionLock.lock();
+        try {
+            // First check if the snapshots dir exits
+            var snapDirFile = new File(_snapshotsDirectory);
+            if (snapDirFile.exists() && snapDirFile.isFile()) {
+                throw new NotDirectoryException(_snapshotsDirectory);
+            }
+            boolean mkdirsRes = snapDirFile.mkdirs();
+            logger.trace("Create snapshot, snapshot directory created: {0}", mkdirsRes);
+            // Generate snapshot ID (used as filenames)
+            final String snapFilenamePrefix = UUID.randomUUID().toString().replace("-", "");
+            final String snapRegistryFile = Paths.get(_snapshotsDirectory, snapFilenamePrefix + _registryDumpFilePostfix)
+                    .toAbsolutePath().normalize().toString();
+            final String snapDataNodesFile = Paths.get(_snapshotsDirectory, snapFilenamePrefix + _dataNodeDumpFilePostfix)
+                    .toAbsolutePath().normalize().toString();
 
-        _registryStoreManager.dumpToFile(snapRegistryFile, true);
-        _dataShuffler.dumpToFile(snapDataNodesFile, true);
-        if(isDefault){
-            _registryStoreManager.assignDefaultSnapshot(snapFilenamePrefix);
-        }
+            _registryStoreManager.dumpToFile(snapRegistryFile, true);
+            _dataShuffler.dumpToFile(snapDataNodesFile, true);
+            if (isDefault) {
+                _registryStoreManager.assignDefaultSnapshot(snapFilenamePrefix);
+            }
 
-        return snapFilenamePrefix;
+            return snapFilenamePrefix;
+        }
+        catch (Exception ex){
+            logger.error("Failed creating snapshot", ex);
+            throw ex;
+        }
+        finally {
+            _commandExecutionLock.unlock();
+        }
     }
 
     /**
@@ -286,29 +369,39 @@ public final class RegistryStateCommandHandler {
      * @throws IOException
      */
     public synchronized boolean loadSnapshot(String snapshotId) throws IOException{
-        if(snapshotId == null || snapshotId.isBlank()){
-            throw new IllegalArgumentException("Snapshot ID is not set");
-        }
-        var snapDirFile = new File(_snapshotsDirectory);
-        if(!snapDirFile.exists() || snapDirFile.isFile()){
-            throw new NotDirectoryException(_snapshotsDirectory);
-        }
-        final String snapRegistryFile = Paths.get(_snapshotsDirectory, snapshotId + _registryDumpFilePostfix)
-                .toAbsolutePath().normalize().toString();
-        final String snapDataNodesFile =  Paths.get(_snapshotsDirectory, snapshotId + _dataNodeDumpFilePostfix)
-                .toAbsolutePath().normalize().toString();
+        _commandExecutionLock.lock();
+        try {
+            if (snapshotId == null || snapshotId.isBlank()) {
+                throw new IllegalArgumentException("Snapshot ID is not set");
+            }
+            var snapDirFile = new File(_snapshotsDirectory);
+            if (!snapDirFile.exists() || snapDirFile.isFile()) {
+                throw new NotDirectoryException(_snapshotsDirectory);
+            }
+            final String snapRegistryFile = Paths.get(_snapshotsDirectory, snapshotId + _registryDumpFilePostfix)
+                    .toAbsolutePath().normalize().toString();
+            final String snapDataNodesFile = Paths.get(_snapshotsDirectory, snapshotId + _dataNodeDumpFilePostfix)
+                    .toAbsolutePath().normalize().toString();
 
-        if(!new File(snapRegistryFile).isFile()){
-            throw new FileNotFoundException(snapRegistryFile);
-        }
-        if(!new File(snapDataNodesFile).isFile()){
-            throw new FileNotFoundException(snapDataNodesFile);
-        }
+            if (!new File(snapRegistryFile).isFile()) {
+                throw new FileNotFoundException(snapRegistryFile);
+            }
+            if (!new File(snapDataNodesFile).isFile()) {
+                throw new FileNotFoundException(snapDataNodesFile);
+            }
 
-        var dataRestored = _dataShuffler.restoreFromFile(snapDataNodesFile);
-        var registryRestored = _registryStoreManager.restoreFromFile(snapRegistryFile);
+            var dataRestored = _dataShuffler.restoreFromFile(snapDataNodesFile);
+            var registryRestored = _registryStoreManager.restoreFromFile(snapRegistryFile);
 
-        return dataRestored && registryRestored;
+            return dataRestored && registryRestored;
+        }
+        catch (Exception ex){
+            logger.error("Failed loading snapshot", ex);
+            throw ex;
+        }
+        finally {
+            _commandExecutionLock.unlock();
+        }
     }
 
 

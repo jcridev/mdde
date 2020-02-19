@@ -49,35 +49,7 @@ public class CommandProcessorSingleton {
         _commandProcessor = processor;
     }
 
-    /**
-     * Pre-populate default nodes in the registry
-     * @param networkDBNodes
-     */
-    public synchronized void initializeDefaultNodes(List<DBNetworkNodesConfiguration> networkDBNodes)
-        throws IOException {
-        if(_commandProcessor == null){
-            throw new IllegalStateException("CommandProcessorSingleton is not initialized");
-        }
-        var defaultNodesParam = new HashSet<String>();
-        for(var node: networkDBNodes){
-            if(!node.getDefaultNode()){
-                continue;
-            }
-            if(!defaultNodesParam.add(node.getNodeId())){
-                throw new IllegalArgumentException(String.format("Duplicate node id: %s", node.getNodeId()));
-            }
-        }
 
-        if(defaultNodesParam.size() == 0){
-            return;
-        }
-
-        WriteArgsPopulateNodesContainer newNodesArg = new WriteArgsPopulateNodesContainer();
-        newNodesArg.setNodes(defaultNodesParam);
-        String populateCommand = CommandSerializationHelper.serializeJson(EWriteCommand.POPULATE_NODES, newNodesArg);
-        var populateNodesResponse = _commandProcessor.processIncomingStatement(populateCommand);
-        logger.info(populateNodesResponse);
-    }
 
     /**
      * Get the instance of the CommandProcessor that was passed to the initializer method

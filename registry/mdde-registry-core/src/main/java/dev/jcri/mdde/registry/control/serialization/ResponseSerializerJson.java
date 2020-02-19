@@ -113,7 +113,12 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     @Override
     public String serializeException(Throwable cause) {
         try {
-            return _mapper.writeValueAsString(new CommandResultContainer<String>(null, cause.getMessage()));
+            var errorMessage = cause.getMessage();
+            if(errorMessage == null || errorMessage.isEmpty()){
+                errorMessage = cause.getClass().getName();
+            }
+
+            return _mapper.writeValueAsString(new CommandResultContainer<String>(null, errorMessage));
         } catch (JsonProcessingException e) {
             return getSerializationError(cause, e);
         }

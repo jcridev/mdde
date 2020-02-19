@@ -40,6 +40,10 @@ public enum  EStateControlCommand implements ICommand {
      */
     RUN_SHUFFLE("RUNSHUFFLE"),
     /**
+     * Initialize *default* nodes from the registry configuration file. Fails if the default nodes were already populated
+     */
+    INIT_NODES("INITNODES"),
+    /**
      * Reset the state of the environment.
      * Following must happen after this command is executed:
      *  1. Flush Registry

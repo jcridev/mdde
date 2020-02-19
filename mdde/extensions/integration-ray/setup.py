@@ -20,7 +20,7 @@ setup(
     author_email='andrey.kharitonov@ovgu.de',
 
     license='MIT Licence',
-    packages=find_namespace_packages(include=['mdde.integration.ray.*'], exclude='test.*'),
+    packages=find_namespace_packages(include=['mdde.integration.ray.*'], exclude=['mdde.test.*']),
 
     installs_requires=['typing-extensions; python_version<"3.8"'],
     zip_safe=False,

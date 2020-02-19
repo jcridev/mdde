@@ -98,16 +98,6 @@ public class Main {
             System.exit(1);
         }
 
-        // Populate nodes
-        try {
-            CommandProcessorSingleton.getDefaultInstance().initializeDefaultNodes(mddeConfig.getDataNodes());
-        }
-        catch (Exception ex){
-            logger.error(ex);
-            System.err.println(ex.getMessage());
-            System.exit(1);
-        }
-
         // Hook attempting to properly shut down the TCP listener on shutdown
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {

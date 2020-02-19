@@ -5,12 +5,11 @@ import numpy as np
 from mdde.agent.abc import ABCAgent
 from mdde.fragmentation.default import DefaultFragmenter, DefaultFragmentSorter
 from mdde.fragmentation.protocol import PFragmentSorter, PFragmenter
-from mdde.registry.protocol import PRegistryReadClient
 from mdde.scenario.abc import ABCScenario
 
 
 class DefaultScenario(ABCScenario):
-    NUM_FRAGMENTS = 100
+    NUM_FRAGMENTS = 10
 
     def __init__(self):
         super().__init__('Default scenario')
