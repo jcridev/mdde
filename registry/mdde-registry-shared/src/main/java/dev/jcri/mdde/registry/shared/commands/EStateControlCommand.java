@@ -17,7 +17,7 @@ public enum  EStateControlCommand implements ICommand {
     /**
      * Execute benchmark and return the resulted metrics
      */
-    RUN_BENCHMARK("BENCHRUN", new ArrayList<ExpectedCommandArgument>(){{add(ARG_WORKLOAD_ID); }}),
+    RUN_BENCHMARK("RUNBENCH", new ArrayList<ExpectedCommandArgument>(){{add(ARG_WORKLOAD_ID); }}),
 
     /**
      * Get the status of the benchmark. If the benchmark run was finished, returns the results
@@ -39,6 +39,10 @@ public enum  EStateControlCommand implements ICommand {
      * synchronizing the state of the data nodes with the registry.
      */
     RUN_SHUFFLE("RUNSHUFFLE"),
+    /**
+     * Get the current state of the registry (Benchmark or Shuffle)
+     */
+    GET_REGISTRY_MODE("REGMODE"),
     /**
      * Initialize *default* nodes from the registry configuration file. Fails if the default nodes were already populated
      */

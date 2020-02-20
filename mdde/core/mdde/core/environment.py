@@ -1,6 +1,8 @@
+from mdde.core.exception import EnvironmentInitializationError
+from mdde.registry.container import RegistryResponseHelper
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.scenario.abc import ABCScenario
-
+from mdde.registry.enums import ERegistryMode
 import numpy as np
 import logging
 
@@ -31,6 +33,8 @@ class Environment:
         if registry_read is None:
             raise TypeError("registry read client can't be None")
 
+        self._logger = logging.getLogger('Environment')
+
         self._scenario = scenario
         self._registry_ctrl = registry_ctrl
         self._registry_write = registry_write
@@ -40,27 +44,70 @@ class Environment:
         """
         Initialize or re-initialize the registry. All existing data will be removed, all data generated anew.
         """
+        self._logger.info("Environment initialization starting")
+        # Registry must be in the 'shuffle' mode, meaning not accepting any modification (write) commands
+        self._set_registry_mode(ERegistryMode.shuffle)
         # Flush existing data
         flush_result = self._registry_ctrl.ctrl_flush()
         if flush_result.failed:
-            raise RuntimeError(flush_result.error)
+            raise EnvironmentInitializationError(flush_result.error)
         # Re-initialize nodes
         nodes_populate_res = self._registry_ctrl.ctrl_populate_default_nodes()
         if nodes_populate_res.failed:
-            raise RuntimeError(nodes_populate_res.error)
+            raise EnvironmentInitializationError(nodes_populate_res.error)
         # Registry must be in the 'benchmark' mode, meaning not accepting any modification (write) commands
-        set_bench_result = self._registry_ctrl.ctrl_set_benchmark_mode()
-        if set_bench_result.failed:
-            raise RuntimeError(set_bench_result.error)
+        self._set_registry_mode(ERegistryMode.benchmark)
         # Generate data
         data_gen_result = self._registry_ctrl.ctrl_generate_data(self._scenario.get_datagenerator_workload())
         if data_gen_result.failed:
-            raise RuntimeError(data_gen_result.error)
+            raise EnvironmentInitializationError(data_gen_result.error)
         if not data_gen_result.result:
-            raise RuntimeError("Data was not generated, check the registry logs for more information")
+            raise EnvironmentInitializationError("Initial data was not generated, "
+                                                 "check the registry logs for more information")
+        # Run initial fragmentation
+        fragmenter = self._scenario.get_fragmenter()
+        fragmentation_requires_shuffle = fragmenter.run_fragmentation(self._registry_read, self._registry_write)
+        # Switch to shuffle
+        self._set_registry_mode(ERegistryMode.shuffle)
+        # Shuffle tuples if fragmentation introduced any changes in the registry
+        if fragmentation_requires_shuffle:
+            registry_to_data_sync_result = self._registry_ctrl.ctrl_sync_registry_to_data()
+            if registry_to_data_sync_result.failed:
+                raise EnvironmentInitializationError(data_gen_result.error)
+        # Create an initial default snapshot (Environment will roll back to this snapshot at reset)
+        snapshot_create_result = self._registry_ctrl.ctrl_snapshot_create(True)
+        if snapshot_create_result.failed:
+            raise EnvironmentInitializationError(snapshot_create_result.error)
+        default_snapshot_id = snapshot_create_result.result
+        if default_snapshot_id:
+            self._logger.info("Default snapshot created with ID: %s", default_snapshot_id)
+        else:
+            raise EnvironmentInitializationError("Failed to create a new default snapshot, "
+                                                 "no ID returned from the registry")
 
+        self._logger.info("Environment initialization is complete")
+
+    def _set_registry_mode(self, target_mode: ERegistryMode):
+        get_mode_result = self._registry_ctrl.ctrl_get_mode()  # Verify that the environment is in benchmark mode
+        if get_mode_result.failed:
+            raise EnvironmentInitializationError(get_mode_result.error)
+        if get_mode_result.result == ERegistryMode.unknown:
+            raise RuntimeError("Registry is in unknown mode")
+        if get_mode_result.result != target_mode:
+            self._logger.info("Switching registry to %s mode, current mode: %s",
+                              target_mode.name, get_mode_result.result.name)
+            if target_mode == ERegistryMode.benchmark:
+                set_bench_result = self._registry_ctrl.ctrl_set_benchmark_mode()
+            elif target_mode == ERegistryMode.shuffle:
+                set_bench_result = self._registry_ctrl.ctrl_set_shuffle_mode()
+            else:
+                raise RuntimeError("Illegal registry mode switch attempt")
+            RegistryResponseHelper.raise_on_error(set_bench_result)
 
     def reset(self):
+        self._logger.info("Resetting the environment")
+
+        # TODO: Return observation space
         obs_n = []
         agents = self._scenario.get_agents()
         for agent in agents:
@@ -68,6 +115,13 @@ class Environment:
         return obs_n
 
     def step(self, action_n):
+        """
+
+        :param action_n:
+        :return:
+        """
+        # TODO: Return observations per agent
+        # TODO: Return reward per agent
         obs_n = []
         reward_n = []
         done_n = []

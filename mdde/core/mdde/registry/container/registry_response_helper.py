@@ -8,7 +8,7 @@ class RegistryResponseHelper:
     """
 
     @staticmethod
-    def throw_on_error(response: RegistryResponse):
+    def raise_on_error(response: RegistryResponse):
         """
         Raise an exception if the the registry response returned an error
         :param response:

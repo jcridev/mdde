@@ -39,6 +39,8 @@ public abstract class CommandParserControlBase<TOut, TArgs>
                     return _serializer.serialize(processSetShuffleState());
                 case RUN_SHUFFLE:
                     return _serializer.serialize(syncDataFromRegistryToNodes());
+                case GET_REGISTRY_MODE:
+                    return _serializer.serialize(processGetRegistryMode());
                 case INIT_NODES:
                     return _serializer.serialize(processInitDefaultNodes());
                 case RESET:
@@ -65,6 +67,8 @@ public abstract class CommandParserControlBase<TOut, TArgs>
     protected abstract Boolean processSetBenchmarkState() throws MddeRegistryException;
 
     protected abstract Boolean processSetShuffleState() throws IOException;
+
+    protected abstract String processGetRegistryMode() throws MddeRegistryException;
 
     protected abstract Boolean processReset() throws IOException;
 

@@ -40,5 +40,5 @@ public interface IStoreManager {
      * Erase all records from registry store
      * @return True erase was successful
      */
-    boolean eraseAllData();
+    boolean flushAllData();
 }

@@ -163,7 +163,7 @@ public class RedisStoreManager implements IStoreManager {
     }
 
     @Override
-    public boolean eraseAllData() {
+    public boolean flushAllData() {
         try(Jedis jedis = _redisConnection.getRedisCommands()){
             var res = jedis.flushAll();
             return res.toLowerCase().equals("ok");

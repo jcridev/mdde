@@ -46,6 +46,11 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
     }
 
     @Override
+    protected String processGetRegistryMode() throws MddeRegistryException {
+        return _stateCommandHandler.getCurrentState().name();
+    }
+
+    @Override
     protected Boolean processReset() throws IOException{
         return _stateCommandHandler.reset();
     }

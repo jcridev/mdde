@@ -124,6 +124,25 @@ public class BenchmarkRunner {
         return true;
     }
 
+    public boolean flushData(){
+        _benchmarkRunnerLock.lock();
+        try {
+            if (_currentLoadState != EBenchmarkLoadStage.READY
+                    && _currentLoadState != EBenchmarkLoadStage.EMPTY) {
+                throw new IllegalStateException(String.format("Benchmark data load is in incorrect state: %s",
+                        _currentLoadState.toString()));
+            }
+            if (_runnerState.getState() != EBenchmarkRunStage.READY) {
+                throw new IllegalStateException("Benchmark is already being executed");
+            }
+            _currentLoadState = EBenchmarkLoadStage.EMPTY;
+        }
+        finally {
+            _benchmarkRunnerLock.unlock();
+        }
+        return true;
+    }
+
     /**
      * Execute workload RUN.
      * Should always LOAD in data before running the benchmark for the first time

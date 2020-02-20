@@ -3,6 +3,7 @@ from typing import Set, Dict, Union
 
 from mdde.registry.protocol import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient
 from mdde.registry.container import RegistryResponse
+from mdde.registry.enums import ERegistryMode
 
 from .serializer import Serializer
 
@@ -119,20 +120,25 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
         response = self._serialize_and_run_command('RESET')
         return RegistryResponse[bool](response['result'], response['error'])
 
-    def ctrl_get_mode(self) -> RegistryResponse[Dict]:
-        response = self._serialize_and_run_command('BENCHSTATE')
-        return RegistryResponse[Dict](response['result'], response['error'])
+    def ctrl_get_mode(self) -> RegistryResponse[ERegistryMode]:
+        response = self._serialize_and_run_command('REGMODE')
+        try:
+            response_state = ERegistryMode(response['result'])
+        except ValueError:
+            response_state = ERegistryMode.unknown
+
+        return RegistryResponse[ERegistryMode](response_state, response['error'])
 
     def ctrl_sync_registry_to_data(self) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('RUNSHUFFLE')
         return RegistryResponse[bool](response['result'], response['error'])
 
     def ctrl_start_benchmark(self, workload_id: str) -> RegistryResponse[Dict]:
-        response = self._serialize_and_run_command('RUNSHUFFLE', workload=workload_id)
+        response = self._serialize_and_run_command('RUNBENCH', workload=workload_id)
         return RegistryResponse[Dict](response['result'], response['error'])
 
     def ctrl_get_benchmark(self) -> RegistryResponse[Dict]:
-        response = self._serialize_and_run_command('BENCHRUN')
+        response = self._serialize_and_run_command('BENCHSTATE')
         return RegistryResponse[Dict](response['result'], response['error'])
 
     def ctrl_flush(self) -> RegistryResponse[bool]:

@@ -1,5 +1,8 @@
 from abc import abstractmethod
 from typing import Dict, Set
+
+from mdde.registry.enums import ERegistryMode
+
 try:
     from typing import Protocol
 except ImportError:
@@ -58,12 +61,12 @@ class PRegistryControlClient(Protocol):
         raise NotImplementedError()
 
     @abstractmethod
-    def ctrl_get_mode(self) -> RegistryResponse[Dict]:  # TODO: Explicit result type
+    def ctrl_get_mode(self) -> RegistryResponse[ERegistryMode]:
         """Get the current Registry state (prepared for benchmark or data shuffle)"""
         raise NotImplementedError()
 
     @abstractmethod
-    def ctrl_sync_registry_to_data(self) -> RegistryResponse[bool]:  # TODO: Explicit result type
+    def ctrl_sync_registry_to_data(self) -> RegistryResponse[str]:  # TODO: Explicit result type
         """Synchronize the current state of the registry to the data nodes"""
         raise NotImplementedError()
 

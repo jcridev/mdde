@@ -261,7 +261,8 @@ public final class RegistryStateCommandHandler {
             }
 
             _dataShuffler.flushData();
-            _registryStoreManager.eraseAllData();
+            _registryStoreManager.flushAllData();
+            _benchmarkRunner.flushData();
             return true;
         }
         catch (Exception ex){
