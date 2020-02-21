@@ -1,5 +1,4 @@
 from .mdde_error import MddeError
-from .actor_init_error import ActorInitializationError
 from .fragment_meta_missing import FragmentInstanceMissingMetaError
 from .fragment_property_missing import FragmentInstanceMissingPropertyError
 from .env_init_error import EnvironmentInitializationError

@@ -2,6 +2,6 @@ from enum import Enum
 
 
 class ERegistryMode(Enum):
-    unknown = ''
+    unknown = None
     benchmark = 'benchmark'
     shuffle = 'shuffle'

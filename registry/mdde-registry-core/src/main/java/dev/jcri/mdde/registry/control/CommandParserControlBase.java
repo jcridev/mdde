@@ -1,7 +1,7 @@
 package dev.jcri.mdde.registry.control;
 
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
-import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
@@ -19,9 +19,9 @@ import java.util.Set;
 public abstract class CommandParserControlBase<TOut, TArgs>
         implements ICommandParser<TOut, EStateControlCommand, TArgs> {
 
-    protected final IResponseSerializer<TOut> _serializer;
+    protected final ResponseSerializerBase<TOut> _serializer;
 
-    protected CommandParserControlBase(IResponseSerializer<TOut> serializer){
+    protected CommandParserControlBase(ResponseSerializerBase<TOut> serializer){
         Objects.requireNonNull(serializer, "Serializer can't be null");
         this._serializer = serializer;
     }
@@ -66,19 +66,19 @@ public abstract class CommandParserControlBase<TOut, TArgs>
 
     protected abstract Boolean processSetBenchmarkState() throws MddeRegistryException;
 
-    protected abstract Boolean processSetShuffleState() throws IOException;
+    protected abstract Boolean processSetShuffleState() throws IOException, MddeRegistryException;
 
     protected abstract String processGetRegistryMode() throws MddeRegistryException;
 
-    protected abstract Boolean processReset() throws IOException;
+    protected abstract Boolean processReset() throws IOException, MddeRegistryException;
 
     protected abstract Boolean syncDataFromRegistryToNodes() throws IOException;
 
-    protected abstract String processExecuteBenchmarkCommand(TArgs arguments) throws IllegalCommandArgumentException;
+    protected abstract String processExecuteBenchmarkCommand(TArgs arguments) throws MddeRegistryException;
 
-    protected abstract boolean processLoadDataCommand(TArgs arguments) throws IllegalCommandArgumentException;
+    protected abstract boolean processLoadDataCommand(TArgs arguments) throws MddeRegistryException;
 
-    protected abstract boolean processFlushAll();
+    protected abstract boolean processFlushAll() throws MddeRegistryException;
 
     protected abstract String processCreateSnapshot(TArgs arguments) throws IllegalCommandArgumentException, IOException;
 

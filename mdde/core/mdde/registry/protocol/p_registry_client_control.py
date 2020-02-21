@@ -66,7 +66,7 @@ class PRegistryControlClient(Protocol):
         raise NotImplementedError()
 
     @abstractmethod
-    def ctrl_sync_registry_to_data(self) -> RegistryResponse[str]:  # TODO: Explicit result type
+    def ctrl_sync_registry_to_data(self) -> RegistryResponse[bool]:
         """Synchronize the current state of the registry to the data nodes"""
         raise NotImplementedError()
 

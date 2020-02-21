@@ -1,14 +1,17 @@
 package dev.jcri.mdde.registry.store.exceptions;
 
+import dev.jcri.mdde.registry.exceptions.EErrorCode;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 
 public class UnknownEntityIdException extends MddeRegistryException {
+    private final static EErrorCode _exCode = EErrorCode.UNKNOWN_ENTITY_ID;
+
     /**
      * Custom message constructor
      * @param message Meaningful message
      */
-    public UnknownEntityIdException(String message){
-        super(message);
+    protected UnknownEntityIdException(String message){
+        super(_exCode, message);
     }
 
     /**
@@ -17,6 +20,6 @@ public class UnknownEntityIdException extends MddeRegistryException {
      * @param duplicateId Entity unique id
      */
     public UnknownEntityIdException(RegistryEntityType triedToAddDuplicate, String duplicateId){
-        super(String.format("Attempted to add a duplicate %s with id '%s'", triedToAddDuplicate.name(), duplicateId));
+        this(String.format("Attempted to add a duplicate %s with id '%s'", triedToAddDuplicate.name(), duplicateId));
     }
 }

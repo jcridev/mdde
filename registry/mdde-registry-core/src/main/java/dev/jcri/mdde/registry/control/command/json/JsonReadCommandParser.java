@@ -2,7 +2,7 @@ package dev.jcri.mdde.registry.control.command.json;
 
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.command.sequential.SequentialReadCommandParser;
-import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.server.responders.ReadCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 
@@ -13,9 +13,9 @@ import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 public class JsonReadCommandParser<TOut> extends JsonCommandParserBase
         implements ICommandParser<TOut, EReadCommand, String> {
     private final SequentialReadCommandParser<TOut> _sequentialCommandParser;
-    private final IResponseSerializer<TOut> _serializer;
+    private final ResponseSerializerBase<TOut> _serializer;
 
-    public JsonReadCommandParser(ReadCommandResponder readCommandHandler, IResponseSerializer<TOut> serializer){
+    public JsonReadCommandParser(ReadCommandResponder readCommandHandler, ResponseSerializerBase<TOut> serializer){
         _sequentialCommandParser = new SequentialReadCommandParser<>(readCommandHandler, serializer);
         _serializer = serializer;
     }

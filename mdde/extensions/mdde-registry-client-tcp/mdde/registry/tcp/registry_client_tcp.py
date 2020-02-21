@@ -1,9 +1,10 @@
 import socket
-from typing import Set, Dict, Union
+from typing import Set, Dict, Union, TypeVar
 
 from mdde.registry.protocol import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient
 from mdde.registry.container import RegistryResponse
 from mdde.registry.enums import ERegistryMode
+from .registry_response_json import RegistryResponseJson
 
 from .serializer import Serializer
 
@@ -102,115 +103,117 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
 
     def ctrl_set_benchmark_mode(self) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('PREPBENCHMARK')
-        return RegistryResponse[bool](response['result'], response['error'])
+        return RegistryResponseJson[bool](response)
 
     def ctrl_set_shuffle_mode(self) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('PREPSHUFFLE')
-        return RegistryResponse[bool](response['result'], response['error'])
+        return RegistryResponseJson[bool](response)
 
     def ctrl_populate_default_nodes(self) -> RegistryResponse[Set[str]]:
         response = self._serialize_and_run_command('INITNODES')
-        return RegistryResponse[bool](response['result'], response['error'])
+        return RegistryResponseJson[bool](response)
 
     def ctrl_generate_data(self, workload_id: str) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('BENCHLOAD', workload=workload_id)
-        return RegistryResponse[bool](response['result'], response['error'])
+        return RegistryResponseJson[bool](response)
 
     def ctrl_reset(self) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('RESET')
-        return RegistryResponse[bool](response['result'], response['error'])
+        return RegistryResponseJson[bool](response)
 
     def ctrl_get_mode(self) -> RegistryResponse[ERegistryMode]:
         response = self._serialize_and_run_command('REGMODE')
         try:
-            response_state = ERegistryMode(response['result'])
+            response_state = ERegistryMode(response[RegistryResponseJson.R_RES])
         except ValueError:
             response_state = ERegistryMode.unknown
 
-        return RegistryResponse[ERegistryMode](response_state, response['error'])
+        return RegistryResponse[ERegistryMode](response_state,
+                                               response[RegistryResponseJson.R_ERR],
+                                               response[RegistryResponseJson.R_ERRCODE])
 
     def ctrl_sync_registry_to_data(self) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('RUNSHUFFLE')
-        return RegistryResponse[bool](response['result'], response['error'])
+        return RegistryResponseJson[bool](response)
 
     def ctrl_start_benchmark(self, workload_id: str) -> RegistryResponse[Dict]:
         response = self._serialize_and_run_command('RUNBENCH', workload=workload_id)
-        return RegistryResponse[Dict](response['result'], response['error'])
+        return RegistryResponseJson[Dict](response)
 
     def ctrl_get_benchmark(self) -> RegistryResponse[Dict]:
         response = self._serialize_and_run_command('BENCHSTATE')
-        return RegistryResponse[Dict](response['result'], response['error'])
+        return RegistryResponseJson[Dict](response)
 
     def ctrl_flush(self) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('FLUSHALL')
-        return RegistryResponse[bool](response['result'], response['error'])
+        return RegistryResponseJson[bool](response)
 
     def ctrl_snapshot_create(self, as_default: bool) -> RegistryResponse[str]:
         response = self._serialize_and_run_command('SNAPSAVE', snapisdef=as_default)
-        return RegistryResponse[str](response['result'], response['error'])
+        return RegistryResponseJson[str](response)
 
     def ctrl_snapshot_restore(self, snap_id: str) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('SNAPLOAD', snapid=snap_id)
-        return RegistryResponse[bool](response['result'], response['error'])
+        return RegistryResponseJson[bool](response)
 
     # READ commands
 
     def read_everything(self) -> RegistryResponse[str]:
         response = self._serialize_and_run_command('GETALL')
-        return RegistryResponse[str](response['result'], response['error'])
+        return RegistryResponseJson[str](response)
 
     def read_get_all_fragments_with_meta(self,
                                          local_meta: Union[Set[str], None],
                                          global_meta: Union[Set[str], None]) -> RegistryResponse[Dict]:
         response = self._serialize_and_run_command('GETFRAGSWMETA', fmtagsloc=local_meta, fmtagsglb=global_meta)
-        return RegistryResponse[Dict](response['result'], response['error'])
+        return RegistryResponseJson[Dict](response)
 
     def read_find_fragment(self, fragment_id: str) -> RegistryResponse[str]:
         response = self._serialize_and_run_command('FINDFRAGMENT', fid=fragment_id)
-        return RegistryResponse[str](response['result'], response['error'])
+        return RegistryResponseJson[str](response)
 
     def read_count_fragment(self, fragment_id: str) -> RegistryResponse[int]:
         response = self._serialize_and_run_command('COUNTFRAGMENT', fid=fragment_id)
-        return RegistryResponse[int](response['result'], response['error'])
+        return RegistryResponseJson[int](response)
 
     def read_nodes(self) -> RegistryResponse[Set[str]]:
         response = self._serialize_and_run_command('NODES')
-        return RegistryResponse[str](response['result'], response['error'])
+        return RegistryResponseJson[str](response)
 
     def read_node_unassigned_tuples(self, node_id: str) -> RegistryResponse[Set[str]]:
         response = self._serialize_and_run_command('NTUPLESU', nid=node_id)
-        return RegistryResponse[Set[str]](response['result'], response['error'])
+        return RegistryResponseJson[Set[str]](response)
 
     def read_node_fragments(self, node_id: str) -> RegistryResponse[Set[str]]:
         response = self._serialize_and_run_command('NFRAGS', nid=node_id)
-        return RegistryResponse[Set[str]](response['result'], response['error'])
+        return RegistryResponseJson[Set[str]](response)
 
     def read_fragment_meta_on_exemplar(self, fragment_id: str, node_id: str, meta_tag: str) -> RegistryResponse[str]:
         response = self._serialize_and_run_command('GETMETAFRAGEXM', fid=fragment_id, nid=node_id, fmtag=meta_tag)
-        return RegistryResponse[str](response['result'], response['error'])
+        return RegistryResponseJson[str](response)
 
     def read_fragment_meta_global(self, fragment_id: str, meta_tag: str) -> RegistryResponse[str]:
         response = self._serialize_and_run_command('GETMETAFRAGGLB', fid=fragment_id, fmtag=meta_tag)
-        return RegistryResponse[str](response['result'], response['error'])
+        return RegistryResponseJson[str](response)
 
     # WRITE commands
 
     def write_fragment_create(self, fragment_id: str, tuple_ids: Set[str]) -> RegistryResponse[str]:
         response = self._serialize_and_run_command('FRAGMAKE', fid=fragment_id, tids=tuple_ids)
-        return RegistryResponse[str](response['result'], response['error'])
+        return RegistryResponseJson[str](response)
 
     def write_fragment_append_tuple(self, fragment_id: str, tuple_id: str) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('FRAGAPPEND', fid=fragment_id, tid=tuple_id)
-        return RegistryResponse[bool](response['result'], response['error'])
+        return RegistryResponseJson[bool](response)
 
     def write_fragment_replicate(self, fragment_id: str, source_node_id: str, destination_node_id: str):
         response = self._serialize_and_run_command('DCOPYFRAG',
                                                    fid=fragment_id, nid=source_node_id, nidb=destination_node_id)
-        return RegistryResponse[str](response['result'], response['error'])
+        return RegistryResponseJson[str](response)
 
     def write_fragment_delete_exemplar(self, fragment_id: str, node_id: str) -> RegistryResponse[str]:
         response = self._serialize_and_run_command('DDELFRAGEX', fid=fragment_id, nid=node_id)
-        return RegistryResponse[str](response['result'], response['error'])
+        return RegistryResponseJson[str](response)
 
     def write_fragment_meta_on_copy(self,
                                     fragment_id: str,
@@ -223,7 +226,7 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
                                                    nid=node_id,
                                                    fmtag=meta_tag,
                                                    fmval=meta_value)
-        return RegistryResponse[bool](response['result'], response['error'])
+        return RegistryResponseJson[bool](response)
 
         pass
 
@@ -232,4 +235,4 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
                                                    fid=fragment_id,
                                                    fmtag=meta_tag,
                                                    fmval=meta_value)
-        return RegistryResponse[bool](response['result'], response['error'])
+        return RegistryResponseJson[bool](response)

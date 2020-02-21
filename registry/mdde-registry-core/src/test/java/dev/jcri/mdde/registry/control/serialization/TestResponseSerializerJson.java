@@ -10,7 +10,7 @@ public class TestResponseSerializerJson {
     public void testExceptionSerialization(){
         var testException = new Exception("this is a test exception message");
         var expectedResult = "{\"error\":\"this is a test exception message\",\"result\":null}";
-        IResponseSerializer<String> jsonSerializer = new ResponseSerializerJson();
+        ResponseSerializerBase<String> jsonSerializer = new ResponseSerializerJson();
         var response = jsonSerializer.serializeException(testException);
 
         assertEquals(expectedResult, response);

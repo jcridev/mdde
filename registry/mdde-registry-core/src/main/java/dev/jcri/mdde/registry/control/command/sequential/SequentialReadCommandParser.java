@@ -2,16 +2,13 @@ package dev.jcri.mdde.registry.control.command.sequential;
 
 
 import dev.jcri.mdde.registry.control.CommandParserReadBase;
-import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
 import dev.jcri.mdde.registry.server.responders.ReadCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
 import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
-import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
-import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
-import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 
 import java.util.List;
 import java.util.Objects;
@@ -24,7 +21,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
 
     private final ReadCommandResponder _readCommandHandler;
 
-    public SequentialReadCommandParser(ReadCommandResponder readCommandHandler, IResponseSerializer<T> serializer){
+    public SequentialReadCommandParser(ReadCommandResponder readCommandHandler, ResponseSerializerBase<T> serializer){
         super(serializer);
         Objects.requireNonNull(readCommandHandler, "Read commands handlers can't be null");
         _readCommandHandler = readCommandHandler;

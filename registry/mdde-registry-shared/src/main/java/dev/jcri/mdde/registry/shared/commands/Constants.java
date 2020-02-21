@@ -33,4 +33,5 @@ public final class Constants {
 
     public static final String ResultPayload = "result";
     public static final String ResultError = "error";
+    public static final String ResultErrorCode = "errcode";
 }

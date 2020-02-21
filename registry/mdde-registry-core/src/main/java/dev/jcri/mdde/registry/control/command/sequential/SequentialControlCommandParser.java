@@ -3,7 +3,7 @@ package dev.jcri.mdde.registry.control.command.sequential;
 
 import dev.jcri.mdde.registry.control.CommandParserControlBase;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
-import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
@@ -24,7 +24,7 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
     private final RegistryStateCommandHandler _stateCommandHandler;
 
     public SequentialControlCommandParser(RegistryStateCommandHandler stateCommandHandler,
-                                          IResponseSerializer<T> serializer){
+                                          ResponseSerializerBase<T> serializer){
         super(serializer);
         Objects.requireNonNull(stateCommandHandler, "State commands handlers can't be null");
         _stateCommandHandler = stateCommandHandler;
@@ -41,7 +41,7 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
     }
 
     @Override
-    protected Boolean processSetShuffleState() throws IOException {
+    protected Boolean processSetShuffleState() throws IOException, MddeRegistryException {
         return _stateCommandHandler.switchToShuffle();
     }
 
@@ -51,7 +51,7 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
     }
 
     @Override
-    protected Boolean processReset() throws IOException{
+    protected Boolean processReset() throws IOException, MddeRegistryException {
         return _stateCommandHandler.reset();
     }
 
@@ -62,7 +62,7 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
 
     @Override
     protected String processExecuteBenchmarkCommand(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws MddeRegistryException {
         final EStateControlCommand thisCommand = EStateControlCommand.RUN_BENCHMARK;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -72,7 +72,7 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
 
     @Override
     protected boolean processLoadDataCommand(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws MddeRegistryException {
         final EStateControlCommand thisCommand = EStateControlCommand.LOAD_DATA;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -81,7 +81,7 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
     }
 
     @Override
-    protected boolean processFlushAll(){
+    protected boolean processFlushAll() throws MddeRegistryException {
         return _stateCommandHandler.flushAll();
     }
 

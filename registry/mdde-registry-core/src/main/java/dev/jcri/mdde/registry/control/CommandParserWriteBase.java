@@ -1,7 +1,7 @@
 package dev.jcri.mdde.registry.control;
 
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
-import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.exceptions.*;
 
@@ -15,9 +15,9 @@ import java.util.Objects;
 public abstract class CommandParserWriteBase<TOut, TArgs>
         implements ICommandParser<TOut, EWriteCommand, TArgs> {
 
-    protected final IResponseSerializer<TOut> _serializer;
+    protected final ResponseSerializerBase<TOut> _serializer;
 
-    protected CommandParserWriteBase(IResponseSerializer<TOut> serializer){
+    protected CommandParserWriteBase(ResponseSerializerBase<TOut> serializer){
         Objects.requireNonNull(serializer, "Serializer can't be null");
         this._serializer = serializer;
     }

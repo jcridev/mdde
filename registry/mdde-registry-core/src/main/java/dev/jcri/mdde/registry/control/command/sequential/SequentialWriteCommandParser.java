@@ -1,12 +1,11 @@
 package dev.jcri.mdde.registry.control.command.sequential;
 
 import dev.jcri.mdde.registry.control.CommandParserWriteBase;
-import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
 import dev.jcri.mdde.registry.server.responders.WriteCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.exceptions.*;
-import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +15,7 @@ import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
 public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, List<Object>> {
     private final WriteCommandResponder _writeCommandHandler;
-    public SequentialWriteCommandParser(WriteCommandResponder writeCommandHandler, IResponseSerializer<T> serializer) {
+    public SequentialWriteCommandParser(WriteCommandResponder writeCommandHandler, ResponseSerializerBase<T> serializer) {
         super(serializer);
         Objects.requireNonNull(writeCommandHandler, "Write commands handlers can't be null");
         _writeCommandHandler = writeCommandHandler;

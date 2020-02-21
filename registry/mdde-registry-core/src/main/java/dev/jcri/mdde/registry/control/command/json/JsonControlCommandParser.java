@@ -2,7 +2,7 @@ package dev.jcri.mdde.registry.control.command.json;
 
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.command.sequential.SequentialControlCommandParser;
-import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.store.RegistryStateCommandHandler;
 
@@ -13,14 +13,14 @@ import dev.jcri.mdde.registry.store.RegistryStateCommandHandler;
 public class JsonControlCommandParser<TOut> extends JsonCommandParserBase
         implements ICommandParser<TOut, EStateControlCommand, String> {
     private final SequentialControlCommandParser<TOut> _sequentialCommandParser;
-    private final IResponseSerializer<TOut> _serializer;
+    private final ResponseSerializerBase<TOut> _serializer;
 
     /**
      * Constructor
      * @param commandHandler Current instance of the RegistryStateCommandHandler
      * @param serializer Serializer instance
      */
-    public JsonControlCommandParser(RegistryStateCommandHandler commandHandler, IResponseSerializer<TOut> serializer){
+    public JsonControlCommandParser(RegistryStateCommandHandler commandHandler, ResponseSerializerBase<TOut> serializer){
         _sequentialCommandParser = new SequentialControlCommandParser<>(commandHandler, serializer);
         _serializer = serializer;
     }

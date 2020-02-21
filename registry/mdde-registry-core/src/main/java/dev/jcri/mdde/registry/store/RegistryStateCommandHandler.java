@@ -6,6 +6,8 @@ import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
 import dev.jcri.mdde.registry.store.exceptions.IllegalRegistryActionException;
+import dev.jcri.mdde.registry.store.exceptions.IllegalRegistryModeException;
+import dev.jcri.mdde.registry.store.exceptions.RegistryModeAlreadySetException;
 import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
 import dev.jcri.mdde.registry.store.queue.IDataShuffleQueue;
 import dev.jcri.mdde.registry.store.queue.actions.DataCopyAction;
@@ -81,7 +83,7 @@ public final class RegistryStateCommandHandler {
         logger.trace("Switching to benchmark mode");
         try {
             if(_registryState ==  ERegistryState.benchmark){
-                throw new IllegalStateException("Registry is already in the benchmark mode");
+                throw new RegistryModeAlreadySetException("Registry is already in the benchmark mode");
             }
             _benchmarkRunner.prepareBenchmarkEnvironment();
             logger.trace("Benchmark environment was prepared");
@@ -101,12 +103,12 @@ public final class RegistryStateCommandHandler {
      * Prepare the registry for data shuffling
      * @throws IOException
      */
-    public synchronized boolean switchToShuffle() throws IOException {
+    public synchronized boolean switchToShuffle() throws IOException, MddeRegistryException {
         _commandExecutionLock.lock();
         logger.trace("Switching to shuffle mode");
         try {
             if(_registryState == ERegistryState.shuffle){
-                throw new IllegalStateException("Registry is already in the shuffle mode");
+                throw new RegistryModeAlreadySetException("Registry is already in the shuffle mode");
             }
             _benchmarkRunner.disposeBenchmarkEnvironment();
             _registryState = ERegistryState.shuffle;
@@ -124,13 +126,13 @@ public final class RegistryStateCommandHandler {
      * Load data into the environment
      * @return
      */
-    public synchronized boolean generateData(String workloadId){
+    public synchronized boolean generateData(String workloadId) throws MddeRegistryException {
         _commandExecutionLock.lock();
         logger.trace("Generate data was called");
         try {
             if(_registryState == ERegistryState.shuffle){
                 logger.warn("Registry is in the shuffle mode, unable to execute data generation");
-                throw new IllegalStateException("Registry is in the shuffle mode, switch to benchmark");
+                throw new IllegalRegistryModeException(_registryState, ERegistryState.benchmark);
             }
             return _benchmarkRunner.generateData(workloadId);
         }
@@ -184,13 +186,13 @@ public final class RegistryStateCommandHandler {
      * Run benchmark within the prepared environment and return the results
      * @return
      */
-    public synchronized String executeBenchmark(String workloadId){
+    public synchronized String executeBenchmark(String workloadId) throws MddeRegistryException {
         _commandExecutionLock.lock();
         logger.trace("Benchmark execution was called");
         try {
             if(_registryState == ERegistryState.shuffle){
                 logger.warn("Registry is in the shuffle mode, unable to execute benchmark");
-                throw new IllegalStateException("Registry is in the shuffle mode, switch to benchmark");
+                throw new IllegalRegistryModeException(_registryState, ERegistryState.benchmark);
             }
             return _benchmarkRunner.executeBenchmark(workloadId);
         }
@@ -215,11 +217,11 @@ public final class RegistryStateCommandHandler {
      * Completely reset the environment (including erasing all of the data).
      * Next step after this is loading (generating) data in the environment
      */
-    public synchronized boolean reset() throws IOException{
+    public synchronized boolean reset() throws IOException, MddeRegistryException{
         _commandExecutionLock.lock();
         try {
             if(_registryState == ERegistryState.shuffle){
-                throw new IllegalStateException("Registry is in the shuffle mode, switch to benchmark");
+                throw new IllegalRegistryModeException(_registryState, ERegistryState.benchmark);
             }
             final String defaultSnapshotId = _registryStoreManager.getDefaultSnapshotId();
             _dataShuffler.flushData();
@@ -253,11 +255,11 @@ public final class RegistryStateCommandHandler {
      * Completely erase all records from the Registry and from the Data nodes
      * @return
      */
-    public synchronized boolean flushAll(){
+    public synchronized boolean flushAll() throws MddeRegistryException {
         _commandExecutionLock.lock();
         try {
             if (_registryState != ERegistryState.shuffle) {
-                throw new IllegalStateException("Registry is must be in a shuffle mode to execute FLUSH");
+                throw new IllegalRegistryModeException(_registryState, ERegistryState.shuffle);
             }
 
             _dataShuffler.flushData();
@@ -338,7 +340,7 @@ public final class RegistryStateCommandHandler {
                 throw new NotDirectoryException(_snapshotsDirectory);
             }
             boolean mkdirsRes = snapDirFile.mkdirs();
-            logger.trace("Create snapshot, snapshot directory created: {0}", mkdirsRes);
+            logger.trace("Create snapshot, snapshot directory created: {}", mkdirsRes);
             // Generate snapshot ID (used as filenames)
             final String snapFilenamePrefix = UUID.randomUUID().toString().replace("-", "");
             final String snapRegistryFile = Paths.get(_snapshotsDirectory, snapFilenamePrefix + _registryDumpFilePostfix)

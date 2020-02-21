@@ -3,7 +3,7 @@ package dev.jcri.mdde.registry.control.command.sequential;
 import dev.jcri.mdde.registry.control.ICommandParser;
 import dev.jcri.mdde.registry.control.command.sequential.arguments.ISequenceParser;
 import dev.jcri.mdde.registry.control.command.sequential.arguments.SimpleSequenceParser;
-import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.store.RegistryStateCommandHandler;
 
@@ -19,10 +19,10 @@ public class TextSequentialControlCommandParser<TOut>  implements ICommandParser
 {
     private final ISequenceParser _stringParser = new SimpleSequenceParser();
     private final SequentialControlCommandParser<TOut> _writeSequentialCommandParser;
-    private final IResponseSerializer<TOut> _serializer;
+    private final ResponseSerializerBase<TOut> _serializer;
 
     public TextSequentialControlCommandParser(RegistryStateCommandHandler commandHandler,
-                                              IResponseSerializer<TOut> serializer) {
+                                              ResponseSerializerBase<TOut> serializer) {
         _writeSequentialCommandParser = new SequentialControlCommandParser<TOut>(commandHandler, serializer);
         _serializer = serializer;
     }

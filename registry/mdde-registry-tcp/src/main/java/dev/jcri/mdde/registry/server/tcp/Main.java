@@ -13,7 +13,7 @@ import dev.jcri.mdde.registry.control.command.json.JsonCommandPreProcessor;
 import dev.jcri.mdde.registry.control.command.json.JsonControlCommandParser;
 import dev.jcri.mdde.registry.control.command.json.JsonReadCommandParser;
 import dev.jcri.mdde.registry.control.command.json.JsonWriteCommandParser;
-import dev.jcri.mdde.registry.control.serialization.IResponseSerializer;
+import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerJson;
 import dev.jcri.mdde.registry.data.IDataShuffler;
 import dev.jcri.mdde.registry.data.impl.redis.RedisDataShuffler;
@@ -164,7 +164,7 @@ public class Main {
         ReadCommandResponder readCommandResponder = new ReadCommandResponder(readCommandHandler);
 
         // Commands parsers
-        IResponseSerializer<String> responseSerializer = new ResponseSerializerJson();
+        ResponseSerializerBase<String> responseSerializer = new ResponseSerializerJson();
         ICommandParser<String, EReadCommand, String> readCommandParser =
                 new JsonReadCommandParser<>(readCommandResponder, responseSerializer);
         ICommandParser<String, EWriteCommand, String> writeCommandParser =

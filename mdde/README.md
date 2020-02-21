@@ -23,7 +23,7 @@ pip install -e ./core
 ### Extensions
 
 Registry client:
-* TCP base: `pip install -e ./extensions/mdde-registry-client-tcp`
+* TCP based: `pip install -e ./extensions/mdde-registry-client-tcp`
 
 
 Learners integration:
@@ -36,5 +36,12 @@ Learners integration:
 
 ## Extending the code
 
-You can add new agents, scenarios, registry-client implementations and learner integrations without directly editing MDDE Core code.
+You can add new agents, scenarios, custom fragmentation logic, and registry-client implementations and learner integrations without directly editing MDDE Core code.
 We utilize [implicit namespace packages](https://packaging.python.org/guides/packaging-namespace-packages/) \([PEP 420](https://www.python.org/dev/peps/pep-0420/)\) for the definition of extensions.
+
+Following namespaces are available for extension:
+
+* mdde.scenario
+* mdde.integration
+* mdde.fragmentation
+* mdde.agent

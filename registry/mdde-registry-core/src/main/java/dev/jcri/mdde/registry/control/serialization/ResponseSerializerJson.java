@@ -2,6 +2,7 @@ package dev.jcri.mdde.registry.control.serialization;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.jcri.mdde.registry.exceptions.EErrorCode;
 import dev.jcri.mdde.registry.shared.commands.Constants;
 import dev.jcri.mdde.registry.shared.commands.containers.CommandResultContainer;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
@@ -16,7 +17,7 @@ import java.util.Set;
 /**
  * Serialize responses to raw JSON String
  */
-public class ResponseSerializerJson implements IResponseSerializer<String> {
+public class ResponseSerializerJson extends ResponseSerializerBase<String> {
     private final ObjectMapper _mapper;
 
     public ResponseSerializerJson(){
@@ -26,7 +27,7 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     @Override
     public String serialize(String value) throws ResponseSerializationException {
         try {
-            return _mapper.writeValueAsString(new CommandResultContainer<String>(value, null));
+            return _mapper.writeValueAsString(new CommandResultContainer<String>(value));
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
         }
@@ -36,7 +37,7 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     public String serialize(List<String> value) throws ResponseSerializationException {
         try {
             return _mapper.writeValueAsString(
-                    new CommandResultContainer<List<String>>(value, null)
+                    new CommandResultContainer<List<String>>(value)
             );
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
@@ -47,7 +48,7 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     public String serialize(Set<String> value) throws ResponseSerializationException {
         try {
             return _mapper.writeValueAsString(
-                    new CommandResultContainer<Set<String>>(value, null)
+                    new CommandResultContainer<Set<String>>(value)
             );
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
@@ -57,7 +58,7 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     @Override
     public String serialize(int value) throws ResponseSerializationException {
         try {
-            return _mapper.writeValueAsString(new CommandResultContainer<Integer>(value, null));
+            return _mapper.writeValueAsString(new CommandResultContainer<Integer>(value));
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
         }
@@ -67,7 +68,7 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     public String serialize(boolean value) throws ResponseSerializationException {
         try {
             return _mapper.writeValueAsString(
-                    new CommandResultContainer<Boolean>(value, null)
+                    new CommandResultContainer<Boolean>(value)
             );
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
@@ -77,7 +78,7 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     @Override
     public String serialize(FullRegistry value) throws ResponseSerializationException {
         try {
-            return _mapper.writeValueAsString(new CommandResultContainer<FullRegistry>(value, null));
+            return _mapper.writeValueAsString(new CommandResultContainer<FullRegistry>(value));
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
         }
@@ -86,7 +87,7 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     @Override
     public String serialize(BenchmarkRunResult value) throws ResponseSerializationException {
         try {
-            return _mapper.writeValueAsString(new CommandResultContainer<BenchmarkRunResult>(value, null));
+            return _mapper.writeValueAsString(new CommandResultContainer<BenchmarkRunResult>(value));
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
         }
@@ -95,7 +96,7 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     @Override
     public String serialize(BenchmarkStatus value) throws ResponseSerializationException {
         try {
-            return _mapper.writeValueAsString(new CommandResultContainer<BenchmarkStatus>(value, null));
+            return _mapper.writeValueAsString(new CommandResultContainer<BenchmarkStatus>(value));
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
         }
@@ -104,32 +105,37 @@ public class ResponseSerializerJson implements IResponseSerializer<String> {
     @Override
     public String serialize(FragmentCatalog value) throws ResponseSerializationException {
         try {
-            return _mapper.writeValueAsString(new CommandResultContainer<FragmentCatalog>(value, null));
+            return _mapper.writeValueAsString(new CommandResultContainer<FragmentCatalog>(value));
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
         }
     }
 
     @Override
-    public String serializeException(Throwable cause) {
+    protected String serializeErrorWithCode(EErrorCode errorCode, String message) {
         try {
-            var errorMessage = cause.getMessage();
-            if(errorMessage == null || errorMessage.isEmpty()){
-                errorMessage = cause.getClass().getName();
-            }
-
-            return _mapper.writeValueAsString(new CommandResultContainer<String>(null, errorMessage));
+            return _mapper.writeValueAsString(new CommandResultContainer<String>(null, message, errorCode));
         } catch (JsonProcessingException e) {
-            return getSerializationError(cause, e);
+            return getSerializationError(message, e);
         }
     }
 
-    private String getSerializationError(Throwable cause, JsonProcessingException e) {
+    /**
+     * Error serializing an error (for example if Jackson fails for some reason)
+     * @param causeMessage Optional original error message
+     * @param e Cause
+     * @return Serialization error string
+     */
+    private String getSerializationError(String causeMessage, JsonProcessingException e) {
         String error = e.getMessage();
-        if (cause != null && cause.getMessage() != null) {
-            error = String.format("%s | %s", error, cause.getMessage());
+        if (causeMessage != null) {
+            error = String.format("%s | %s", error, causeMessage);
         }
         error = error.replaceAll("\"", "'");
-        return String.format("{\"%s\": null, \"%s\": \"%s\"}", Constants.ResultPayload, Constants.ResultError, error);
+
+        return java.text.MessageFormat.format("{\"{0}\": null, \"{1}\": \"{2}\",\"{3}\": {4}}",
+                Constants.ResultPayload,
+                Constants.ResultError,  error,
+                Constants.ResultErrorCode,  EErrorCode.RESPONSE_SERIALIZATION_ERROR.getErrorCode());
     }
 }

@@ -45,7 +45,7 @@ class Environment:
         Initialize or re-initialize the registry. All existing data will be removed, all data generated anew.
         """
         self._logger.info("Environment initialization starting")
-        # Registry must be in the 'shuffle' mode, meaning not accepting any modification (write) commands
+        # Registry must be in the 'shuffle' mode
         self._set_registry_mode(ERegistryMode.shuffle)
         # Flush existing data
         flush_result = self._registry_ctrl.ctrl_flush()
@@ -88,6 +88,10 @@ class Environment:
         self._logger.info("Environment initialization is complete")
 
     def _set_registry_mode(self, target_mode: ERegistryMode):
+        """
+        Switch current registry mode to a target mode if needed (if it's not already in that specific mode of execution)
+        :param target_mode: ERegistryMode value
+        """
         get_mode_result = self._registry_ctrl.ctrl_get_mode()  # Verify that the environment is in benchmark mode
         if get_mode_result.failed:
             raise EnvironmentInitializationError(get_mode_result.error)
@@ -106,7 +110,8 @@ class Environment:
 
     def reset(self):
         self._logger.info("Resetting the environment")
-
+        reset_call_response = self._registry_ctrl.ctrl_reset()
+        RegistryResponseHelper.raise_on_error(reset_call_response)
         # TODO: Return observation space
         obs_n = []
         agents = self._scenario.get_agents()
