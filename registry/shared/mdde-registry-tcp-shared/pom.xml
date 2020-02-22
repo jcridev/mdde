@@ -5,26 +5,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <maven.compiler.target>11</maven.compiler.target>
-        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <groupId>dev.jcri.mdde.registry</groupId>
-    <artifactId>mdde-registry-server-tcp</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <artifactId>mdde-registry-tcp-shared</artifactId>
+    <version>0.4-SNAPSHOT</version>
 
-    <modules>
-        <module>../../mdde-registry-core</module>
-        <module>../../mdde-registry-tcp</module>
-    </modules>
-
-    <packaging>pom</packaging>
     <build>
-        <finalName>mdde-registry-tcp</finalName>
+        <finalName>mdde-registry-tcp-shared</finalName>
         <plugins>
-            <!-- Build a gar with all dependencies -->
-            <!-- mvn clean compile assembly:single -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.2.0</version>
@@ -40,29 +32,24 @@
                     </descriptorRefs>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
 
     <dependencies>
+        <!-- MDDE -->
         <dependency>
             <groupId>dev.jcri.mdde.registry</groupId>
-            <artifactId>mdde-registry-core</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <artifactId>mdde-registry-shared</artifactId>
+            <version>[0.3,)</version>
+            <scope>compile</scope>
         </dependency>
+        <!-- Netty (TCP server\client)-->
         <dependency>
-            <groupId>dev.jcri.mdde.registry</groupId>
-            <artifactId>mdde-registry-tcp</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.43.Final</version>
         </dependency>
     </dependencies>
+
 </project>

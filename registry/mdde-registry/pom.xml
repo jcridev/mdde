@@ -12,32 +12,38 @@
     </properties>
 
     <groupId>dev.jcri.mdde.registry</groupId>
-    <artifactId>mdde-registry-core</artifactId>
-    <name>dev.jcri.mdde-registry</name>
-    <version>0.1-SNAPSHOT</version>
+    <artifactId>mdde-registry</artifactId>
+    <version>0.4-SNAPSHOT</version>
 
+    <modules>
+        <module>mdde-registry-core</module>
+        <module>mdde-registry-tcp</module>
+    </modules>
+
+    <packaging>pom</packaging>
+<!--
     <build>
-        <finalName>mdde-registry</finalName>
-        <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <appendAssemblyId>false</appendAssemblyId>
-                </configuration>
-            </plugin>
-        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.2.0</version>
+                    <configuration>
+                        <descriptors>
+                            <descriptor>src/assembly/bin.xml</descriptor>
+                        </descriptors>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
-
+    -->
     <dependencies>
         <!-- MDDE -->
         <dependency>
             <groupId>dev.jcri.mdde.registry</groupId>
             <artifactId>mdde-registry-shared</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>[0.3,)</version>
         </dependency>
         <!-- Jedis (Redis client)-->
         <dependency>
@@ -98,4 +104,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
 </project>

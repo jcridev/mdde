@@ -7,7 +7,7 @@ ENV BINPATH = /opt/mddereg/bin
 RUN apt update
 RUN apt install maven -y
 
-COPY . BUILDPATH
+COPY ../mdde-registry-core BUILDPATH
 WORKDIR BUILDPATH
 
 RUN mvn package

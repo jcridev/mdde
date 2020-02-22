@@ -13,7 +13,7 @@
 
     <groupId>dev.jcri.mdde.registry</groupId>
     <artifactId>mdde-registry-shared</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.4-SNAPSHOT</version>
 
     <build>
         <finalName>mdde-registry-shared</finalName>

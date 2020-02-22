@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="Maven: dev.jcri.mdde.registry:mdde-registry-shared:0.4-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/dev/jcri/mdde/registry/mdde-registry-shared/0.4-SNAPSHOT/mdde-registry-shared-0.4-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/mdde-registry-shared/mdde-registry-shared-0.4-SNAPSHOT-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/dev/jcri/mdde/registry/mdde-registry-shared/0.4-SNAPSHOT/mdde-registry-shared-0.4-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/mdde-registry-shared/mdde-registry-shared-0.4-SNAPSHOT-sources.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/dev/jcri/mdde/registry/mdde-registry-shared/0.4-SNAPSHOT/mdde-registry-shared-0.4-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
