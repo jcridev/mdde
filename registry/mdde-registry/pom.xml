@@ -4,47 +4,65 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <groupId>dev.jcri.mdde.registry</groupId>
+    <artifactId>mdde-registry</artifactId>
+    <version>${revision}</version>
+    <name>mdde-registry</name>
+
     <properties>
+        <!-- MDDE Version -->
+        <revision>0.5.0-SNAPSHOT</revision>
+
         <maven.compiler.target>11</maven.compiler.target>
         <maven.compiler.source>11</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jackson.version>2.10.1</jackson.version>
+        <log4j.version>2.13.0</log4j.version>
+        <testcontainers.version>1.12.4</testcontainers.version>
     </properties>
 
-    <groupId>dev.jcri.mdde.registry</groupId>
-    <artifactId>mdde-registry</artifactId>
-    <version>0.4-SNAPSHOT</version>
-
     <modules>
+        <!-- Shared (projects imported by external tools integrating with this registry (ex. YCSB MDDE client))-->
+        <module>../shared/mdde-registry-shared</module>
+        <module>../shared/mdde-registry-tcp-shared</module>
+        <!-- Primary -->
         <module>mdde-registry-core</module>
         <module>mdde-registry-tcp</module>
     </modules>
 
     <packaging>pom</packaging>
-<!--
+
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>3.2.0</version>
-                    <configuration>
-                        <descriptors>
-                            <descriptor>src/assembly/bin.xml</descriptor>
-                        </descriptors>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
-    -->
+
     <dependencies>
-        <!-- MDDE -->
-        <dependency>
-            <groupId>dev.jcri.mdde.registry</groupId>
-            <artifactId>mdde-registry-shared</artifactId>
-            <version>[0.3,)</version>
-        </dependency>
         <!-- Jedis (Redis client)-->
         <dependency>
             <groupId>redis.clients</groupId>
@@ -68,12 +86,12 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.13.0</version>
+            <version>${log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.13.0</version>
+            <version>${log4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -94,13 +112,13 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>1.12.4</version>
+            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>1.12.4</version>
+            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

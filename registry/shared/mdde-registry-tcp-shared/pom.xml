@@ -10,39 +10,24 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <groupId>dev.jcri.mdde.registry</groupId>
-    <artifactId>mdde-registry-tcp-shared</artifactId>
-    <version>0.4-SNAPSHOT</version>
+    <parent>
+        <artifactId>mdde-registry</artifactId>
+        <groupId>dev.jcri.mdde.registry</groupId>
+        <version>${revision}</version>
+        <relativePath>../../mdde-registry/pom.xml</relativePath>
+    </parent>
 
-    <build>
-        <finalName>mdde-registry-tcp-shared</finalName>
-        <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>dev.jcri.mdde.registry.server.tcp.Main</mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <appendAssemblyId>false</appendAssemblyId>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <artifactId>mdde-registry-tcp-shared</artifactId>
+    <version>${revision}</version>
+
+
 
     <dependencies>
         <!-- MDDE -->
         <dependency>
             <groupId>dev.jcri.mdde.registry</groupId>
             <artifactId>mdde-registry-shared</artifactId>
-            <version>[0.3,)</version>
-            <scope>compile</scope>
+            <version>${project.version}</version>
         </dependency>
         <!-- Netty (TCP server\client)-->
         <dependency>

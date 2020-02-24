@@ -192,7 +192,7 @@ public class Main {
     private static AppParams parseArgs(String[] args){
         final String portTag = "-p";
         final String configPathTag = "-c";
-        final String portBenchmarkTag = "-pb";
+        final String portBenchmarkTag = "-b";
 
         if(args.length < 6){
             throw new IllegalArgumentException(

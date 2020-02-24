@@ -1,15 +1,15 @@
 <component name="libraryTable">
   <library name="Maven: dev.jcri.mdde.registry:mdde-registry-tcp-shared:0.4-SNAPSHOT">
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/dev/jcri/mdde/registry/mdde-registry-tcp-shared/0.4-SNAPSHOT/mdde-registry-tcp-shared-0.4-SNAPSHOT.jar!/" />
+      <root url="jar://$PROJECT_DIR$/shared/mdde-registry-tcp-shared/pom.xml!/" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$PROJECT_DIR$/mdde-registry-tcp-shared/mdde-registry-tcp-shared-0.4-SNAPSHOT-javadoc.jar!/" />
-      <root url="jar://$MAVEN_REPOSITORY$/dev/jcri/mdde/registry/mdde-registry-tcp-shared/0.4-SNAPSHOT/mdde-registry-tcp-shared-0.4-SNAPSHOT-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/shared/mdde-registry-tcp-shared/mdde-registry-tcp-shared-0.4-SNAPSHOT-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/mdde-registry-tcp-shared/mdde-registry-tcp-shared-0.4-SNAPSHOT-sources.jar!/" />
-      <root url="jar://$MAVEN_REPOSITORY$/dev/jcri/mdde/registry/mdde-registry-tcp-shared/0.4-SNAPSHOT/mdde-registry-tcp-shared-0.4-SNAPSHOT-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/shared/mdde-registry-tcp-shared/mdde-registry-tcp-shared-0.4-SNAPSHOT-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

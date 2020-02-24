@@ -14,11 +14,12 @@
     <parent>
         <groupId>dev.jcri.mdde.registry</groupId>
         <artifactId>mdde-registry</artifactId>
-        <version>0.4-SNAPSHOT</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>mdde-registry-core</artifactId>
     <name>mdde-registry-core</name>
+    <version>${revision}</version>
 
     <!--
        <build>
@@ -37,4 +38,11 @@
             </plugins>
         </build>
      -->
+    <dependencies>
+        <dependency>
+            <groupId>dev.jcri.mdde.registry</groupId>
+            <artifactId>mdde-registry-shared</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

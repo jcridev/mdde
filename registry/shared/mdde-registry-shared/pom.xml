@@ -11,12 +11,17 @@
         <jackson.version>2.10.1</jackson.version>
     </properties>
 
-    <groupId>dev.jcri.mdde.registry</groupId>
+    <parent>
+        <artifactId>mdde-registry</artifactId>
+        <groupId>dev.jcri.mdde.registry</groupId>
+        <version>${revision}</version>
+        <relativePath>../../mdde-registry/pom.xml</relativePath>
+    </parent>
+
     <artifactId>mdde-registry-shared</artifactId>
-    <version>0.4-SNAPSHOT</version>
+    <version>${revision}</version>
 
     <build>
-        <finalName>mdde-registry-shared</finalName>
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -32,18 +37,6 @@
     </build>
 
     <dependencies>
-        <!-- Jackson -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>

@@ -11,6 +11,8 @@
         <option value="$PROJECT_DIR$/build-configurations/mdde-registry-server-tcp/pom.xml" />
         <option value="$PROJECT_DIR$/mdde-registry-shared/pom.xml" />
         <option value="$PROJECT_DIR$/mdde-registry-tcp-shared/pom.xml" />
+        <option value="$PROJECT_DIR$/shared/mdde-registry-tcp-shared/pom.xml" />
+        <option value="$PROJECT_DIR$/shared/mdde-registry-shared/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
