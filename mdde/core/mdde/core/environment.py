@@ -1,10 +1,13 @@
+import logging
+from typing import Set
+
 from mdde.core.exception import EnvironmentInitializationError
 from mdde.registry.container import RegistryResponseHelper
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.scenario.abc import ABCScenario
 from mdde.registry.enums import ERegistryMode
 import numpy as np
-import logging
+
 
 
 class Environment:
@@ -33,12 +36,28 @@ class Environment:
         if registry_read is None:
             raise TypeError("registry read client can't be None")
 
+        if scenario is None:
+            raise TypeError("scenario can't be None")
+
         self._logger = logging.getLogger('Environment')
 
         self._scenario = scenario
         self._registry_ctrl = registry_ctrl
         self._registry_write = registry_write
         self._registry_read = registry_read
+
+        self.verify_scenario()
+
+    def verify_scenario(self):
+        """
+        Verify the current scenario and ensure it's basic correctness before the start of experiments
+        """
+        # Make sure the same data node isn't assigned to more than one agent at a time
+        nodes_per_agent: [Set[str]] = []
+        for agent in self._scenario.get_agents():
+            nodes_per_agent.append(set(agent.get_data_node_ids))
+        if len(set.intersection(*nodes_per_agent)) > 0:
+            raise ValueError("The same data node id can't be assigned to more than one agent at the time")
 
     def initialize_registry(self):
         """
@@ -58,7 +77,7 @@ class Environment:
         # Registry must be in the 'benchmark' mode, meaning not accepting any modification (write) commands
         self._set_registry_mode(ERegistryMode.benchmark)
         # Generate data
-        data_gen_result = self._registry_ctrl.ctrl_generate_data(self._scenario.get_datagenerator_workload())
+        data_gen_result = self._registry_ctrl.ctrl_generate_data(self._scenario.get_data_generator_workload())
         if data_gen_result.failed:
             raise EnvironmentInitializationError(data_gen_result.error)
         if not data_gen_result.result:
@@ -110,13 +129,17 @@ class Environment:
 
     def reset(self):
         self._logger.info("Resetting the environment")
+        # Call reset
+        self._set_registry_mode(ERegistryMode.benchmark)
         reset_call_response = self._registry_ctrl.ctrl_reset()
         RegistryResponseHelper.raise_on_error(reset_call_response)
-        # TODO: Return observation space
+        # Retrieve the observations
+        full_observation_space = self._scenario.get_full_observation(registry_read=self._registry_read)
+
         obs_n = []
         agents = self._scenario.get_agents()
         for agent in agents:
-            obs_n.append(agent.get_observation())
+            obs_n.append(agent.filter_observation(full_observation_space))
         return obs_n
 
     def step(self, action_n):

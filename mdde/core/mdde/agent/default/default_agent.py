@@ -1,10 +1,10 @@
-from typing import Sequence, Set
+from typing import Sequence, List
 import numpy as np
 from mdde.agent.abc import ABCAgent
 
 
 class DefaultAgent(ABCAgent):
-    def __init__(self, agent_id: str, data_node_ids: Set[str]):
+    def __init__(self, agent_id: str, data_node_ids: List[str]):
         super().__init__(agent_id, data_node_ids)
 
     def get_actions(self) -> Sequence[int]:

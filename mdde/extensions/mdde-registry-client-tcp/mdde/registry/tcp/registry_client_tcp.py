@@ -166,6 +166,14 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
                                          local_meta: Union[Set[str], None],
                                          global_meta: Union[Set[str], None]) -> RegistryResponse[Dict]:
         response = self._serialize_and_run_command('GETFRAGSWMETA', fmtagsloc=local_meta, fmtagsglb=global_meta)
+        """
+        response_catalog = ERegistryMode(response[RegistryResponseJson.R_RES])
+
+        return RegistryResponse[ERegistryMode](response_state,
+                                               response[RegistryResponseJson.R_ERR],
+                                               response[RegistryResponseJson.R_ERRCODE])
+        """
+
         return RegistryResponseJson[Dict](response)
 
     def read_find_fragment(self, fragment_id: str) -> RegistryResponse[str]:

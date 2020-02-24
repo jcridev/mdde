@@ -13,6 +13,9 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
 
 packages = find_namespace_packages(include=['mdde.*'], exclude=['mdde.test.*'])
 
+requirements = ['typing-extensions; python_version<"3.8"',
+                'PyYAML']
+
 setup(
     name='mdde',
     version='0.1',
@@ -25,6 +28,6 @@ setup(
     packages=packages,
 
 
-    install_requires=['typing-extensions; python_version<"3.8"'],
+    install_requires=requirements,
     zip_safe=False,
 )

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Set, Sequence, Union
+from typing import Sequence, Union, Tuple, AnyStr
 import numpy as np
 
 from mdde.registry.protocol import PRegistryReadClient, PRegistryWriteClient
@@ -12,7 +12,7 @@ class ABCAgent(ABC):
     the read instructions of the
     """
     @abstractmethod
-    def __init__(self, agent_id: str, data_node_ids: Set[str]):
+    def __init__(self, agent_id: AnyStr, data_node_ids: Union[Sequence[str], str]):
         """
         Constructor
         :param agent_id: Unique agent id (name)
@@ -23,13 +23,22 @@ class ABCAgent(ABC):
         if data_node_ids is None:
             raise TypeError("Data node ID must of type String")
 
-        self._agent_id = agent_id.strip()
+        self._agent_id: AnyStr = agent_id.strip()
         if not self._agent_id:
             raise ValueError("Agent ID can't be empty")
 
+        # At least one data node must be specified
         if len(data_node_ids) < 1:
             raise ValueError("The agent must be associated with at lest one data node")
-        self._data_node_id = frozenset(data_node_ids)
+
+        if not isinstance(data_node_ids, (str, bytes, bytearray)):
+            # Duplicates are not allowed in the data nodes list
+            data_node_ids_set = set(data_node_ids)
+            if len(data_node_ids_set) != len(data_node_ids):
+                raise ValueError("The agent data node ids list contains duplicates")
+            self._data_node_id: Tuple[str] = tuple(data_node_ids)
+        else:
+            self._data_node_id: Tuple[str] = (data_node_ids, )
 
         # Read and write access to the registry.
         # These properties will have the implementation of the protocols assigned to them at the time of execution,
@@ -37,7 +46,7 @@ class ABCAgent(ABC):
         self._registry_read: Union[PRegistryReadClient, None] = None
         self._registry_write: Union[PRegistryReadClient, None] = None
 
-    def id(self) -> str:
+    def id(self) -> AnyStr:
         """
         Get agent id
         :return: String agent id
@@ -52,6 +61,14 @@ class ABCAgent(ABC):
         """
         self._registry_read = registry_read
         self._registry_write = registry_write
+
+    @property
+    def get_data_node_ids(self) -> Tuple[str]:
+        """
+        Get the node ids associated with this agent
+        :return:
+        """
+        return self._data_node_id
 
     @abstractmethod
     def get_actions(self) -> np.array:

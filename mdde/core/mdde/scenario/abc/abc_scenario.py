@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Tuple, Union, Sequence
 
 import numpy as np
 
 from mdde.agent.abc import ABCAgent
-from mdde.core.exception import MddeError
 from mdde.fragmentation.protocol import PFragmenter, PFragmentSorter
 from mdde.registry.protocol import PRegistryReadClient
 
@@ -18,9 +17,6 @@ class ABCScenario(ABC):
     #   TODO: mapping agents to data nodes
     #   TODO: actions definitions
     # TODO: Declaration of the meta values (global and local)
-    # TODO: Declaration of the fragments generator
-    # TODO: Declaration of the benchmark settings (workload id)
-
 
     _DEFAULT_NAME = 'Unnamed scenario'
 
@@ -45,7 +41,7 @@ class ABCScenario(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_datagenerator_workload(self) -> str:
+    def get_data_generator_workload(self) -> str:
         """
         Override this method to return the workload ID you want to be used for data generation
         :return: Workload ID as it's defined in the Registry
@@ -53,7 +49,7 @@ class ABCScenario(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_agents(self) -> List[ABCAgent]:
+    def get_agents(self) -> Tuple[ABCAgent]:
         """
         Override this method to return the list of agents that are to be used within the environment. Make sure that
         agents have unique IDs and correspond to existing data nodes
@@ -77,6 +73,24 @@ class ABCScenario(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def get_fragment_instance_meta_fields(self) -> Union[Sequence, None]:
+        """
+        Override to return a list of meta values that are attached to every instance of a fragment.
+        Return None if no meta values needed
+        :return:
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_fragment_global_meta_fields(self) -> Union[Sequence, None]:
+        """
+        Override to return a list of meta values that are attached to a fragment globally.
+        Return None if no meta values needed
+        :return:
+        """
+        raise NotImplementedError
+
     def get_full_observation(self, registry_read: PRegistryReadClient) -> np.array:
         """
         Generate full observation space of the scenario.
@@ -86,6 +100,13 @@ class ABCScenario(ABC):
         """
         call_result = registry_read.read_get_all_fragments_with_meta(local_meta=None, global_meta=None)
         if call_result.failed:
-            raise MddeError(call_result.error)
+            raise RuntimeError(call_result.error)
+        fragment_catalog = call_result.result
+        # make sure fragments are ordered
+        sorted_fragments = self.get_fragment_sorter().sort(fragment_catalog['fragments'])
+
+        #obs_full = {}
+        #for agent in self.get_agents():
+
 
         return call_result  # TODO: Proper return conversion
