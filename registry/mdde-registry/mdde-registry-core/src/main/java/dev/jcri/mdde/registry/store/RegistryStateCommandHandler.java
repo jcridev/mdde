@@ -18,8 +18,10 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.NotDirectoryException;
 import java.nio.file.Paths;
+import java.sql.*;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -220,10 +222,13 @@ public final class RegistryStateCommandHandler {
     public synchronized boolean reset() throws IOException, MddeRegistryException{
         _commandExecutionLock.lock();
         try {
-            if(_registryState == ERegistryState.shuffle){
+            if(_registryState != ERegistryState.benchmark){
                 throw new IllegalRegistryModeException(_registryState, ERegistryState.benchmark);
             }
-            final String defaultSnapshotId = _registryStoreManager.getDefaultSnapshotId();
+            final String defaultSnapshotId = getDefaultSnapshotId();
+            // Flush registry
+            _writeCommandHandler.flush();
+            // Flush data nodes
             _dataShuffler.flushData();
             _dataShuffleQueue.clear();
 
@@ -246,6 +251,10 @@ public final class RegistryStateCommandHandler {
         } catch (WriteOperationException | IllegalRegistryActionException e) {
             logger.error("Failed flushing all", e);
             throw new IOException(e);
+        }
+        catch (IOException e){
+            logger.error("Failed flushing all", e);
+            throw e;
         } finally {
             _commandExecutionLock.unlock();
         }
@@ -325,6 +334,127 @@ public final class RegistryStateCommandHandler {
      */
     private static final String _dataNodeDumpFilePostfix = "-data.dmp";
 
+
+    private static final String _snapshotsCatalogFileName = "mdde-snapshots.db";
+
+    /**
+     * Get fully resolved, normalized path to the snapshots directory. If the directory doesn't exist, it will be created.
+     * @return fully resolved, normalized path to the snapshots directory
+     * @throws NotDirectoryException Thrown if there is a file with the same name as the configured snapshots directory
+     */
+    private String getSnapshotsDirPath() throws NotDirectoryException {
+        var normalizedPath = Paths.get(_snapshotsDirectory).toAbsolutePath().normalize().toString();
+        var snapDirFile = new File(normalizedPath);
+        if (snapDirFile.exists() && snapDirFile.isFile()) {
+            throw new NotDirectoryException(normalizedPath);
+        }
+        boolean mkdirsRes = snapDirFile.mkdirs();
+        logger.trace("Create snapshot, snapshot directory created: {}", mkdirsRes);
+        return normalizedPath;
+    }
+
+    private String getSnapshotsDbPath() throws NotDirectoryException {
+        final String snapshotsPath = getSnapshotsDirPath();
+        return Paths.get(snapshotsPath, _snapshotsCatalogFileName).toString();
+    }
+
+    /**
+     * Get connection to the SQLLite catalog of the snapshots
+     * @return SQLite connection
+     * @throws SQLException
+     * @throws NotDirectoryException
+     */
+    private Connection getSnapshotsCatalogConnection()
+            throws SQLException, NotDirectoryException {
+        var pathToDb = getSnapshotsDbPath();
+        var fileAlreadyExists = new File(pathToDb).exists();
+        var connection = DriverManager.getConnection(String.format("jdbc:sqlite:%s", pathToDb));
+        if(fileAlreadyExists){
+            return connection;
+        }
+        else{
+            var createSnapsTable =  "CREATE TABLE IF NOT EXISTS snapshots (\n" +
+                                    "    snapshot_id TEXT NOT NULL PRIMARY KEY,\n" +
+                                    "    created DATETIME DEFAULT(STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')) NOT NULL\n" +
+                                    ");";
+
+            var createDefSnTable =  "CREATE TABLE IF NOT EXISTS default_snapshot (\n" +
+                                    "    id INTEGER PRIMARY KEY CHECK (id = 0),\n" +
+                                    "    snapshot_id TEXT NOT NULL,\n" +
+                                    "    FOREIGN KEY (snapshot_id)\n" +
+                                    "       REFERENCES snapshots (snapshot_id)\n" +
+                                    ");";
+
+            try(Statement statement = connection.createStatement()) {
+                statement.executeUpdate(createSnapsTable);
+                statement.executeUpdate(createDefSnTable);
+            }
+        }
+        return connection;
+    }
+
+    private void insertNewSnapshotId(String snapshotId, boolean asDefault)
+            throws SQLException, NotDirectoryException {
+        try(var connection = getSnapshotsCatalogConnection()){
+
+            var newSnapIdInsert = String.format("INSERT INTO snapshots(snapshot_id) VALUES ('%s');", snapshotId);
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(newSnapIdInsert);
+            if(asDefault){
+                var newDefSnapIdInsert =
+                        String.format(  "INSERT INTO default_snapshot(id, snapshot_id)\n" +
+                                        "VALUES (0, '%s')\n" +
+                                        "ON CONFLICT(id)\n" +
+                                        "    DO UPDATE SET snapshot_id=excluded.snapshot_id;", snapshotId);
+                statement.executeUpdate(newDefSnapIdInsert);
+            }
+        }
+    }
+
+    private String getDefaultSnapshotId() throws IOException {
+        try(var connection = getSnapshotsCatalogConnection()){
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery("SELECT snapshot_id FROM default_snapshot WHERE id=0;");
+            if(rs.next()){
+                return rs.getString(1);
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            var errorText = "Error accessing snapshots db";
+            logger.error(errorText, e);
+            throw new IOException(errorText, e);
+        }
+    }
+
+    private boolean flushSnapshots() throws IOException, SQLException {
+        var pathToDb = getSnapshotsDbPath();
+        if(!new File(pathToDb).exists()){
+            return true;
+        }
+        // Delete snapshot files
+        try(var connection = getSnapshotsCatalogConnection()){
+            Statement statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery("SELECT snapshot_id FROM snapshots;");
+            final String snapshotsPath = getSnapshotsDirPath();
+            while(rs.next())
+            { // Remove known snapshot files
+                try{
+                    var snapFilenamePrefix = rs.getString(1);
+                    var pathRegistry = Paths.get(snapshotsPath, snapFilenamePrefix + _registryDumpFilePostfix);
+                    var pathData = Paths.get(snapshotsPath, snapFilenamePrefix + _dataNodeDumpFilePostfix);
+                    Files.deleteIfExists(pathRegistry);
+                    Files.deleteIfExists(pathData);
+                } catch (IOException e) {
+                    logger.error("Error flushing a snapshot", e);
+                }
+            }
+        }
+        // Delete the database
+        Files.deleteIfExists(Paths.get(pathToDb));
+        return true;
+    }
+
     /**
      * Crete full snapshot of the Registry with Data and dump them in the snapshots directory
      * @param isDefault If True - newly created snapshot is set as Default and will be used during the RESET execution
@@ -334,27 +464,26 @@ public final class RegistryStateCommandHandler {
     public synchronized String createSnapshot(boolean isDefault) throws IOException {
         _commandExecutionLock.lock();
         try {
-            // First check if the snapshots dir exits
-            var snapDirFile = new File(_snapshotsDirectory);
-            if (snapDirFile.exists() && snapDirFile.isFile()) {
-                throw new NotDirectoryException(_snapshotsDirectory);
-            }
-            boolean mkdirsRes = snapDirFile.mkdirs();
-            logger.trace("Create snapshot, snapshot directory created: {}", mkdirsRes);
+            final String snapshotsPath = getSnapshotsDirPath();
             // Generate snapshot ID (used as filenames)
             final String snapFilenamePrefix = UUID.randomUUID().toString().replace("-", "");
-            final String snapRegistryFile = Paths.get(_snapshotsDirectory, snapFilenamePrefix + _registryDumpFilePostfix)
-                    .toAbsolutePath().normalize().toString();
-            final String snapDataNodesFile = Paths.get(_snapshotsDirectory, snapFilenamePrefix + _dataNodeDumpFilePostfix)
-                    .toAbsolutePath().normalize().toString();
-
+            final String snapRegistryFile = Paths.get(snapshotsPath, snapFilenamePrefix + _registryDumpFilePostfix)
+                    .toString();
+            final String snapDataNodesFile = Paths.get(snapshotsPath, snapFilenamePrefix + _dataNodeDumpFilePostfix)
+                    .toString();
+            // Dump registry into the file
             _registryStoreManager.dumpToFile(snapRegistryFile, true);
+            // Dump data from all of the nodes into the file
             _dataShuffler.dumpToFile(snapDataNodesFile, true);
-            if (isDefault) {
-                _registryStoreManager.assignDefaultSnapshot(snapFilenamePrefix);
-            }
+            // Record the snapshot in the catalog
+            insertNewSnapshotId(snapFilenamePrefix, isDefault);
 
             return snapFilenamePrefix;
+        }
+        catch (SQLException e){
+            var errorText = "Failed to save info about a new snapshot";
+            logger.error(errorText, e);
+            throw new IOException(errorText, e);
         }
         catch (Exception ex){
             logger.error("Failed creating snapshot", ex);
@@ -377,14 +506,15 @@ public final class RegistryStateCommandHandler {
             if (snapshotId == null || snapshotId.isBlank()) {
                 throw new IllegalArgumentException("Snapshot ID is not set");
             }
-            var snapDirFile = new File(_snapshotsDirectory);
+            final String snapshotsPath = getSnapshotsDirPath();
+            var snapDirFile = new File(snapshotsPath);
             if (!snapDirFile.exists() || snapDirFile.isFile()) {
-                throw new NotDirectoryException(_snapshotsDirectory);
+                throw new NotDirectoryException(snapshotsPath);
             }
-            final String snapRegistryFile = Paths.get(_snapshotsDirectory, snapshotId + _registryDumpFilePostfix)
-                    .toAbsolutePath().normalize().toString();
-            final String snapDataNodesFile = Paths.get(_snapshotsDirectory, snapshotId + _dataNodeDumpFilePostfix)
-                    .toAbsolutePath().normalize().toString();
+            final String snapRegistryFile = Paths.get(snapshotsPath, snapshotId + _registryDumpFilePostfix)
+                    .toString();
+            final String snapDataNodesFile = Paths.get(snapshotsPath, snapshotId + _dataNodeDumpFilePostfix)
+                    .toString();
 
             if (!new File(snapRegistryFile).isFile()) {
                 throw new FileNotFoundException(snapRegistryFile);

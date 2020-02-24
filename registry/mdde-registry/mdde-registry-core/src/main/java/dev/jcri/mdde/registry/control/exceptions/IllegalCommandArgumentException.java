@@ -6,7 +6,7 @@ import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 /**
  * A command received an illegal argument
  */
-public class IllegalCommandArgumentException extends MddeRegistryException {
+public class IllegalCommandArgumentException extends CommandException {
     private final static EErrorCode _exCode = EErrorCode.DATA_KEY_NOT_FOUND;
 
     public IllegalCommandArgumentException(String message) {

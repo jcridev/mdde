@@ -240,7 +240,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      * Clear the registry
      */
     @Override
-    public final boolean reset() throws WriteOperationException {
+    public final boolean flush() throws WriteOperationException {
         _commandExecutionLock.lock();
         try {
             return runFlush();
@@ -438,11 +438,29 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
      */
     protected abstract boolean runPopulateNodes(final Set<String> nodeIds) throws WriteOperationException;
 
+    /**
+     * Attach a global meta value to fragment. This meta value will be attached to the fragment ID, not specific fragment
+     * replica.
+     * @param fragmentId Fragment ID
+     * @param metaField Name of the meta value
+     * @param metaValue Value
+     * @return True - operation was successful
+     * @throws WriteOperationException
+     */
     protected abstract boolean runAddMetaToFragmentGlobal(final String fragmentId,
                                                        final String metaField,
                                                        final String metaValue)
             throws WriteOperationException;
 
+    /**
+     * Appach a meta value to the fragment replica, which is residing on a specific node
+     * @param fragmentId Fragment ID
+     * @param nodeId Node ID
+     * @param metaField Name of the meta value
+     * @param metaValue Value
+     * @return True - operation was successful
+     * @throws WriteOperationException
+     */
     protected abstract boolean runAddMetaToFragmentExemplar(final String fragmentId,
                                                          final String nodeId,
                                                          final String metaField,
@@ -452,6 +470,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
 
     protected abstract boolean runResetFragmentsMeta();
 
+    /**
+     * Flush the registry
+     * @return True - operation was successful
+     */
     protected abstract boolean runFlush();
 //endregion
 

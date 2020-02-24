@@ -5,7 +5,7 @@
 * OpenJDK 11
 * Maven 3.6.x
 
-## Struncture
+## Structure
 
 * `./mdde-registry` parent POM
     * `/mdde-registry-core` Core functionality of the registry

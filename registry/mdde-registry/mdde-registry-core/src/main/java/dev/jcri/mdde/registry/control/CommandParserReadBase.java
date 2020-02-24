@@ -1,6 +1,6 @@
 package dev.jcri.mdde.registry.control;
 
-import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
+import dev.jcri.mdde.registry.control.exceptions.CommandException;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
@@ -69,37 +69,37 @@ public abstract class CommandParserReadBase<TOut, TArgs>
             throws ReadOperationException;
 
     protected abstract Set<String> processFindTupleCommand(TArgs arguments)
-            throws IllegalCommandArgumentException;
+            throws CommandException;
 
     protected abstract Set<String> processGetUnassignedTuplesForNode(TArgs arguments)
-            throws IllegalCommandArgumentException;
+            throws CommandException;
 
     protected abstract Set<String> processGetNodeFragments(TArgs arguments)
-            throws IllegalCommandArgumentException;
+            throws CommandException;
 
     protected abstract String processFindTupleFragmentCommand(TArgs arguments)
-            throws IllegalCommandArgumentException;
+            throws CommandException;
 
     protected abstract Set<String> processFindFragmentNodesCommand(TArgs arguments)
-            throws IllegalCommandArgumentException;
+            throws CommandException;
 
     protected abstract Set<String> processGetFragmentTuplesCommand(TArgs arguments)
-            throws ReadOperationException, IllegalCommandArgumentException;
+            throws ReadOperationException, CommandException;
 
     protected abstract FragmentCatalog processGetFragmentCatalog(TArgs arguments)
-            throws IllegalCommandArgumentException;
+            throws CommandException;
 
     protected abstract int processCountFragmentsCommand(TArgs arguments)
-            throws IllegalCommandArgumentException;
+            throws CommandException;
 
     protected abstract int processCountTuplesCommand(TArgs arguments)
-            throws IllegalCommandArgumentException;
+            throws CommandException;
 
     protected abstract Set<String> processGetNodesCommand();
 
     protected abstract String processGetFragmentMetaExemplarValue(TArgs arguments)
-            throws IllegalCommandArgumentException;
+            throws CommandException;
 
     protected abstract String processGetFragmentMetaGlobalValue(TArgs arguments)
-            throws IllegalCommandArgumentException;
+            throws CommandException;
 }

@@ -24,19 +24,6 @@ public interface IStoreManager {
     boolean restoreFromFile(String pathToFile) throws IOException;
 
     /**
-     * Assign the snapshot ID to be used by default when RESET operation is executed
-     * @param snapshotId Snapshot ID
-     * @return True - id was assigned
-     */
-    boolean assignDefaultSnapshot(String snapshotId);
-
-    /**
-     * If there is an assigned default snapshot ID, retrieve it
-     * @return Snapshot ID if the default snapshot is assigned, otherwise null
-     */
-    String getDefaultSnapshotId();
-
-    /**
      * Erase all records from registry store
      * @return True erase was successful
      */

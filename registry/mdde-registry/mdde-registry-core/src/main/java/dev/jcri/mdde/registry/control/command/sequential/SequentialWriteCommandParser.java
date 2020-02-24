@@ -1,6 +1,7 @@
 package dev.jcri.mdde.registry.control.command.sequential;
 
 import dev.jcri.mdde.registry.control.CommandParserWriteBase;
+import dev.jcri.mdde.registry.control.exceptions.CommandException;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
 import dev.jcri.mdde.registry.server.responders.WriteCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
@@ -23,7 +24,7 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
 
     protected boolean processInsertTupleCommand(final List<Object> arguments)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException,
-            IllegalCommandArgumentException {
+            CommandException {
         final var thisCommand = EWriteCommand.INSERT_TUPLE;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -34,7 +35,7 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
 
     protected boolean processInsertTupleInBulkCommand(final List<Object> arguments)
             throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException,
-            IllegalCommandArgumentException {
+            CommandException {
         final var thisCommand = EWriteCommand.INSERT_TUPLE_BULK;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -44,7 +45,7 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
     }
 
     protected boolean processDeleteTupleCommand(final List<Object> arguments)
-            throws UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException    {
+            throws UnknownEntityIdException, WriteOperationException, CommandException    {
         final var thisCommand = EWriteCommand.DELETE_TUPLE;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -53,7 +54,8 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
     }
 
     protected boolean processFormFragmentCommand(final List<Object> arguments)
-            throws WriteOperationException, IllegalRegistryActionException, UnknownEntityIdException, DuplicateEntityRecordException, IllegalCommandArgumentException {
+            throws WriteOperationException, IllegalRegistryActionException, UnknownEntityIdException,
+            DuplicateEntityRecordException, CommandException {
         final var thisCommand = EWriteCommand.FORM_FRAGMENT;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -64,7 +66,7 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
     }
 
     protected boolean processAppendToFragmentCommand(final List<Object> arguments)
-            throws WriteOperationException, DuplicateEntityRecordException, UnknownEntityIdException, IllegalCommandArgumentException {
+            throws WriteOperationException, DuplicateEntityRecordException, UnknownEntityIdException, CommandException {
         final var thisCommand = EWriteCommand.APPEND_TO_FRAGMENT;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -74,7 +76,7 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
     }
 
     protected boolean processReplicateFragmentCommand(final List<Object> arguments)
-            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException {
+            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, CommandException {
         final var thisCommand = EWriteCommand.REPLICATE_FRAGMENT_DATA;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -90,7 +92,7 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
 
     protected boolean processDeleteFragmentExemplar(final List<Object> arguments)
             throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException,
-            IllegalCommandArgumentException, ReadOperationException {
+            CommandException, ReadOperationException {
         final var thisCommand = EWriteCommand.DELETE_FRAGMENT_DATA;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -100,7 +102,7 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
     }
 
     protected String processDestroyFragment(final List<Object> arguments)
-            throws UnknownEntityIdException, IllegalCommandArgumentException,
+            throws UnknownEntityIdException, CommandException,
             WriteOperationException, ReadOperationException {
         final var thisCommand = EWriteCommand.DESTROY_FRAGMENT;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
@@ -110,7 +112,7 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
     }
 
     protected boolean processPopulateNodes(final List<Object> arguments)
-            throws IllegalRegistryActionException,  WriteOperationException, IllegalCommandArgumentException {
+            throws IllegalRegistryActionException,  WriteOperationException, CommandException {
         final var thisCommand = EWriteCommand.POPULATE_NODES;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -119,7 +121,7 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
     }
 
     protected boolean processAttachMetaToFragmentExemplar(final List<Object> arguments)
-            throws IllegalCommandArgumentException, UnknownEntityIdException, WriteOperationException
+            throws CommandException, UnknownEntityIdException, WriteOperationException
             {
         final var thisCommand = EWriteCommand.META_FRAGMENT_EXEMPLAR;
                 CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
@@ -132,7 +134,7 @@ public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, L
     }
 
     protected boolean processAttachMetaToFragmentGlobally(final List<Object> arguments)
-            throws IllegalCommandArgumentException, UnknownEntityIdException, WriteOperationException
+            throws CommandException, UnknownEntityIdException, WriteOperationException
             {
         final var thisCommand = EWriteCommand.META_FRAGMENT_GLOBAL;
                 CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());

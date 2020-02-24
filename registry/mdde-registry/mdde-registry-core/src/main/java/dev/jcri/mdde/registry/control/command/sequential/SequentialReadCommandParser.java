@@ -2,7 +2,7 @@ package dev.jcri.mdde.registry.control.command.sequential;
 
 
 import dev.jcri.mdde.registry.control.CommandParserReadBase;
-import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
+import dev.jcri.mdde.registry.control.exceptions.CommandException;
 import dev.jcri.mdde.registry.server.responders.ReadCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
@@ -32,7 +32,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
     }
 
     protected Set<String> processFindTupleCommand(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         final EReadCommand thisCommand = EReadCommand.FIND_TUPLE;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -41,7 +41,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
     }
 
     protected String processFindTupleFragmentCommand(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         final EReadCommand thisCommand = EReadCommand.FIND_TUPLE_FRAGMENT;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -50,7 +50,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
     }
 
     protected Set<String> processFindFragmentNodesCommand(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         final EReadCommand thisCommand = EReadCommand.FIND_FRAGMENT;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -59,7 +59,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
     }
 
     protected Set<String> processGetFragmentTuplesCommand(List<Object> arguments)
-            throws ReadOperationException, IllegalCommandArgumentException {
+            throws ReadOperationException, CommandException {
         final EReadCommand thisCommand = EReadCommand.GET_FRAGMENT_TUPLES;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -68,7 +68,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
     }
 
     protected int processCountFragmentsCommand(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         final EReadCommand thisCommand = EReadCommand.COUNT_FRAGMENT;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -77,7 +77,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
     }
 
     protected int processCountTuplesCommand(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         final EReadCommand thisCommand = EReadCommand.COUNT_TUPLE;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -90,7 +90,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
     }
 
     protected String processGetFragmentMetaGlobalValue(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         final EReadCommand thisCommand = EReadCommand.META_FRAGMENT_GLOBAL;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -101,7 +101,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
     }
 
     protected String processGetFragmentMetaExemplarValue(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         final EReadCommand thisCommand = EReadCommand.META_FRAGMENT_EXEMPLAR;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -113,7 +113,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
     }
 
     protected Set<String> processGetUnassignedTuplesForNode(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         final EReadCommand thisCommand = EReadCommand.NODE_TUPLES_UNASSIGNED;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -122,7 +122,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
     }
 
     protected Set<String> processGetNodeFragments(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         final EReadCommand thisCommand = EReadCommand.NODE_FRAGMENTS;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -131,7 +131,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
     }
 
     protected FragmentCatalog processGetFragmentCatalog(List<Object> arguments)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         final EReadCommand thisCommand = EReadCommand.GET_ALL_FRAGMENTS_NODES_WITH_META;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 

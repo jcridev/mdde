@@ -129,5 +129,5 @@ public interface IWriteCommandHandler {
     /**
      * Clear all meta, fragments and tuples from the registry, leaving only empty nodes
      */
-    boolean reset() throws WriteOperationException;
+    boolean flush() throws WriteOperationException;
 }

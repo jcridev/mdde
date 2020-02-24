@@ -204,7 +204,6 @@ public class Main {
         }
         int port = -1;
         int portBenchmark = -1;
-        Path configFilePath = null;
         Map<String, String> argsMap = new HashMap<>();
         for(int i = 0; i < args.length; i = i+2){
             var tag = args[i];

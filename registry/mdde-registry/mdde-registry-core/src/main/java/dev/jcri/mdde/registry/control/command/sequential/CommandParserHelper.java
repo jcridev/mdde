@@ -1,6 +1,8 @@
 package dev.jcri.mdde.registry.control.command.sequential;
 
+import dev.jcri.mdde.registry.control.exceptions.CommandException;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
+import dev.jcri.mdde.registry.control.exceptions.MalformedCommandStatementException;
 import dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument;
 import dev.jcri.mdde.registry.shared.commands.ICommand;
 
@@ -73,10 +75,13 @@ public class CommandParserHelper {
     public String getPositionalArgumentAsString(List<Object> arguments,
                                                 ICommand command,
                                                 ExpectedCommandArgument argument)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         var argIndex = command.getExpectedArguments().indexOf(argument);
         if(argIndex < 0){
             throw new IllegalCommandArgumentException(getIllegalArgumentError(command, argument));
+        }
+        if(arguments.size() -1 < argIndex){
+            throw new MalformedCommandStatementException(getPositionalArgumentError(command, argument, argIndex));
         }
         return (String) Objects.requireNonNull(arguments.get(argIndex),
                                                 getPositionalArgumentError(command, argument, argIndex));
@@ -88,18 +93,25 @@ public class CommandParserHelper {
      * @param command Command name
      * @param argument Argument description object
      * @return Argument value
-     * @throws IllegalCommandArgumentException
+     * @throws CommandException
      */
     public Boolean getPositionalArgumentAsBoolean(List<Object> arguments,
                                                   ICommand command,
                                                   ExpectedCommandArgument argument)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         var argIndex = command.getExpectedArguments().indexOf(argument);
         if(argIndex < 0){
             throw new IllegalCommandArgumentException(getIllegalArgumentError(command, argument));
         }
-        return (Boolean) Objects.requireNonNull(arguments.get(argIndex),
-                                                getPositionalArgumentError(command, argument, argIndex));
+        if(arguments.size() -1 < argIndex){
+            throw new MalformedCommandStatementException(getPositionalArgumentError(command, argument, argIndex));
+        }
+
+        if(arguments.get(argIndex) == null){
+            return null;
+        }
+
+        return (Boolean) arguments.get(argIndex);
     }
 
     /**
@@ -112,7 +124,7 @@ public class CommandParserHelper {
     public Set<String> getPositionalArgumentAsSet(List<Object> arguments,
                                                   ICommand command,
                                                   ExpectedCommandArgument argument)
-            throws IllegalCommandArgumentException {
+            throws CommandException {
         if(argument.getArgumentType() != ExpectedCommandArgument.ArgumentType.SET_STRINGS){
             throw new IllegalArgumentException(String.format("Argument %s is not a set of strings", argument.toString()));
         }
@@ -121,11 +133,18 @@ public class CommandParserHelper {
         if(argIndex < 0){
             throw new IllegalCommandArgumentException(getIllegalArgumentError(command, argument));
         }
-        var tupleIdsArg = Objects.requireNonNull(arguments.get(argIndex),
-                getPositionalArgumentError(command, argument, argIndex));
-                if(!(tupleIdsArg instanceof Set<?>)){
-                    throw new IllegalArgumentException(getPositionalArgumentError(command, argument, argIndex));
-                }
-        return (Set<String>) tupleIdsArg;
+        if(arguments.size() -1 < argIndex){
+            throw new MalformedCommandStatementException(getPositionalArgumentError(command, argument, argIndex));
+        }
+
+        if (arguments.get(argIndex) == null){
+            return null;
+        } else{
+            var tupleIdsArg = arguments.get(argIndex);
+            if(!(tupleIdsArg instanceof Set<?>)){
+                throw new IllegalArgumentException(getPositionalArgumentError(command, argument, argIndex));
+            }
+            return (Set<String>) tupleIdsArg;
+        }
     }
 }

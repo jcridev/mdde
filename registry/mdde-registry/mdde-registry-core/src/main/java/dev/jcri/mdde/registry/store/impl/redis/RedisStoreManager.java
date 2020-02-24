@@ -29,7 +29,6 @@ public class RedisStoreManager implements IStoreManager {
         _redisConnection = redisConnectionHelper;
     }
 
-
     private static final Charset _dumpCharset = StandardCharsets.UTF_8;
     @Override
     public boolean dumpToFile(String pathToFile, boolean overwrite) throws IOException {
@@ -133,33 +132,6 @@ public class RedisStoreManager implements IStoreManager {
             }
         }
         return true;
-    }
-
-    @Override
-    public boolean assignDefaultSnapshot(String snapshotId) {
-        if(snapshotId == null || snapshotId.isBlank()){
-            // Erase the default key
-            try(Jedis jedis = _redisConnection.getRedisCommands()){
-                jedis.del(Constants.DEFAULT_SNAPSHOT_ID_KEY);
-                return true;
-            }
-        }
-        else{
-            try(Jedis jedis = _redisConnection.getRedisCommands()){
-                String res = jedis.set(Constants.DEFAULT_SNAPSHOT_ID_KEY, snapshotId);
-                if(res.toLowerCase().equals("ok")){
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public String getDefaultSnapshotId() {
-        try(Jedis jedis = _redisConnection.getRedisCommands()){
-            return jedis.get(Constants.DEFAULT_SNAPSHOT_ID_KEY);
-        }
     }
 
     @Override

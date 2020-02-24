@@ -1,6 +1,6 @@
 package dev.jcri.mdde.registry.control;
 
-import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
+import dev.jcri.mdde.registry.control.exceptions.CommandException;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.exceptions.*;
@@ -57,35 +57,35 @@ public abstract class CommandParserWriteBase<TOut, TArgs>
     }
 
     protected abstract boolean processInsertTupleCommand(TArgs arguments)
-            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException;
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException, CommandException;
 
     protected abstract boolean processInsertTupleInBulkCommand(TArgs arguments)
-            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException;
+            throws DuplicateEntityRecordException, UnknownEntityIdException, WriteOperationException, CommandException;
 
     protected abstract boolean processDeleteTupleCommand(TArgs arguments)
-            throws UnknownEntityIdException, WriteOperationException, IllegalCommandArgumentException;
+            throws UnknownEntityIdException, WriteOperationException, CommandException;
 
     protected abstract boolean processFormFragmentCommand(TArgs arguments)
-            throws WriteOperationException, IllegalRegistryActionException, UnknownEntityIdException, DuplicateEntityRecordException, IllegalCommandArgumentException;
+            throws WriteOperationException, IllegalRegistryActionException, UnknownEntityIdException, DuplicateEntityRecordException, CommandException;
 
     protected abstract boolean processAppendToFragmentCommand(TArgs arguments)
-            throws WriteOperationException, DuplicateEntityRecordException, UnknownEntityIdException, IllegalCommandArgumentException;
+            throws WriteOperationException, DuplicateEntityRecordException, UnknownEntityIdException, CommandException;
 
     protected abstract boolean processReplicateFragmentCommand(TArgs arguments)
-            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException;
+            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, CommandException;
 
     protected abstract boolean processDeleteFragmentExemplar(TArgs arguments)
-            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, IllegalCommandArgumentException, ReadOperationException;
+            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, CommandException, ReadOperationException;
 
     protected abstract String processDestroyFragment(TArgs arguments)
-            throws UnknownEntityIdException, IllegalCommandArgumentException, WriteOperationException, ReadOperationException;
+            throws UnknownEntityIdException, CommandException, WriteOperationException, ReadOperationException;
 
     protected abstract boolean processPopulateNodes(TArgs arguments)
-            throws IllegalRegistryActionException, WriteOperationException, IllegalCommandArgumentException;
+            throws IllegalRegistryActionException, WriteOperationException, CommandException;
 
     protected abstract boolean processAttachMetaToFragmentExemplar(TArgs arguments)
-            throws IllegalCommandArgumentException, UnknownEntityIdException, WriteOperationException;
+            throws CommandException, UnknownEntityIdException, WriteOperationException;
 
     protected abstract boolean processAttachMetaToFragmentGlobally(TArgs arguments)
-            throws IllegalCommandArgumentException, UnknownEntityIdException, WriteOperationException;
+            throws CommandException, UnknownEntityIdException, WriteOperationException;
 }

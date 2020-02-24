@@ -71,7 +71,6 @@ public enum EReadCommand implements ICommand {
                 {add(ARG_FRAGMENT_ID); add(ARG_FRAGMENT_META_TAG);}
             });
 
-
     private final String _command;
     private final List<ExpectedCommandArgument> _expectedArguments;
     private final int _numExpectedArguments;

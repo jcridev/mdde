@@ -2,7 +2,7 @@ package dev.jcri.mdde.registry.control.command.sequential;
 
 
 import dev.jcri.mdde.registry.control.CommandParserControlBase;
-import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
+import dev.jcri.mdde.registry.control.exceptions.CommandException;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
@@ -87,7 +87,7 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
 
     @Override
     protected String processCreateSnapshot(List<Object> arguments)
-            throws IllegalCommandArgumentException, IOException {
+            throws CommandException, IOException {
         final EStateControlCommand thisCommand = EStateControlCommand.SNAPSHOT_CREATE;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
@@ -97,7 +97,7 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
 
     @Override
     protected boolean processLoadSnapshot(List<Object> arguments)
-            throws IllegalCommandArgumentException, IOException{
+            throws CommandException, IOException{
 
         final EStateControlCommand thisCommand = EStateControlCommand.SNAPSHOT_LOAD;
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());

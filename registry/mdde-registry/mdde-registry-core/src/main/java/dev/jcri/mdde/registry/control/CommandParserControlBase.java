@@ -1,5 +1,6 @@
 package dev.jcri.mdde.registry.control;
 
+import dev.jcri.mdde.registry.control.exceptions.CommandException;
 import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
@@ -80,9 +81,9 @@ public abstract class CommandParserControlBase<TOut, TArgs>
 
     protected abstract boolean processFlushAll() throws MddeRegistryException;
 
-    protected abstract String processCreateSnapshot(TArgs arguments) throws IllegalCommandArgumentException, IOException;
+    protected abstract String processCreateSnapshot(TArgs arguments) throws IOException, CommandException;
 
-    protected abstract boolean processLoadSnapshot(TArgs arguments) throws IllegalCommandArgumentException, IOException;
+    protected abstract boolean processLoadSnapshot(TArgs arguments) throws CommandException, IOException;
 
     protected abstract BenchmarkStatus processGetBenchmarkState();
 }

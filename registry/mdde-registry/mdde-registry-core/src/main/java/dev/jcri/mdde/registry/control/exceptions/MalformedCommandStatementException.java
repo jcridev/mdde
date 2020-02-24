@@ -6,7 +6,7 @@ import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 /**
  * Incoming command statement was incorrect
  */
-public class MalformedCommandStatementException extends MddeRegistryException {
+public class MalformedCommandStatementException extends CommandException {
     private final static EErrorCode _exCode = EErrorCode.CTRL_MALFORMED_COMMAND_STATEMENT;
 
     public MalformedCommandStatementException(String message) {

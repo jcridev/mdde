@@ -60,8 +60,8 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
     protected FragmentCatalog runGetFragmentCatalog(Set<String> metaTagsExemplar, Set<String> metaTagsGlobal) {
         final var nodes = runGetNodes();
 
-        List<String> resultLocalMetaTags = new ArrayList<>(metaTagsExemplar);
-        List<String> resultGlobalMetaTags = new ArrayList<>(metaTagsGlobal);
+        List<String> resultLocalMetaTags = metaTagsExemplar != null ? new ArrayList<>(metaTagsExemplar) : null;
+        List<String> resultGlobalMetaTags = metaTagsGlobal != null ? new ArrayList<>(metaTagsGlobal) : null;
         // <local fragment key map value, array of expected
         Map<Integer, List<String>> resultGlobalFragmentTagValues= new HashMap<>();
         // <Node local Id, <Fragment local id, Meta values>>
@@ -103,7 +103,7 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
                 // <Fragment local id, Meta values>
                 HashMap<Integer, List<String>> fragmentMeta = new HashMap<>();
                 resultLocalFragmentTagValues.put(currentNodeIde, fragmentMeta);
-                if(resultLocalMetaTags.size() > 0) {
+                if(resultLocalMetaTags != null && resultLocalMetaTags.size() > 0) {
                     // Get exemplar meta
                     for (String fragId : fragments) {
                         var currentFragmentMetaValues = new ArrayList<String>();
@@ -118,7 +118,7 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
                 }
             }
 
-            if(resultGlobalMetaTags.size() > 0) {
+            if(resultGlobalMetaTags != null && resultGlobalMetaTags.size() > 0) {
                 // Global fragments // TODO: Batch pipelining
                 for (var fragIdAndLocalKey : resultFragments.entrySet()) {
                     var gMetaKeyFrag = CommandHandlerRedisHelper.sharedInstance()
