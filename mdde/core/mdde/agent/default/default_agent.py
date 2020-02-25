@@ -1,6 +1,7 @@
-from typing import Sequence, List
+from typing import Sequence, List, Tuple
 import numpy as np
-from mdde.agent.abc import ABCAgent
+
+from mdde.agent.abc import ABCAgent, NodeAgentMapping
 
 
 class DefaultAgent(ABCAgent):
@@ -10,10 +11,11 @@ class DefaultAgent(ABCAgent):
     def get_actions(self) -> Sequence[int]:
         pass
 
-    def filter_observation(self, full_observation: np.array) -> np.array:
+    def filter_observation(self, obs_descr: Tuple[NodeAgentMapping, ...], obs: np.array) -> np.array:
         """
-        Default agents can observe the full observation space
-        :param full_observation: Full observation space provided by the environment
-        :return: full_observation
+        Return full observation space
+        :param obs_descr:
+        :param obs:
+        :return:
         """
-        return full_observation
+        return obs

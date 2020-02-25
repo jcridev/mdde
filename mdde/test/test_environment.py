@@ -1,4 +1,5 @@
 import unittest
+import logging
 
 from mdde.agent.default.default_agent import DefaultAgent
 from mdde.config import ConfigRegistry
@@ -8,11 +9,15 @@ from mdde.registry.protocol import PRegistryReadClient, PRegistryControlClient, 
 from mdde.scenario.default import DefaultScenario
 
 
-
 class EnvironmentTestCase(unittest.TestCase):
     REGISTRY_HOST = 'localhost'
     REGISTRY_PORT = 8942
     TEST_CONFIG_FILE = '../../test/registry_config.yml'
+
+    def setUp(self) -> None:
+        # Init logging
+        logging.basicConfig(level=logging.DEBUG,
+                            format='%(asctime)-15s %(name)s - %(levelname)s - %(message)s')
 
     def test_initialization(self):
         # Create Registry client
@@ -38,7 +43,7 @@ class EnvironmentTestCase(unittest.TestCase):
         environment.initialize_registry()
 
         # Reset
-        #environment.reset()
+        environment.reset()
 
 
 if __name__ == '__main__':

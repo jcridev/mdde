@@ -31,5 +31,5 @@ class ConfigRegistry:
             # only 2 values are relevant for the environment: id and whether or not the node is a default one
             self._data_node_ids = (self.DataNode(node['id'], node['default']) for node in yml_file['nodes'])
 
-    def get_nodes(self) -> Tuple[DataNode]:
+    def get_nodes(self) -> Tuple[DataNode, ...]:
         return self._data_node_ids

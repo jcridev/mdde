@@ -1,5 +1,5 @@
 import socket
-from typing import Set, Dict, Union, TypeVar
+from typing import Set, Dict, Union
 
 from mdde.registry.protocol import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient
 from mdde.registry.container import RegistryResponse
@@ -166,15 +166,18 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
                                          local_meta: Union[Set[str], None],
                                          global_meta: Union[Set[str], None]) -> RegistryResponse[Dict]:
         response = self._serialize_and_run_command('GETFRAGSWMETA', fmtagsloc=local_meta, fmtagsglb=global_meta)
-        """
-        response_catalog = ERegistryMode(response[RegistryResponseJson.R_RES])
-
-        return RegistryResponse[ERegistryMode](response_state,
-                                               response[RegistryResponseJson.R_ERR],
-                                               response[RegistryResponseJson.R_ERRCODE])
-        """
-
-        return RegistryResponseJson[Dict](response)
+        # TODO: Dedicated container class for deserialization
+        response_catalog = response[RegistryResponseJson.R_RES]
+        response_catalog["nodefrags"] = {int(k): v for k, v in response_catalog["nodefrags"].items()}
+        exemplar_meta = response_catalog.get("fmexval", None)
+        if exemplar_meta:
+            response_catalog["fmexval"] = {int(k): v for k, v in exemplar_meta.items()}
+        global_meta = response_catalog["fmglval"]
+        if global_meta:
+            response_catalog["fmglval"] = {int(k): v for k, v in global_meta.items()}
+        return RegistryResponse[Dict](response_catalog,
+                                      response[RegistryResponseJson.R_ERR],
+                                      response[RegistryResponseJson.R_ERRCODE])
 
     def read_find_fragment(self, fragment_id: str) -> RegistryResponse[str]:
         response = self._serialize_and_run_command('FINDFRAGMENT', fid=fragment_id)

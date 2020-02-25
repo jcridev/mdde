@@ -32,8 +32,8 @@ class DefaultFragmenter(PFragmenter):
         """
         if number_of_fragments < 1:
             raise ValueError("Target number of fragments must be larger than 0")
-
         self._target_n_fragments = number_of_fragments
+        self._logger = logging.getLogger('DefaultFragmenter')
 
     def run_fragmentation(self, registry_reader: PRegistryReadClient, registry_writer: PRegistryWriteClient) -> bool:
         """
@@ -45,7 +45,7 @@ class DefaultFragmenter(PFragmenter):
         # Get registry nodes
         nodes_response = registry_reader.read_nodes()
         RegistryResponseHelper.raise_on_error(nodes_response)
-        logging.debug("Fragmenter retrieved nodes: {}", len(nodes_response.result))
+        self._logger.debug("Fragmenter retrieved nodes: %d", len(nodes_response.result))
         # Retrieve all unassigned fragments
         node_contents = {}  # node_id:Set[tuple_id]
         for node in nodes_response.result:
@@ -56,8 +56,10 @@ class DefaultFragmenter(PFragmenter):
 
         total_num_tuples = reduce(lambda a, b: (a if isinstance(a, int) else len(a)) + len(b), node_contents.values())
         if total_num_tuples < self._target_n_fragments:
-            raise FragmentationError("Specified target number of fragments {} is higher than the number of tuples in "
+            err = FragmentationError("Specified target number of fragments {} is higher than the number of tuples in "
                                      "the registry: {}.".format(self._target_n_fragments, total_num_tuples))
+            self._logger.error(err)
+            raise err
 
         optimal_fragment_size = round(total_num_tuples / self._target_n_fragments)
 
@@ -151,14 +153,13 @@ class DefaultFragmenter(PFragmenter):
         for node_key, node_values in nodes.items():
             node_values.discard(items)
 
-    @staticmethod
-    def _form_fragment(registry_writer: PRegistryWriteClient,
+    def _form_fragment(self, registry_writer: PRegistryWriteClient,
                        new_frag_id: str,
                        tuples: Set[str],
                        optimal_fragment_size: int):
         if len(tuples) < optimal_fragment_size:
-            logging.warning("Forming a fragment based on intersecting tuples with a suboptimal length "
-                            "of {} instead of the optimal {}".format(len(tuples), optimal_fragment_size))
+            self._logger.warning("Forming a fragment based on intersecting tuples with a suboptimal length "
+                                 "of {} instead of the optimal {}".format(len(tuples), optimal_fragment_size))
         registry_writer.write_fragment_create(new_frag_id, tuples)
 
     @staticmethod

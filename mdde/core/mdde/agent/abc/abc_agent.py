@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Sequence, Union, Tuple, AnyStr
 import numpy as np
 
+from mdde.agent.abc import NodeAgentMapping
 from mdde.registry.protocol import PRegistryReadClient, PRegistryWriteClient
 
 
@@ -36,9 +37,9 @@ class ABCAgent(ABC):
             data_node_ids_set = set(data_node_ids)
             if len(data_node_ids_set) != len(data_node_ids):
                 raise ValueError("The agent data node ids list contains duplicates")
-            self._data_node_id: Tuple[str] = tuple(data_node_ids)
+            self._data_node_id: Tuple[str, ...] = tuple(data_node_ids)
         else:
-            self._data_node_id: Tuple[str] = (data_node_ids, )
+            self._data_node_id: Tuple[str, ...] = (data_node_ids, )
 
         # Read and write access to the registry.
         # These properties will have the implementation of the protocols assigned to them at the time of execution,
@@ -63,12 +64,16 @@ class ABCAgent(ABC):
         self._registry_write = registry_write
 
     @property
-    def get_data_node_ids(self) -> Tuple[str]:
+    def get_data_node_ids(self) -> Tuple[str, ...]:
         """
         Get the node ids associated with this agent
         :return:
         """
         return self._data_node_id
+
+    @property
+    def mapped_data_node_ids(self) -> Tuple[NodeAgentMapping, ...]:
+        return tuple(NodeAgentMapping(self.id(), node) for node in self.get_data_node_ids)
 
     @abstractmethod
     def get_actions(self) -> np.array:
@@ -79,10 +84,11 @@ class ABCAgent(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def filter_observation(self, full_observation: np.array) -> np.array:
+    def filter_observation(self, obs_descr: Tuple[NodeAgentMapping, ...], obs: np.array) -> np.array:
         """
         Get observation space for the specific agent
-        :param full_observation: full_observation: Full observation space provided by the environment
+        :param obs_descr: Observation space description
+        :param obs: full_observation: Full observation space provided by the environment
         :return: agents can have full or limited observation spaces. In case of the latter, provide the filtering logic
                  within this function and return a filtered out observation space
         """
