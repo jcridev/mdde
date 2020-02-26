@@ -76,9 +76,39 @@ class ABCAgent(ABC):
         return tuple(NodeAgentMapping(self.id(), node) for node in self.get_data_node_ids)
 
     @abstractmethod
-    def get_actions(self) -> np.array:
+    def get_actions(self) -> int:
         """
-        Get the list of action ids available to the agent
+        Get the number of actions from 0 to n, each discrete number within the range correspond to a specific action.
+        :return: number of actions
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def create_action_space(self,
+                            nodes: Tuple[NodeAgentMapping, ...],
+                            fragments: Sequence[str],
+                            obs: np.ndarray
+                            ) -> int:
+        """
+        Override this method to create action space associated with this agent.
+        When this method is invoked, attach_registry() method was already called so the agent already should have access
+        to the registry. Additionally, this method is parameterized with the full observation space that was generated
+        right after the initialization of the environment.
+
+        Actions provided by the agent can rely on the supplied parameters or be hard coded. Implement this method in
+        accordance to the simulated scenario.
+        :param nodes: Description of the observation space nodes
+        :param fragments: Ordered sequence of fragments
+        :param obs:
+        :return:
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def do_action(self, action_id: int):
+        """
+        Execute an action corresponding to the specified action id [0,self.get_actions())
+        :param action_id:
         :return:
         """
         raise NotImplementedError

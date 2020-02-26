@@ -93,7 +93,7 @@ class ABCScenario(ABC):
         raise NotImplementedError
 
     def get_full_allocation_observation(self, registry_read: PRegistryReadClient) \
-            -> Tuple[Tuple[NodeAgentMapping, ...], np.array]:
+            -> Tuple[Tuple[NodeAgentMapping, ...], Tuple[str, ...], np.ndarray]:
         """
         Generate full observation space of the scenario.
         Override this method in case you require custom logic of forming full observation space.
@@ -137,4 +137,4 @@ class ABCScenario(ABC):
             rows, cols = zip(*n_exists_pos)
             obs_full[rows, cols] = n_exist_val
 
-        return nodes, obs_full
+        return nodes, sorted_fragments, obs_full

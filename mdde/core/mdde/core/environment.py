@@ -1,13 +1,14 @@
 import logging
 from typing import Set, Tuple
 
+import numpy as np
+
 from mdde.agent.abc import NodeAgentMapping
 from mdde.core.exception import EnvironmentInitializationError
 from mdde.registry.container import RegistryResponseHelper
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.scenario.abc import ABCScenario
 from mdde.registry.enums import ERegistryMode
-import numpy as np
 
 
 class Environment:
@@ -47,9 +48,9 @@ class Environment:
         self._registry_write = registry_write
         self._registry_read = registry_read
 
-        self.verify_scenario()
+        self.activate_scenario()
 
-    def verify_scenario(self):
+    def activate_scenario(self):
         """
         Verify the current scenario and ensure it's basic correctness before the start of experiments
         """
@@ -59,6 +60,9 @@ class Environment:
             nodes_per_agent.append(set(agent.get_data_node_ids))
         if len(set.intersection(*nodes_per_agent)) > 0:
             raise ValueError("The same data node id can't be assigned to more than one agent at the time")
+        # Attach registry clients to the agents
+        for agent in self._scenario.get_agents():
+            agent.attach_registry(self._registry_read, self._registry_write)
 
     def initialize_registry(self):
         """
@@ -122,7 +126,7 @@ class Environment:
             raise err
         # Initialize the action space
         self._logger.info("Initializing action space per agent")
-
+        self._initialize_action_space()
         self._logger.info("Environment initialization is complete")
 
     def reset(self) -> Tuple[Tuple[NodeAgentMapping, ...], np.array]:
@@ -132,7 +136,8 @@ class Environment:
         reset_call_response = self._registry_ctrl.ctrl_reset()
         RegistryResponseHelper.raise_on_error(reset_call_response)
         # Retrieve the observations
-        return self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
+        nodes, fragments, allocation = self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
+        return nodes, allocation
 
     def step(self, action_n):
         """
@@ -154,7 +159,12 @@ class Environment:
         return obs_n, reward_n, done_n, info_n
 
     def _initialize_action_space(self):
-        agent_nodes, obs = self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
+        """
+        Initialize actions for agents
+        """
+        agent_nodes, fragments, obs = self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
+        for agent in self._scenario.get_agents():
+            agent.create_action_space(agent_nodes, fragments, obs)
 
     def _set_registry_mode(self, target_mode: ERegistryMode):
         """

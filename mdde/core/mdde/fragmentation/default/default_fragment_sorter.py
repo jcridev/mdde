@@ -1,4 +1,4 @@
-from typing import Sequence, List
+from typing import Sequence, Tuple
 
 from mdde.fragmentation.protocol import PFragmentSorter
 
@@ -9,5 +9,5 @@ class DefaultFragmentSorter(PFragmentSorter):
     Suitable for the scenarios where the number of fragments is static (fragmentation is executed once and the generated
     fragments do no change over the course of the scenario run).
     """
-    def sort(self, fragments: Sequence[str]) -> List[str]:
-        return sorted(fragments, key=lambda fragment: fragment)
+    def sort(self, fragments: Sequence[str]) -> Tuple[str, ...]:
+        return tuple(sorted(fragments, key=lambda fragment: fragment))
