@@ -45,7 +45,7 @@ class ABCAgent(ABC):
         # These properties will have the implementation of the protocols assigned to them at the time of execution,
         # Use these to create actions affecting the registry (write) and the agent observation space (read).
         self._registry_read: Union[PRegistryReadClient, None] = None
-        self._registry_write: Union[PRegistryReadClient, None] = None
+        self._registry_write: Union[PRegistryWriteClient, None] = None
 
     def id(self) -> AnyStr:
         """

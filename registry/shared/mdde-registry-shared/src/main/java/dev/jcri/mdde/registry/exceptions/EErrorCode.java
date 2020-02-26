@@ -1,9 +1,12 @@
 package dev.jcri.mdde.registry.exceptions;
 
+/**
+ * Catalog of error codes returned by registry exceptions
+ */
 public enum EErrorCode {
     /**
      * Value: 0
-     * Standard Java exception
+     * Standard Java exception (likely a code level issue, rather than a logical issue of the registry)
      */
     RUNTIME_ERROR(0x00),
     /**
@@ -74,8 +77,6 @@ public enum EErrorCode {
      * Value:2605
      */
     SEED_NON_EMPTY_REGISTRY(0x0A2D),
-
-
 
     /**
      * Value: 3100
