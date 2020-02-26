@@ -2,3 +2,4 @@ ycsb/
 target/
 temp/
 snapshots/
+debug/

@@ -10,7 +10,6 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
                      .format(REQUIRED_PYTHON, CURRENT_PYTHON))
     sys.exit(1)
 
-
 setup(
     name='mdde.integration.ray',
     version='0.1',
@@ -22,6 +21,14 @@ setup(
     license='MIT Licence',
     packages=find_namespace_packages(include=['mdde.integration.ray.*'], exclude=['mdde.test.*']),
 
-    installs_requires=['typing-extensions; python_version<"3.8"'],
+    installs_requires=['typing-extensions; python_version<"3.8"',
+                       'gym==0.16.0',
+                       'tensorflow==1.13.2',
+                       'tabulate==0.8.6',
+                       'requests==2.22.0',
+                       'opencv-python==4.1.1.26',
+                       'psutil==5.6.3',
+                       'lz4==2.2.1',
+                       'setproctitle==1.1.10'],
     zip_safe=False,
 )

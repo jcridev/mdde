@@ -1,11 +1,11 @@
 import logging
-from typing import Set, Tuple
+from typing import Set, Tuple, Dict
 
 import numpy as np
 
 from mdde.agent.abc import NodeAgentMapping
 from mdde.core.exception import EnvironmentInitializationError
-from mdde.registry.container import RegistryResponseHelper
+#from mdde.registry.container import RegistryResponseHelper
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.scenario.abc import ABCScenario
 from mdde.registry.enums import ERegistryMode
@@ -134,29 +134,58 @@ class Environment:
         # Call reset
         self._set_registry_mode(ERegistryMode.benchmark)
         reset_call_response = self._registry_ctrl.ctrl_reset()
-        RegistryResponseHelper.raise_on_error(reset_call_response)
+        #RegistryResponseHelper.raise_on_error(reset_call_response)
         # Retrieve the observations
         nodes, fragments, allocation = self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
         return nodes, allocation
 
-    def step(self, action_n):
-        """
+    debug_reward: float = 0.0  # TODO: Replace with the actual reward function
 
-        :param action_n:
+    def step(self, action_n: Dict[str, int])\
+            -> Tuple[Dict[int, np.ndarray], Dict[int, float]]:
+        """
+        Execute actions chosen for each agent, get resulted rewards and new observations
+        :param action_n: Dict['agent_id':action_id]
+        :return: Dict['agent_id':np.ndarray], Dict['agent_id':float]
+        """
+        # TODO: Return reward per agent
+        # execute actions
+        # TODO: Execute actions logic in the scenario
+
+        obs_n = self.observation_space
+        reward_n = {}
+
+        for agent in self._scenario.get_agents():
+            reward_n[agent.id] = self.debug_reward
+
+        self.debug_reward += 1.0  # TODO: Remove later
+
+        return obs_n, reward_n
+
+    @property
+    def observation_space(self) -> Dict[int, np.ndarray]:
+        """
+        Retrieve all observation spaces for all agents
         :return:
         """
         # TODO: Return observations per agent
-        # TODO: Return reward per agent
-        obs_n = []
-        reward_n = []
-        done_n = []
-        info_n = {'n': []}
+        # retrieve full observation space for the scenario
+        agent_nodes, fragments, obs = self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
+        obs_n: Dict[int, np.ndarray] = {}
+        for agent in self._scenario.get_agents():
+            obs_n[agent.id] = agent.filter_observation(agent_nodes, obs)
+        return obs_n
 
-        agents = self._scenario.get_agents()
-        for i, agent in enumerate(agents):
-            self._set_action(action_n[i], agent, self.action_space[i])
-
-        return obs_n, reward_n, done_n, info_n
+    @property
+    def action_space(self) -> Dict[int, int]:
+        """
+        Retrieve the action space per agent.
+        :return: Dict['agent_id', number_of_discrete_actions]
+        """
+        act_n: Dict[int, int] = {}
+        for agent in self._scenario.get_agents():
+            act_n[agent.id] = agent.get_actions()
+        return act_n
 
     def _initialize_action_space(self):
         """
@@ -165,6 +194,8 @@ class Environment:
         agent_nodes, fragments, obs = self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
         for agent in self._scenario.get_agents():
             agent.create_action_space(agent_nodes, fragments, obs)
+            self._logger.info("Agent '{}' initialized with the action space size: {}."
+                              .format(agent.id, agent.get_actions()))
 
     def _set_registry_mode(self, target_mode: ERegistryMode):
         """
@@ -185,4 +216,4 @@ class Environment:
                 set_bench_result = self._registry_ctrl.ctrl_set_shuffle_mode()
             else:
                 raise RuntimeError("Illegal registry mode switch attempt")
-            RegistryResponseHelper.raise_on_error(set_bench_result)
+            #RegistryResponseHelper.raise_on_error(set_bench_result)

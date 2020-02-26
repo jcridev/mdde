@@ -31,8 +31,10 @@ class EnvironmentTestCase(unittest.TestCase):
         config_container.read(self.TEST_CONFIG_FILE)
 
         agents = list()
+        idx = 0
         for node in config_container.get_nodes():
-            agents.append(DefaultAgent(node.id, node.id))
+            agents.append(DefaultAgent(node.id, idx, node.id))
+            idx += 1
 
         # Create scenario
         scenario = DefaultScenario(100, agents)

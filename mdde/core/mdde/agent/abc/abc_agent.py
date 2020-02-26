@@ -13,20 +13,23 @@ class ABCAgent(ABC):
     the read instructions of the
     """
     @abstractmethod
-    def __init__(self, agent_id: AnyStr, data_node_ids: Union[Sequence[str], str]):
+    def __init__(self,
+                 agent_name: AnyStr,
+                 agent_id: int,
+                 data_node_ids: Union[Sequence[str], str]
+                 ):
         """
         Constructor
-        :param agent_id: Unique agent id (name)
+        :param agent_name: Agent name
         :param data_node_ids: A set of the data node IDs associated with the agent
+        :param agent_id
         """
         if agent_id is None:
-            raise TypeError("Agent ID must of type String")
+            raise TypeError("Agent ID must of type int")
         if data_node_ids is None:
             raise TypeError("Data node ID must of type String")
-
-        self._agent_id: AnyStr = agent_id.strip()
-        if not self._agent_id:
-            raise ValueError("Agent ID can't be empty")
+        self._agent_name: agent_name
+        self._agent_id: int = agent_id
 
         # At least one data node must be specified
         if len(data_node_ids) < 1:
@@ -47,7 +50,8 @@ class ABCAgent(ABC):
         self._registry_read: Union[PRegistryReadClient, None] = None
         self._registry_write: Union[PRegistryWriteClient, None] = None
 
-    def id(self) -> AnyStr:
+    @property
+    def id(self) -> int:
         """
         Get agent id
         :return: String agent id
@@ -73,7 +77,7 @@ class ABCAgent(ABC):
 
     @property
     def mapped_data_node_ids(self) -> Tuple[NodeAgentMapping, ...]:
-        return tuple(NodeAgentMapping(self.id(), node) for node in self.get_data_node_ids)
+        return tuple(NodeAgentMapping(self.id, node) for node in self.get_data_node_ids)
 
     @abstractmethod
     def get_actions(self) -> int:
@@ -114,7 +118,7 @@ class ABCAgent(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def filter_observation(self, obs_descr: Tuple[NodeAgentMapping, ...], obs: np.array) -> np.array:
+    def filter_observation(self, obs_descr: Tuple[NodeAgentMapping, ...], obs: np.array) -> np.ndarray:
         """
         Get observation space for the specific agent
         :param obs_descr: Observation space description

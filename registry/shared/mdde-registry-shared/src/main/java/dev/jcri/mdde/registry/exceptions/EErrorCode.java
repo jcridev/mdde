@@ -96,7 +96,7 @@ public enum EErrorCode {
 
     private final int _errorCode;
 
-    private EErrorCode(int errorCode){
+    EErrorCode(int errorCode){
         _errorCode = errorCode;
     }
 

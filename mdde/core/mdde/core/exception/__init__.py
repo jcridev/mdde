@@ -1,4 +1,4 @@
 from .mdde_error import MddeError
-from .fragment_meta_missing import FragmentInstanceMissingMetaError
-from .fragment_property_missing import FragmentInstanceMissingPropertyError
+from .registry_error_codes import RegistryErrorCodes
+from .mdde_registry_error import MddeRegistryError
 from .env_init_error import EnvironmentInitializationError

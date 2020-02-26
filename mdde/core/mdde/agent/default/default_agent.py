@@ -2,14 +2,14 @@ from typing import List, Tuple, Sequence, NamedTuple, Union
 
 import numpy as np
 
-from mdde.agent.abc import ABCAgent, NodeAgentMapping
 from mdde.registry.container import RegistryResponseHelper
+from mdde.agent.abc import ABCAgent, NodeAgentMapping
 
 
 class DefaultAgent(ABCAgent):
 
-    def __init__(self, agent_id: str, data_node_ids: List[str]):
-        super().__init__(agent_id, data_node_ids)
+    def __init__(self, agent_name: str, agent_id: int, data_node_ids: List[str]):
+        super().__init__(agent_name, agent_id, data_node_ids)
         self._actions: Union[np.ndarray, None] = None
 
     class Action(NamedTuple):
@@ -28,11 +28,12 @@ class DefaultAgent(ABCAgent):
                             ) -> int:
         """
         Default agent can remove fragment from self and can also copy fragment from other to self.
-        Action space: 1 + (n_f*f)+(n_o*2*f) + (a-1)*n*f,
+        Action space: 1 + f*n_f*n_o + f*n_o*n_o + f*n_o,
         where f is the number of fragments, n_f number of foreign nodes, n_o number of own nodes
         0 - do nothing
-        (n*f) - remove from self
-        (a-1)*n*f - copy from others
+        f*n_o - remove from self
+        f*n_o*n_o - copy within self
+        f*n_f*n_o - copy from others
         We assume that no fragments are created or fully removed without a trace for the default agent.
         """
         a_actions = np.empty(1 + len(nodes) * len(fragments), dtype=object)
@@ -92,7 +93,7 @@ class DefaultAgent(ABCAgent):
                                       selected_action.node_destination_id,
                                       selected_action.fragment_id)
 
-    def filter_observation(self, obs_descr: Tuple[NodeAgentMapping, ...], obs: np.array) -> np.array:
+    def filter_observation(self, obs_descr: Tuple[NodeAgentMapping, ...], obs: np.ndarray) -> np.ndarray:
         """
         Return full observation space
         """
@@ -100,8 +101,8 @@ class DefaultAgent(ABCAgent):
 
     def _invoke_copy_to_self(self, source_node: str, destination_node: str, fragment: str):
         copy_result = self._registry_write.write_fragment_replicate(fragment, source_node, destination_node)
-        RegistryResponseHelper.raise_on_error(copy_result)
+        #RegistryResponseHelper.raise_on_error(copy_result)
 
     def _invoke_delete_from_self(self, node: str, fragment: str):
         delete_result = self._registry_write.write_fragment_delete_exemplar(fragment, node)
-        RegistryResponseHelper.raise_on_error(delete_result)
+        #RegistryResponseHelper.raise_on_error(delete_result)

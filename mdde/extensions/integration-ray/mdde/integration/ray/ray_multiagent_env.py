@@ -1,11 +1,25 @@
+from typing import Dict
+
+from gym.spaces import Discrete, Box, MultiBinary
 from ray import rllib
+import numpy as np
+
+from mdde.agent.default import DefaultAgent
+from mdde.config import ConfigRegistry
+from mdde.core import Environment
+from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
+from mdde.registry.tcp import RegistryClientTCP
+from mdde.scenario.default import DefaultScenario
 
 
-# TODO: Make documentation examples MDDE specific (now these are copies from the Ray documentation)
 class MddeMultiAgentEnv(rllib.MultiAgentEnv):
     """
     https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py
     """
+
+    # TODO: Make documentation examples MDDE specific (now these are copies from the Ray documentation)
+    def __init__(self, **kvargs):
+        self._env = self._make_env(**kvargs)
 
     def reset(self):
         """
@@ -18,7 +32,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
                     "traffic_light_1": [0, 3, 5, 1],
                 }
         """
-        pass
+        self._env.reset()
 
     def step(self, action_dict):
         """
@@ -60,4 +74,49 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
                                     "car_1": {},  # info for car_1
                                 }
         """
-        pass
+        return self._env.step(action_dict)
+
+    @property
+    def observation_space_dict(self) -> Dict[int, MultiBinary]:
+        obs_n = {}
+        for k, v in self._env.observation_space.items():
+            obs_n[k] = MultiBinary(v)  # Currently not supported by Ray MADDPG
+            #obs_n[k] = Box(low=np.zeros((space.n,)), high=np.ones((space.n,)))
+        return obs_n
+
+    @property
+    def action_space_dict(self) -> Dict[int, Discrete]:
+        act_n: Dict[int, Discrete] = {}
+        for k, v in self._env.action_space.items():
+            act_n[k] = Discrete(v)
+
+        return act_n
+
+    def _make_env(self, host: str, port: int, config: str) -> Environment:
+        # TODO: Configurable scenario initialization
+
+        # Create Registry client
+        tcp_client = RegistryClientTCP(host, port)
+        read_client: PRegistryReadClient = tcp_client
+        write_client: PRegistryWriteClient = tcp_client
+        ctrl_client: PRegistryControlClient = tcp_client
+
+        # Create agents
+        config_container = ConfigRegistry()
+        config_container.read(config)
+
+        agents = list()
+        idx = 0
+        for node in config_container.get_nodes():
+            agents.append(DefaultAgent(node.id, idx, node.id))
+            idx += 1
+
+        # Create scenario
+        scenario = DefaultScenario(100, agents)
+
+        # Create environment
+        environment = Environment(scenario, ctrl_client, write_client, read_client)
+        # Re-generate data
+        environment.initialize_registry()
+
+        return environment

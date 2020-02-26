@@ -14,9 +14,8 @@ class ABCScenario(ABC):
     Subclass this class overriding provided abstract methods to define a new scenario for the environment
     """
 
-    # TODO: Declaration of the agents
-    #   TODO: actions definitions
     # TODO: Declaration of the meta values (global and local)
+    # TODO: Reward function definition
 
     _DEFAULT_NAME = 'Unnamed scenario'
 
@@ -115,7 +114,7 @@ class ABCScenario(ABC):
         obs_nodes = fragment_catalog['nodes']
         nodes = tuple(na for a in self.get_agents() for na in a.mapped_data_node_ids)
 
-        obs_full = np.zeros((len(nodes), len(sorted_fragments)), dtype=np.bool)
+        obs_full = np.zeros((len(nodes), len(sorted_fragments)), dtype=np.int8)
         for node in nodes:
             obs_node_id = obs_nodes.get(node.node_id, None)
             if obs_node_id is None:
@@ -128,7 +127,7 @@ class ABCScenario(ABC):
                                      node.node_id, node.agent_id)
                 continue
             n_y = nodes.index(node)
-            n_exist_val = np.ones((len(obs_node_frags),), dtype=np.bool)
+            n_exist_val = np.ones((len(obs_node_frags),), dtype=np.int8)
             n_exists_pos = list()
             for obs_node_frag in obs_node_frags:
                 obs_node_frag_id = obs_frags.get(obs_node_frag)
