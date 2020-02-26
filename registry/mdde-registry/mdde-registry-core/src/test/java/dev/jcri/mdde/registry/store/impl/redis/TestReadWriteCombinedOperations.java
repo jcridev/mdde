@@ -2,7 +2,7 @@ package dev.jcri.mdde.registry.store.impl.redis;
 
 import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
-import dev.jcri.mdde.registry.store.exceptions.IllegalRegistryActionException;
+import dev.jcri.mdde.registry.store.exceptions.action.IllegalRegistryActionException;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
 import org.junit.jupiter.api.BeforeAll;

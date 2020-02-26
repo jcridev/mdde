@@ -3,6 +3,7 @@ package dev.jcri.mdde.registry.store.impl;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.IWriteCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.*;
+import dev.jcri.mdde.registry.store.exceptions.action.*;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -166,8 +167,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
         try {
             var currentNodes = readCommandHandler.getNodes();
             if(currentNodes != null && !currentNodes.isEmpty()){
-                throw new IllegalRegistryActionException("Nodes population is now allowed in non-empty registry",
-                        IllegalRegistryActionException.IllegalActions.AttemptToSeedNonEmptyRegistry);
+                throw new SeedNonEmptyRegistryException("Nodes population is now allowed in non-empty registry");
             }
 
             return runPopulateNodes((Set<String>)nodeIds);
@@ -279,8 +279,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
         }
 
         if(relevantNodes.size() == 0){
-            throw new IllegalRegistryActionException("Fragments can only be formed from colocated exiting tuples",
-                    IllegalRegistryActionException.IllegalActions.FormingFragmentFromNonColocatedTuples);
+            throw new NonColocatedFragmentFormationException("Fragments can only be formed from colocated exiting tuples");
         }
 
         return runFormFragment(tupleIds, fragmentId, relevantNodes);
@@ -325,12 +324,11 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
             throw new UnknownEntityIdException(RegistryEntityType.Node, destinationNodeId);
         }
         if(sourceNodeId.equals(destinationNodeId)){
-            throw new IllegalRegistryActionException("Source and destination nodes can't be the same",
-                    IllegalRegistryActionException.IllegalActions.LocalFragmentReplication);
+            throw new LocalFragmentReplicationException("Source and destination nodes can't be the same");
         }
         if(readCommandHandler.getIsNodeContainsFragment(destinationNodeId, fragmentId)){
-            throw new IllegalRegistryActionException(String.format("Destination node %s already contains fragment %s",
-                    destinationNodeId, fragmentId), IllegalRegistryActionException.IllegalActions.DuplicateFragmentReplication);
+            throw new DuplicateFragmentReplicationException(
+                    String.format("Destination node %s already contains fragment %s", destinationNodeId, fragmentId));
         }
         return runReplicateFragment(fragmentId, sourceNodeId, destinationNodeId);
     }
@@ -341,8 +339,7 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
         if(fragmentCount == 0){
             throw new UnknownEntityIdException(RegistryEntityType.Fragment, fragmentId);
         } else if (fragmentCount == 1){
-            throw new IllegalRegistryActionException(String.format("Attempted to remove a unique fragment %s", fragmentId),
-                    IllegalRegistryActionException.IllegalActions.UniqueFragmentRemoval);
+            throw new UniqueFragmentRemovalException(String.format("Attempted to remove a unique fragment %s", fragmentId));
         }
         if (!readCommandHandler.getIsNodeExists(nodeId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);

@@ -4,6 +4,7 @@ import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.IWriteCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.*;
+import dev.jcri.mdde.registry.store.exceptions.action.IllegalRegistryActionException;
 import dev.jcri.mdde.registry.store.queue.IDataShuffleQueue;
 import dev.jcri.mdde.registry.store.queue.actions.DataCopyAction;
 import dev.jcri.mdde.registry.store.queue.actions.DataDeleteAction;
@@ -53,7 +54,7 @@ public class WriteCommandResponder {
 
     public boolean formFragment(final Set<String> tupleIds, final String fragmentId)
             throws UnknownEntityIdException, WriteOperationException, DuplicateEntityRecordException,
-            IllegalRegistryActionException{
+            IllegalRegistryActionException {
         logger.trace("Responding to WRITE: {}", EWriteCommand.FORM_FRAGMENT.toString());
         return _writeHandler.formFragment(tupleIds, fragmentId);
     }

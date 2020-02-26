@@ -2,11 +2,11 @@ package dev.jcri.mdde.registry.control.command.sequential;
 
 import dev.jcri.mdde.registry.control.CommandParserWriteBase;
 import dev.jcri.mdde.registry.control.exceptions.CommandException;
-import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
 import dev.jcri.mdde.registry.server.responders.WriteCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.exceptions.*;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
+import dev.jcri.mdde.registry.store.exceptions.action.IllegalRegistryActionException;
 
 import java.util.List;
 import java.util.Objects;

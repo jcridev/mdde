@@ -22,10 +22,6 @@ public enum EErrorCode {
     UNKNOWN_ENTITY_ID(0x0835),
 
     /**
-     * Value:2200
-     */
-    ILLEGAL_REGISTRY_ACTION(0x0898),
-    /**
      * Value: 2201
      */
     UNKNOWN_COMMAND(0x0899),
@@ -56,6 +52,30 @@ public enum EErrorCode {
      * Value: 2501
      */
     INCORRECT_REGISTRY_MODE_FOR_OPERATION(0x09C5),
+
+
+    /**
+     * Value:2601
+     */
+    DUPLICATE_FRAGMENT_REPLICATION(0x0A29),
+    /**
+     * Value:2602
+     */
+    LOCAL_FRAGMENT_REPLICATION(0x0A2A),
+    /**
+     * Value:2603
+     */
+    NON_COLOCATED_FRAGMENT_FORMATION(0x0A2B),
+    /**
+     * Value:2604
+     */
+    UNIQUE_FRAGMENT_REMOVAL(0x0A2C),
+    /**
+     * Value:2605
+     */
+    SEED_NON_EMPTY_REGISTRY(0x0A2D),
+
+
 
     /**
      * Value: 3100

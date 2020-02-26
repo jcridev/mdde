@@ -5,7 +5,7 @@ import dev.jcri.mdde.registry.data.IDataShuffler;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
-import dev.jcri.mdde.registry.store.exceptions.IllegalRegistryActionException;
+import dev.jcri.mdde.registry.store.exceptions.action.IllegalRegistryActionException;
 import dev.jcri.mdde.registry.store.exceptions.IllegalRegistryModeException;
 import dev.jcri.mdde.registry.store.exceptions.RegistryModeAlreadySetException;
 import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;

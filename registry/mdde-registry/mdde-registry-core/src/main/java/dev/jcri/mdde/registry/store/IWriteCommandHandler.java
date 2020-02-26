@@ -1,7 +1,7 @@
 package dev.jcri.mdde.registry.store;
 
 import dev.jcri.mdde.registry.store.exceptions.DuplicateEntityRecordException;
-import dev.jcri.mdde.registry.store.exceptions.IllegalRegistryActionException;
+import dev.jcri.mdde.registry.store.exceptions.action.IllegalRegistryActionException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
 import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
 
