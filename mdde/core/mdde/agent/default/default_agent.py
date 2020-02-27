@@ -2,7 +2,7 @@ from typing import List, Tuple, Sequence, NamedTuple, Union
 
 import numpy as np
 
-from mdde.registry.container import RegistryResponseHelper
+#from mdde.registry.container import RegistryResponseHelper
 from mdde.agent.abc import ABCAgent, NodeAgentMapping
 
 

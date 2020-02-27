@@ -45,7 +45,14 @@ class EnvironmentTestCase(unittest.TestCase):
         environment.initialize_registry()
 
         # Reset
-        environment.reset()
+        r1, r2 = environment.reset()
+
+        # Retrieve observation and action spaces
+        osb = environment.observation_space
+        act = environment.action_space
+
+        # Make step
+        environment.step(action_n={})
 
 
 if __name__ == '__main__':

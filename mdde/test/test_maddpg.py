@@ -35,7 +35,7 @@ class MaddpgTestCases(unittest.TestCase):  #
     GOOD_POLICY = 'maddpg'
 
     def setUp(self) -> None:
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # {'0': 'DEBUG', '1': 'INFO', '2': 'WARNING', '3': 'ERROR'}
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'  # {'0': 'DEBUG', '1': 'INFO', '2': 'WARNING', '3': 'ERROR'}
 
     class CustomStdOut(object):
         def _log_result(self, result):
@@ -113,7 +113,7 @@ class MaddpgTestCases(unittest.TestCase):  #
                     "episodes_total": self.NUM_EPISODES,
                 },
                 "checkpoint_freq": 0,
-                "local_dir": self.TEST_RESULT_DIR,
+                "local_dir": result_dur_full_path,
                 "restore": False,
                 "config": {
                     # === Log ===

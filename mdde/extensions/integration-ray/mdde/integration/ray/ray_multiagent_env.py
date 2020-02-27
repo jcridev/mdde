@@ -1,6 +1,6 @@
-from typing import Dict
+from typing import Dict, Union
 
-from gym.spaces import Discrete, Box, MultiBinary
+from gym.spaces import Discrete, Box
 from ray import rllib
 import numpy as np
 
@@ -32,7 +32,11 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
                     "traffic_light_1": [0, 3, 5, 1],
                 }
         """
-        self._env.reset()
+        obs = self._env.reset()
+        obs_n = {}
+        for k, v in obs.items():
+            obs_n[k] = v.astype(np.float32).flatten()
+        return obs_n
 
     def step(self, action_dict):
         """
@@ -74,14 +78,19 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
                                     "car_1": {},  # info for car_1
                                 }
         """
-        return self._env.step(action_dict)
+        obs, reward = self._env.step(action_dict)
+        obs_n = {}
+        for k, v in obs.items():
+            obs_n[k] = v.astype(np.float32).flatten()
+        return obs_n, reward, {}, {}
 
     @property
-    def observation_space_dict(self) -> Dict[int, MultiBinary]:
+    def observation_space_dict(self) -> Dict[int, Union[Box]]:
         obs_n = {}
+        # MultiBinary(v) Currently not supported by Ray MADDPG, converting to Box
         for k, v in self._env.observation_space.items():
-            obs_n[k] = MultiBinary(v)  # Currently not supported by Ray MADDPG
-            #obs_n[k] = Box(low=np.zeros((space.n,)), high=np.ones((space.n,)))
+            v_float = v.astype(np.float32).flatten()
+            obs_n[k] = Box(low=0., high=1., shape=v_float.shape)
         return obs_n
 
     @property

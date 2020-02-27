@@ -5,7 +5,7 @@ import numpy as np
 
 from mdde.agent.abc import NodeAgentMapping
 from mdde.core.exception import EnvironmentInitializationError
-#from mdde.registry.container import RegistryResponseHelper
+from mdde.registry.container import RegistryResponseHelper
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.scenario.abc import ABCScenario
 from mdde.registry.enums import ERegistryMode
@@ -129,15 +129,15 @@ class Environment:
         self._initialize_action_space()
         self._logger.info("Environment initialization is complete")
 
-    def reset(self) -> Tuple[Tuple[NodeAgentMapping, ...], np.array]:
+    def reset(self) -> Dict[int, np.ndarray]:
         self._logger.info("Resetting the environment")
         # Call reset
         self._set_registry_mode(ERegistryMode.benchmark)
         reset_call_response = self._registry_ctrl.ctrl_reset()
-        #RegistryResponseHelper.raise_on_error(reset_call_response)
+        RegistryResponseHelper.raise_on_error(reset_call_response)
         # Retrieve the observations
-        nodes, fragments, allocation = self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
-        return nodes, allocation
+        #nodes, fragments, allocation = self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
+        return self.observation_space
 
     debug_reward: float = 0.0  # TODO: Replace with the actual reward function
 
@@ -216,4 +216,4 @@ class Environment:
                 set_bench_result = self._registry_ctrl.ctrl_set_shuffle_mode()
             else:
                 raise RuntimeError("Illegal registry mode switch attempt")
-            #RegistryResponseHelper.raise_on_error(set_bench_result)
+            RegistryResponseHelper.raise_on_error(set_bench_result)

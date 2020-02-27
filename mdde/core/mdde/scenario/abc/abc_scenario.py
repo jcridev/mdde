@@ -114,7 +114,8 @@ class ABCScenario(ABC):
         obs_nodes = fragment_catalog['nodes']
         nodes = tuple(na for a in self.get_agents() for na in a.mapped_data_node_ids)
 
-        obs_full = np.zeros((len(nodes), len(sorted_fragments)), dtype=np.int8)
+        obs_dtype = np.int8 # https://numpy.org/devdocs/user/basics.types.html
+        obs_full = np.zeros((len(nodes), len(sorted_fragments)), dtype=obs_dtype)
         for node in nodes:
             obs_node_id = obs_nodes.get(node.node_id, None)
             if obs_node_id is None:
@@ -127,7 +128,7 @@ class ABCScenario(ABC):
                                      node.node_id, node.agent_id)
                 continue
             n_y = nodes.index(node)
-            n_exist_val = np.ones((len(obs_node_frags),), dtype=np.int8)
+            n_exist_val = np.ones((len(obs_node_frags),), dtype=obs_dtype)
             n_exists_pos = list()
             for obs_node_frag in obs_node_frags:
                 obs_node_frag_id = obs_frags.get(obs_node_frag)

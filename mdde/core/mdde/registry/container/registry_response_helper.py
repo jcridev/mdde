@@ -1,5 +1,5 @@
-from . import RegistryResponse
-from mdde.registry.exceptions import RegistryResponseError
+# from mdde.registry.exceptions import RegistryResponseError
+from mdde.registry.container import RegistryResponse
 
 
 class RegistryResponseHelper:
@@ -14,9 +14,9 @@ class RegistryResponseHelper:
         :param response: RegistryResponse
         """
         try:
-            if response.failed:
-                raise RegistryResponseError(response.error if response.error is not None
-                                            else 'Registry returned undefined error')
+            if response.failed:  # RegistryResponseError
+                raise ValueError(response.error if response.error is not None
+                                 else 'Registry returned undefined error')
         except AttributeError as aex:
             raise TypeError('Expected response type is an instance of RegistryResponse class, '
                             'or an object containing a properties "failed" and "error"') from aex
