@@ -81,7 +81,7 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
     }
 
     @Override
-    protected boolean processFlushAll() throws MddeRegistryException {
+    protected boolean processFlushAll() throws MddeRegistryException, IOException {
         return _stateCommandHandler.flushAll();
     }
 

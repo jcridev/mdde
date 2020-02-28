@@ -9,6 +9,7 @@ import dev.jcri.mdde.registry.store.exceptions.action.IllegalRegistryActionExcep
 import dev.jcri.mdde.registry.store.exceptions.IllegalRegistryModeException;
 import dev.jcri.mdde.registry.store.exceptions.RegistryModeAlreadySetException;
 import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
+import dev.jcri.mdde.registry.store.exceptions.snapshot.FailedToDeleteSnapshot;
 import dev.jcri.mdde.registry.store.queue.IDataShuffleQueue;
 import dev.jcri.mdde.registry.store.queue.actions.DataCopyAction;
 import dev.jcri.mdde.registry.store.queue.actions.DataDeleteAction;
@@ -264,7 +265,7 @@ public final class RegistryStateCommandHandler {
      * Completely erase all records from the Registry and from the Data nodes
      * @return
      */
-    public synchronized boolean flushAll() throws MddeRegistryException {
+    public synchronized boolean flushAll() throws MddeRegistryException, IOException {
         _commandExecutionLock.lock();
         try {
             if (_registryState != ERegistryState.shuffle) {
@@ -274,7 +275,12 @@ public final class RegistryStateCommandHandler {
             _dataShuffler.flushData();
             _registryStoreManager.flushAllData();
             _benchmarkRunner.flushData();
+            flushSnapshots();
             return true;
+        }
+        catch (SQLException ex){
+            logger.error("Unable to flush snapshots, SQLite error.", ex);
+            throw new FailedToDeleteSnapshot(ex);
         }
         catch (Exception ex){
             logger.error("Failed flushing all", ex);

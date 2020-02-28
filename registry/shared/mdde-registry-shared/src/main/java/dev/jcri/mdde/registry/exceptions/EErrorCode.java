@@ -56,6 +56,12 @@ public enum EErrorCode {
      */
     INCORRECT_REGISTRY_MODE_FOR_OPERATION(0x09C5),
 
+    /**
+     * Unable to remove snapshot
+     * Value: 2540
+     */
+    FAILED_TO_DELETE_SNAPSHOT(0x09EC),
+
 
     /**
      * Value:2601

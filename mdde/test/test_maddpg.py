@@ -19,11 +19,11 @@ class MaddpgTestCases(unittest.TestCase):  #
     REGISTRY_PORT = 8942
     TEST_CONFIG_FILE = '../../test/registry_config.yml'
 
-    TEST_RESULT_DIR = '../../test/debug/result'
+    TEST_RESULT_DIR = '/mnt/hdd-a500/Temp/debug/result' #'../../test/debug/result'
     """
     For tests, make sure "TEST_TEMP_DIR" not too long for the plasma store, otherwise ray will fail
     """
-    TEST_TEMP_DIR = '/mnt/hdd-a500/Temp'  #'../../test/debug/temp'
+    TEST_TEMP_DIR = '/mnt/hdd-a500/Temp/debug/temp'  #'../../test/debug/temp'
 
     NUM_EPISODES = 1000
     EPISODE_LEN = 25

@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
+/**
+ * Valid YCSB workloads known by MDDE
+ */
 public enum EYCSBWorkloadCatalog {
     READ_10000("read10000", "/benchmark/ycsb/workload_read_10000");
 

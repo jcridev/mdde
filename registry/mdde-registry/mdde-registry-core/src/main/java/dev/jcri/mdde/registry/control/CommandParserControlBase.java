@@ -79,7 +79,7 @@ public abstract class CommandParserControlBase<TOut, TArgs>
 
     protected abstract boolean processLoadDataCommand(TArgs arguments) throws MddeRegistryException;
 
-    protected abstract boolean processFlushAll() throws MddeRegistryException;
+    protected abstract boolean processFlushAll() throws MddeRegistryException, IOException;
 
     protected abstract String processCreateSnapshot(TArgs arguments) throws IOException, CommandException;
 

@@ -6,6 +6,13 @@ import dev.jcri.mdde.registry.shared.store.response.TupleCatalog;
 
 import java.io.Closeable;
 
+/**
+ * During the benchmark run, this registry plays a role of a cluster controller node, this interface provides an
+ * interface allowing location of tuples within the cluster according to our own custom logic for read operations.
+ *
+ * Synthetic nature of such system allows us to abstract from the real world databases heuristic optimizations and
+ * concentrate on the learners performance only.
+ */
 public interface IReadOnlyTupleLocator extends Closeable {
     /**
      * Get Node Id which is most suitable for reading a tuple from. Even if tuple is replicated on multiple nodes, we
@@ -22,7 +29,7 @@ public interface IReadOnlyTupleLocator extends Closeable {
     /**
      * When the read operation is complete from a node Id, notify the locator by calling this functions.
      * It can be used for statistics gathering purposes or internal load balancing purposes
-     * @param nodeId
+     * @param nodeId Node Id
      */
     void notifyReadFinished(String nodeId) throws KeyNotFoundException;
 

@@ -3,7 +3,8 @@ package dev.jcri.mdde.registry.benchmark.ycsb.cli;
 import java.util.Scanner;
 
 /**
- * Parse YCSB output that can potentially be interesting for us
+ * Parse YCSB output that can potentially be interesting for us.
+ * Compatibility tested with YCSB 17,18.
  */
 public class YCSBOutputParser {
     /**
