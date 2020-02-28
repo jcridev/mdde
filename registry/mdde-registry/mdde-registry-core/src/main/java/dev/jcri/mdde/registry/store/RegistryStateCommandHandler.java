@@ -349,7 +349,7 @@ public final class RegistryStateCommandHandler {
             throw new NotDirectoryException(normalizedPath);
         }
         boolean mkdirsRes = snapDirFile.mkdirs();
-        logger.trace("Create snapshot, snapshot directory created: {}", mkdirsRes);
+        logger.trace("New snapshot directory was created: {}", mkdirsRes);
         return normalizedPath;
     }
 

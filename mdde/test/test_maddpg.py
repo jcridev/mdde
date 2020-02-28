@@ -85,15 +85,19 @@ class MaddpgTestCases(unittest.TestCase):  #
 
         # generate policies based on the created environment instance
         def gen_policy(i):
+            use_local_critic = [
+                self.ADV_POLICY == "ddpg" if i < 0 else
+                self.GOOD_POLICY == "ddpg" for i in range(4)
+            ]
             return (
                 None,
                 env_instance.observation_space_dict[i],
                 env_instance.action_space_dict[i],
                 {
                     "agent_id": i,
-                    "use_local_critic": False,
-                    "obs_space_dict": env_instance.observation_space_dict[i],
-                    "act_space_dict": env_instance.action_space_dict[i],
+                    "use_local_critic": use_local_critic[i],
+                    "obs_space_dict": env_instance.observation_space_dict,
+                    "act_space_dict": env_instance.action_space_dict,
                 }
             )
 
@@ -132,9 +136,9 @@ class MaddpgTestCases(unittest.TestCase):  #
                     # --- Model ---
                     "good_policy": self.GOOD_POLICY,
                     "adv_policy": self.ADV_POLICY,
-                    "actor_hiddens": 64 * 2,
+                    "actor_hiddens": [64] * 2,
                     "actor_hidden_activation": "relu",
-                    "critic_hiddens": 64 * 2,
+                    "critic_hiddens": [64] * 2,
                     "critic_hidden_activation": "relu",
                     "n_step": 1,
                     "gamma": 0.95,
