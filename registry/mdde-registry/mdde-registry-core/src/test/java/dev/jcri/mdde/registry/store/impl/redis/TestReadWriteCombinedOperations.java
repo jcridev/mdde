@@ -2,6 +2,7 @@ package dev.jcri.mdde.registry.store.impl.redis;
 
 import dev.jcri.mdde.registry.configuration.redis.RegistryStoreConfigRedis;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
+import dev.jcri.mdde.registry.store.exceptions.action.DuplicateFragmentReplicationException;
 import dev.jcri.mdde.registry.store.exceptions.action.IllegalRegistryActionException;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
@@ -233,7 +234,7 @@ public class TestReadWriteCombinedOperations {
             try {
                 redisWriter.replicateFragment(nlrFragment, nlrNodeA, nlrNodeB);
             } catch (IllegalRegistryActionException e){
-                assertEquals(IllegalRegistryActionException.IllegalActions.DuplicateFragmentReplication, e.getAction());
+                assertTrue(e instanceof DuplicateFragmentReplicationException);
                 nlrDuplicateExceptionThrown = true;
             }
             catch (MddeRegistryException e) {
