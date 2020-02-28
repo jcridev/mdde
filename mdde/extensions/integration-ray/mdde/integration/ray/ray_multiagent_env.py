@@ -17,7 +17,6 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
     https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py
     """
 
-    # TODO: Make documentation examples MDDE specific (now these are copies from the Ray documentation)
     def __init__(self, **kvargs):
         self._env = self._make_env(**kvargs)
 
@@ -92,8 +91,12 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
 
     @property
     def observation_space_dict(self) -> Dict[int, Union[Box]]:
+        """
+        Environment observation space shape
+        :return: Dictionary containing the shape of the observation space per agent
+        """
         obs_n = {}
-        # MultiBinary(v) Currently not supported by Ray MADDPG, converting to Box
+        # MultiBinary(v) Currently not supported by Ray MADDPG, making a Box instead
         for k, v in self._env.observation_space.items():
             v_float = v.astype(np.float32).flatten()
             obs_n[k] = Box(low=0., high=1., shape=v_float.shape)
@@ -101,6 +104,10 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
 
     @property
     def action_space_dict(self) -> Dict[int, Discrete]:
+        """
+        Environment action space shape
+        :return: Dictionary containing the shape of the action space per agent
+        """
         act_n: Dict[int, Discrete] = {}
         for k, v in self._env.action_space.items():
             act_n[k] = Discrete(v)

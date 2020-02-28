@@ -5,7 +5,7 @@ import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.Benchm
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
-import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistryAllocation;
 
 import java.util.List;
 import java.util.Set;
@@ -43,7 +43,7 @@ public class ResponseSerializerPassThrough extends ResponseSerializerBase<Object
     }
 
     @Override
-    public Object serialize(FullRegistry value) throws ResponseSerializationException {
+    public Object serialize(FullRegistryAllocation value) throws ResponseSerializationException {
         return value;
     }
 

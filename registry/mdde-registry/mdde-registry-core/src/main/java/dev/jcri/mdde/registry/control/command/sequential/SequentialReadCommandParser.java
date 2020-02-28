@@ -6,7 +6,7 @@ import dev.jcri.mdde.registry.control.exceptions.CommandException;
 import dev.jcri.mdde.registry.server.responders.ReadCommandResponder;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
-import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistryAllocation;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 
@@ -27,7 +27,7 @@ public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, Lis
         _readCommandHandler = readCommandHandler;
     }
 
-    protected FullRegistry processGetFullRegistryCommand() throws ReadOperationException {
+    protected FullRegistryAllocation processGetFullRegistryCommand() throws ReadOperationException {
         return _readCommandHandler.getFullRegistry();
     }
 

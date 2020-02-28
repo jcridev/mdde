@@ -3,7 +3,7 @@ package dev.jcri.mdde.registry.shared.commands.containers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerJson;
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
-import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistryAllocation;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -94,7 +94,7 @@ public class TestCommandResponseSerialization {
         secondNodeFragments.put("Fragment ID 3", new HashSet<>(Arrays.asList("Item 5", "Item 6")));
         items.put("Node ID 2",secondNodeFragments);
 
-        var expectedResult = new FullRegistry(items);
+        var expectedResult = new FullRegistryAllocation(items);
 
         ResponseSerializerJson jsonSerializer = new ResponseSerializerJson();
         String response = null;
@@ -104,16 +104,16 @@ public class TestCommandResponseSerialization {
             fail(e.getMessage());
         }
 
-        CommandResultContainer<FullRegistry> deserializedJSON = null;
+        CommandResultContainer<FullRegistryAllocation> deserializedJSON = null;
         try {
-            deserializedJSON = CommandSerializationHelper.<FullRegistry>deserializeJson(FullRegistry.class, response);
+            deserializedJSON = CommandSerializationHelper.<FullRegistryAllocation>deserializeJson(FullRegistryAllocation.class, response);
         } catch (JsonProcessingException e) {
             fail(e.getMessage());
         }
         assertNotNull(deserializedJSON);
 
 
-        FullRegistry retrievedRegistry = deserializedJSON.getResult();
+        FullRegistryAllocation retrievedRegistry = deserializedJSON.getResult();
         assertEquals(expectedResult, retrievedRegistry);
     }
 }

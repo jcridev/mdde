@@ -9,7 +9,7 @@ import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.Benchm
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
-import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistryAllocation;
 
 import java.util.List;
 import java.util.Set;
@@ -76,9 +76,9 @@ public class ResponseSerializerJson extends ResponseSerializerBase<String> {
     }
 
     @Override
-    public String serialize(FullRegistry value) throws ResponseSerializationException {
+    public String serialize(FullRegistryAllocation value) throws ResponseSerializationException {
         try {
-            return _mapper.writeValueAsString(new CommandResultContainer<FullRegistry>(value));
+            return _mapper.writeValueAsString(new CommandResultContainer<FullRegistryAllocation>(value));
         } catch (JsonProcessingException e) {
             throw new ResponseSerializationException(e);
         }

@@ -2,7 +2,7 @@ package dev.jcri.mdde.registry.server.responders;
 
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
-import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistryAllocation;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import org.apache.logging.log4j.LogManager;
@@ -24,7 +24,7 @@ public class ReadCommandResponder {
         _readHandler = readHandler;
     }
 
-    public FullRegistry getFullRegistry() throws ReadOperationException{
+    public FullRegistryAllocation getFullRegistry() throws ReadOperationException{
         logger.trace("Responding to READ: {}", EReadCommand.GET_REGISTRY.toString());
         return _readHandler.getFullRegistry();
     }

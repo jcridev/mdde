@@ -5,7 +5,7 @@ import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.RegistryEntityType;
 import dev.jcri.mdde.registry.store.exceptions.UnknownEntityIdException;
-import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistryAllocation;
 import dev.jcri.mdde.registry.shared.store.response.TupleCatalog;
 
 import java.util.*;
@@ -18,7 +18,7 @@ public abstract class ReadCommandHandler implements IReadCommandHandler {
      * @return Full registry state
      * @throws ReadOperationException
      */
-    public FullRegistry getFullRegistry() throws ReadOperationException{
+    public FullRegistryAllocation getFullRegistry() throws ReadOperationException{
         return runGetFullRegistry();
     }
 
@@ -261,7 +261,7 @@ public abstract class ReadCommandHandler implements IReadCommandHandler {
      * Retrieve a snapshot of the current state for the entire registry including tuples, nodes and fragments
      * @return Current registry snapshot
      */
-    protected abstract FullRegistry runGetFullRegistry() throws ReadOperationException;
+    protected abstract FullRegistryAllocation runGetFullRegistry() throws ReadOperationException;
 
     /**
      * Get the list of node Ids where the tuple is located

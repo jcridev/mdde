@@ -8,7 +8,10 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import java.beans.Transient;
 import java.util.*;
 
-public class FullRegistry {
+/**
+ * Allocation information for all of the fragments and tuples in the registry
+ */
+public class FullRegistryAllocation {
     private static final String REGISTRY_STATE_FIELD = "registry";
     /**
      * Map<Node ID, Map<Fragment ID, List<Tuple ID>>>
@@ -19,7 +22,7 @@ public class FullRegistry {
      * Construct registry
      * @param registry Map<Node ID, Map<Fragment ID, List<Tuple ID>>>
      */
-    public FullRegistry(Map<String, Map<String, Set<String>>> registry){
+    public FullRegistryAllocation(Map<String, Map<String, Set<String>>> registry){
         Objects.requireNonNull(registry, "Registry map can't be null");
         _registry = registry;
     }
@@ -27,8 +30,12 @@ public class FullRegistry {
     /**
      * Default constructor
      */
-    public FullRegistry(){ _registry = null;};
+    public FullRegistryAllocation(){ _registry = null;};
 
+    /**
+     * Get the map containing the entirety of the registry contents
+     * @return Dictionary <Node ID, Dictionary <Fragment ID, Set <Tuple ID>>>
+     */
     @JsonGetter(REGISTRY_STATE_FIELD)
     public Map<String, Map<String, Set<String>>> getRegistry() {
         return _registry;
@@ -38,12 +45,21 @@ public class FullRegistry {
         _registry = registry;
     }
 
+    /**
+     * Get the list of nodes
+     * @return Set of Node IDs in the registry
+     */
     @Transient
     @JsonIgnore
     public Set<String> getNodes(){
         return _registry.keySet();
     }
 
+    /**
+     * Get fragments stored on the specified node with tuple contents mapped to it
+     * @param nodeId Node ID
+     * @return Dictionary <Fragment ID, Set<Tuple ID>>
+     */
     @Transient
     @JsonIgnore
     public Map<String, Set<String>> getNodeContents(String nodeId){
@@ -54,22 +70,27 @@ public class FullRegistry {
         return  _registry.get(nodeId);
     }
 
+    /**
+     * Get ids of the fragments stored on the specified node
+     * @param nodeId Node ID
+     * @return Set of fragment IDs
+     */
     @Transient
     @JsonIgnore
     public Set<String> getNodeFragments(String nodeId){
         Map<String, Set<String>> contents = getNodeContents(nodeId);
         if(contents == null){
-            return new HashSet<String>(); // return empty value
+            return new HashSet<>(); // return empty value
         }
         return contents.keySet();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if(!(obj instanceof FullRegistry)){
+        if(!(obj instanceof FullRegistryAllocation)){
             return false;
         }
-        FullRegistry objB = (FullRegistry) obj;
+        FullRegistryAllocation objB = (FullRegistryAllocation) obj;
         if(this.getRegistry() == null && objB.getRegistry() == null){
             return true;
         }
@@ -82,7 +103,7 @@ public class FullRegistry {
             if(!objB.getRegistry().containsKey(node.getKey())){
                 return false;
             }
-            Boolean equals = node.getValue().entrySet().stream()
+            boolean equals = node.getValue().entrySet().stream()
                     .allMatch(e -> e.getValue()
                                     .equals(objB.getRegistry()
                                                 .get(node.getKey())

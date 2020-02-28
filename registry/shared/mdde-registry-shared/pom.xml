@@ -64,6 +64,14 @@
             <version>1.8</version>
         </dependency>
 
+        <!-- OpenCSV -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.1</version>
+        </dependency>
+
+
         <!-- Kafka -->
         <dependency>
             <groupId>org.apache.kafka</groupId>

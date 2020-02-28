@@ -6,7 +6,7 @@ import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.Benchm
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
 import dev.jcri.mdde.registry.store.exceptions.ResponseSerializationException;
-import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistryAllocation;
 
 import java.util.List;
 import java.util.Set;
@@ -21,7 +21,7 @@ public abstract class ResponseSerializerBase<T> implements IResponseExceptionSer
     public abstract T serialize(Set<String> value) throws ResponseSerializationException;
     public abstract T serialize(int value) throws ResponseSerializationException;
     public abstract T serialize(boolean value) throws ResponseSerializationException;
-    public abstract T serialize(FullRegistry value) throws ResponseSerializationException;
+    public abstract T serialize(FullRegistryAllocation value) throws ResponseSerializationException;
     public abstract T serialize(BenchmarkRunResult value) throws ResponseSerializationException;
     public abstract T serialize(BenchmarkStatus value) throws ResponseSerializationException;
     public abstract T serialize(FragmentCatalog value) throws ResponseSerializationException;

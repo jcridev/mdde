@@ -7,7 +7,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-
+/**
+ * A container class for tuple allocation.
+ */
 public class TupleCatalog {
     private Map<Integer, String> _nodes;
     private Map<Integer, String> _tuples;

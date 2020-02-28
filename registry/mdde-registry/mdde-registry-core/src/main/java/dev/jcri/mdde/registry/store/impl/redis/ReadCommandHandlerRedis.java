@@ -3,7 +3,7 @@ package dev.jcri.mdde.registry.store.impl.redis;
 import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
 import dev.jcri.mdde.registry.store.impl.ReadCommandHandler;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
-import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistryAllocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import redis.clients.jedis.Pipeline;
@@ -23,7 +23,7 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
     }
 
     @Override
-    public FullRegistry runGetFullRegistry() throws ReadOperationException {
+    public FullRegistryAllocation runGetFullRegistry() throws ReadOperationException {
         var allFragmentsContents = new HashMap<String, Set<String>>();
         for(String fragmentId: runGetAllFragmentIds()){
             allFragmentsContents.put(fragmentId, runGetFragmentTuples(fragmentId));
@@ -40,7 +40,7 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
             }
             temp.put(nodeId, nodeMap);
         }
-        return new FullRegistry(temp);
+        return new FullRegistryAllocation(temp);
     }
 
     @Override

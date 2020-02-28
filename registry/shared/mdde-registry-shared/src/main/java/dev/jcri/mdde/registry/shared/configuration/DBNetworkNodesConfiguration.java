@@ -146,7 +146,7 @@ public class DBNetworkNodesConfiguration {
 
     /**
      * Get the directory in the database.
-     * @return
+     * @return Name of the DB directory
      */
     @JsonSetter(DIRECTORY_FIELD)
     public String getDirectory() {
@@ -155,7 +155,7 @@ public class DBNetworkNodesConfiguration {
 
     /**
      * Set the directory in the database if required.
-     * @param directory
+     * @param directory Name of the DB directory
      */
     @JsonSetter(DIRECTORY_FIELD)
     public void setDirectory(String directory) {
@@ -163,9 +163,10 @@ public class DBNetworkNodesConfiguration {
     }
 
     /**
+     * Default node flag
+     * @return
      * True - the node should be populated in the Registry store upon its initialization.
      * False - node is configured but not used initially (future scalability testing).
-     * @return
      */
     @JsonSetter(DEFAULT_NODE_FIELD)
     public Boolean getDefaultNode() {
@@ -173,9 +174,10 @@ public class DBNetworkNodesConfiguration {
     }
 
     /**
+     * Default node flag
+     * @param defaultNode
      * True - the node should be populated in the Registry store upon its initialization.
      * False - node is configured but not used initially (future scalability testing).
-     * @param defaultNode
      */
     @JsonSetter(DEFAULT_NODE_FIELD)
     public void setDefaultNode(Boolean defaultNode) {

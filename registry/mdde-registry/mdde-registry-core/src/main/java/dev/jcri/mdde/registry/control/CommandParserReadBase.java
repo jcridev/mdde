@@ -4,7 +4,7 @@ import dev.jcri.mdde.registry.control.exceptions.CommandException;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.shared.commands.EReadCommand;
 import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
-import dev.jcri.mdde.registry.shared.store.response.FullRegistry;
+import dev.jcri.mdde.registry.shared.store.response.FullRegistryAllocation;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
 
@@ -65,7 +65,7 @@ public abstract class CommandParserReadBase<TOut, TArgs>
     }
 
 
-    protected abstract FullRegistry processGetFullRegistryCommand()
+    protected abstract FullRegistryAllocation processGetFullRegistryCommand()
             throws ReadOperationException;
 
     protected abstract Set<String> processFindTupleCommand(TArgs arguments)
