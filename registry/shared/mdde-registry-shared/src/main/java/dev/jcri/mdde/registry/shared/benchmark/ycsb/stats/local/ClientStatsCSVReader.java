@@ -1,4 +1,4 @@
-package dev.jcri.mdde.registry.shared.benchmark.ycsb.stats;
+package dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.local;
 
 import com.opencsv.CSVReader;
 

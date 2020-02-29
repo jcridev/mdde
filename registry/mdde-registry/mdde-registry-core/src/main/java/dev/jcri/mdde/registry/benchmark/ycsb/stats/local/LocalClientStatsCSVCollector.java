@@ -5,9 +5,9 @@ import dev.jcri.mdde.registry.benchmark.ycsb.stats.IStatsCollector;
 import dev.jcri.mdde.registry.benchmark.ycsb.stats.result.FragmentBenchmarkStats;
 import dev.jcri.mdde.registry.benchmark.ycsb.stats.result.NodeBenchmarkStats;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
-import dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.ClientStatsCSVReader;
-import dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.ClientStatsCSVWriter;
-import dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.LogActions;
+import dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.local.ClientStatsCSVReader;
+import dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.local.ClientStatsCSVWriter;
+import dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.local.LogActions;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,13 +50,13 @@ public class LocalClientStatsCSVCollector implements IStatsCollector {
         if (logsFolder.isBlank()){
             throw new IllegalArgumentException("logsFolder must be a valid path");
         }
-        var normalizedPath = Paths.get(logsFolder).toAbsolutePath().normalize().toString();
-        var logsDir = new File(normalizedPath);
+
+        var logsDir = new File(logsFolder);
         if (logsDir.exists() && logsDir.isFile()) {
-            throw new NotDirectoryException(normalizedPath);
+            throw new NotDirectoryException(logsFolder);
         }
         boolean mkdirsRes = logsDir.mkdirs();
-        _logsDir = normalizedPath;
+        _logsDir = logsFolder;
         logger.trace("New YCSB stats logs directory was created: {}", mkdirsRes);
     }
 

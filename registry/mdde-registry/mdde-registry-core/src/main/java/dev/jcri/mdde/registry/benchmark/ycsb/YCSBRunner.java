@@ -2,9 +2,11 @@ package dev.jcri.mdde.registry.benchmark.ycsb;
 
 import dev.jcri.mdde.registry.benchmark.ycsb.cli.YCSBOutput;
 import dev.jcri.mdde.registry.benchmark.ycsb.cli.YCSBOutputParser;
+import dev.jcri.mdde.registry.benchmark.ycsb.stats.IStatsCollectorFactory;
 import dev.jcri.mdde.registry.configuration.benchmark.YCSBConfig;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfiguration;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfigurationWriter;
+import dev.jcri.mdde.registry.shared.benchmark.ycsb.cli.EMddeArgs;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
 import dev.jcri.mdde.registry.utility.ResourcesTools;
 import org.apache.logging.log4j.LogManager;
@@ -36,7 +38,9 @@ public class YCSBRunner implements Closeable {
      * Bash executable for YCSB
      */
     private static final String YCSB_NIX = "sh ycsb.sh";
-
+    /**
+     * MDDE client configuration file name
+     */
     private static final String TEMP_CLIENT_CONFIG_FILE = "mddeClientConfig." + MDDEClientConfigurationWriter.FILE_EXTENSION;
 
     /**
@@ -52,6 +56,8 @@ public class YCSBRunner implements Closeable {
      */
     private final YCSBOutputParser _ycsbParser = new YCSBOutputParser();
 
+    private final IStatsCollectorFactory _statsCollectorFactory;
+
     private final EYCSBClients _defaultClient;
     /**
      * Path to the *folder* where YCSB is located
@@ -61,7 +67,8 @@ public class YCSBRunner implements Closeable {
      */
     public YCSBRunner(YCSBConfig ycsbConfig,
                       List<DBNetworkNodesConfiguration> nodes,
-                      Map<String, String> connectionProperties)
+                      Map<String, String> connectionProperties,
+                      IStatsCollectorFactory statsCollectorFactory)
     throws IOException{
         Objects.requireNonNull(ycsbConfig.getYcsbBin(), "Working folder for YCSB is not specified");
 
@@ -78,6 +85,7 @@ public class YCSBRunner implements Closeable {
         logger.trace("Created temporary directory {}", tempFolderCreated);
 
         _ycsbConfig = ycsbConfig;
+        _statsCollectorFactory = statsCollectorFactory;
 
         _defaultClient = EYCSBClients.fromString(ycsbConfig.getYcsbClient());
         if(_defaultClient == null){
@@ -148,11 +156,11 @@ public class YCSBRunner implements Closeable {
         }
 
         // Example ycsb.bat load mdde.redis -P ..\workloads\workloada -p mdde.redis.configfile=.\\test-config.yml
-        var command = String.format("%s load %s -P %s -p %s.configfile=%s",
+        var command = String.format("%s load %s -P %s -p %s=%s",
                 getYCSBExecutableName(),
                 ycsbClient,
                 pathToWorkloadFile,
-                ycsbClient,
+                EMddeArgs.CONFIG_FILE,
                 pathToMDDENodesConfig);
 
         var strOutput = executeYCSBCommand(_ycsbConfig.getYcsbBin(), command);
@@ -186,13 +194,28 @@ public class YCSBRunner implements Closeable {
                                   String ycsbClient,
                                   int threads) throws IOException {
         // Example ycsb.bat run mdde.redis -P ..\workloads\workloada -threads 10 -p mdde.redis.configfile=.\\test-config.yml
-        var command = String.format("%s run %s -P %s -threads %d -p %s.configfile=%s",
+        var command = String.format("%s run %s -P %s -threads %d -p %s=%s",
                 getYCSBExecutableName(),
                 ycsbClient,
                 pathToWorkloadFile,
                 threads,
-                ycsbClient,
+                EMddeArgs.CONFIG_FILE,
                 pathToMDDENodesConfig);
+
+        if(_statsCollectorFactory != null){
+            var additionalParams = _statsCollectorFactory.getYCSBParams();
+            if(additionalParams != null && additionalParams.size() > 0){
+                StringBuilder sb = new StringBuilder();
+                for(var entry: additionalParams.entrySet()){
+                    var value=entry.getValue();
+                    if(value != null){
+                        var argument=entry.getKey();
+                        sb.append(String.format(" -p %s=%s",argument, value ));
+                    }
+                }
+                command += sb.toString();
+            }
+        }
 
         var strOutput = executeYCSBCommand(_ycsbConfig.getYcsbBin(), command);
         return _ycsbParser.parse(strOutput);

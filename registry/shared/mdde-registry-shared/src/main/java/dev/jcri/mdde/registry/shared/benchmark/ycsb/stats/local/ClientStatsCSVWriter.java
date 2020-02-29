@@ -1,9 +1,9 @@
-package dev.jcri.mdde.registry.shared.benchmark.ycsb.stats;
+package dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.local;
 
 
 import com.opencsv.CSVWriter;
+import dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.IClientStatsWriter;
 
-import java.io.Closeable;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -16,23 +16,29 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Objects;
 
-
-public class ClientStatsCSVWriter implements Closeable {
+/**
+ * Simple file based statistics collector
+ */
+public class ClientStatsCSVWriter implements IClientStatsWriter {
 
     public static final String LOG_FILE_EXTENSION = "csv";
     public static final String STATUS_FILE_EXTENSION = "mdde";
     public static final String STATUS_FILE_FINAL_PREFIX = "done";
     public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss:SSS";
+    public static final char DEFAULT_DELIMITER = ',';
 
     private final String _clientId;
     private final char _delimiter;
 
-    private final String _logFile;
     private final String _logDir;
     private final DateTimeFormatter _tsFormatter;
     private final Charset _charset;
 
     private CSVWriter _writer;
+
+    public ClientStatsCSVWriter(String statsDir, String clientId) throws IOException {
+        this(statsDir, clientId, DEFAULT_DELIMITER);
+    }
 
     /**
      * Constructor
@@ -52,7 +58,7 @@ public class ClientStatsCSVWriter implements Closeable {
         _clientId = clientId;
         _charset = StandardCharsets.UTF_8;
         _logDir = Paths.get(statsDir).toAbsolutePath().normalize().toString();
-        _logFile = Paths.get(_logDir, String.format("%s.%s", clientId, LOG_FILE_EXTENSION)).toString();
+        String _logFile = Paths.get(_logDir, String.format("%s.%s", clientId, LOG_FILE_EXTENSION)).toString();
         Path flagFilePath = Paths.get(_logDir, String.format("%s.%s", clientId, STATUS_FILE_EXTENSION));
         _tsFormatter = DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT);
 
@@ -69,7 +75,7 @@ public class ClientStatsCSVWriter implements Closeable {
      * @param nodeId Node ID from which it was read
      * @param success True - successful read
      */
-    private void addReadToLog(String tupleId, String nodeId, boolean success){
+    public void addReadToLog(String tupleId, String nodeId, boolean success){
         this.addReadToLog(tupleId, nodeId, success, LocalDateTime.now());
     }
 
@@ -81,7 +87,7 @@ public class ClientStatsCSVWriter implements Closeable {
      * @param success True - successful read
      * @param timestamp Timestamp
      */
-    private void addReadToLog(String tupleId, String nodeId, boolean success, LocalDateTime timestamp){
+    public void addReadToLog(String tupleId, String nodeId, boolean success, LocalDateTime timestamp){
         String[] newLine = new String[5];
         newLine[0] = LogActions.READ.toString();
         newLine[1] = tupleId;

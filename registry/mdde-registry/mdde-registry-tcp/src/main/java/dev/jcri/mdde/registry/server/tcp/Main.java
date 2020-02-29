@@ -3,6 +3,8 @@ package dev.jcri.mdde.registry.server.tcp;
 import dev.jcri.mdde.registry.benchmark.BenchmarkRunner;
 import dev.jcri.mdde.registry.benchmark.cluster.InMemoryTupleLocatorFactory;
 import dev.jcri.mdde.registry.benchmark.ycsb.YCSBRunner;
+import dev.jcri.mdde.registry.benchmark.ycsb.stats.IStatsCollectorFactory;
+import dev.jcri.mdde.registry.benchmark.ycsb.stats.local.LocalClientStatsCSVCollectorFactory;
 import dev.jcri.mdde.registry.configuration.RegistryConfig;
 import dev.jcri.mdde.registry.configuration.benchmark.YCSBConfig;
 import dev.jcri.mdde.registry.configuration.reader.ConfigReaderYamlAllRedis;
@@ -138,7 +140,11 @@ public class Main {
         IReadCommandHandler readCommandHandler = new ReadCommandHandlerRedis(redisConnection);
         // Initialize benchmark service
         InMemoryTupleLocatorFactory tupleLocatorFactory = new InMemoryTupleLocatorFactory();
-        YCSBRunner ycsbRunner = new YCSBRunner(ycsbConfig, nodes, connectionProperties);
+        // Initialize log collector
+        var statsTempFolder = Paths.get(ycsbConfig.getTemp(), "stats").toString();
+        IStatsCollectorFactory statsCollectorFactory =
+                new LocalClientStatsCSVCollectorFactory(statsTempFolder, readCommandHandler);
+        YCSBRunner ycsbRunner = new YCSBRunner(ycsbConfig, nodes, connectionProperties, statsCollectorFactory);
         BenchmarkRunner benchmarkRunner = new BenchmarkRunner(tupleLocatorFactory, readCommandHandler, ycsbRunner);
         // Initialize write command handler
         IWriteCommandHandler writeCommandHandler = new WriteCommandHandlerRedis(redisConnection, readCommandHandler);
@@ -208,7 +214,8 @@ public class Main {
         for(int i = 0; i < args.length; i = i+2){
             var tag = args[i];
             if(i+1 >= args.length){
-                throw new IllegalArgumentException(MessageFormat.format("Parameter {} passed without a value", tag));
+                throw new IllegalArgumentException(
+                        MessageFormat.format("Parameter {} passed without a value", tag));
             }
             var val = args[i+1];
             argsMap.put(tag, val);
