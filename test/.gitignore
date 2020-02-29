@@ -1,5 +1,5 @@
-ycsb/
-target/
-temp/
-snapshots/
-debug/
+/ycsb
+/target
+/temp
+/snapshots
+/debug

@@ -1,6 +1,6 @@
 *.flattened-pom.xml
 
-ycsb/
-target/
-temp/
-snapshots/
+/ycsb
+/target
+/temp
+/snapshots
