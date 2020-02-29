@@ -1,7 +1,7 @@
 package dev.jcri.mdde.registry.benchmark.ycsb.stats;
 
-import dev.jcri.mdde.registry.benchmark.ycsb.stats.result.NodeBenchmarkStats;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
+import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkNodeStats;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -19,5 +19,5 @@ public interface IStatsCollector extends Closeable {
      * Return statistics for benchmark run relevant to the fragments specifically
      * @return Fragment level statistics
      */
-    Collection<NodeBenchmarkStats> getFragmentStats() throws IOException, MddeRegistryException;
+    Collection<BenchmarkNodeStats> getFragmentStats() throws IOException, MddeRegistryException;
 }

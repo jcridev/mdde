@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 
@@ -341,7 +342,25 @@ public class BenchmarkRunner {
                 this._state.setState(EBenchmarkRunStage.FINALIZING);
                 var result = new BenchmarkRunResult();
                 result.setError(null);
-                result.setNodes(null); // TODO: Node statistics
+
+                // Await for node statistics
+                int awaitCycles = 12;
+                if(this._ycsbRunner.statsResultsReady() == false){
+                    while(awaitCycles > 0){
+                        awaitCycles--;
+                        TimeUnit.SECONDS.sleep(5);
+                        if(this._ycsbRunner.statsResultsReady()){
+                            break;
+                        }
+                    }
+                }
+                else if(this._ycsbRunner.statsResultsReady() != null){
+                    result.setNodes(this._ycsbRunner.getStats());
+                }
+                else{
+                    result.setNodes(null);
+                }
+
                 result.setThroughput(ycsbRunOutput.getThroughput());
                 _state.setResult(result);
             }

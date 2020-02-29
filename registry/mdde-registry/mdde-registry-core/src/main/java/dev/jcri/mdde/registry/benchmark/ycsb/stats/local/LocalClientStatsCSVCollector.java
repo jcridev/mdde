@@ -2,12 +2,12 @@ package dev.jcri.mdde.registry.benchmark.ycsb.stats.local;
 
 import com.opencsv.exceptions.CsvValidationException;
 import dev.jcri.mdde.registry.benchmark.ycsb.stats.IStatsCollector;
-import dev.jcri.mdde.registry.benchmark.ycsb.stats.result.FragmentBenchmarkStats;
-import dev.jcri.mdde.registry.benchmark.ycsb.stats.result.NodeBenchmarkStats;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.local.ClientStatsCSVReader;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.local.ClientStatsCSVWriter;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.stats.local.LogActions;
+import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkFragmentStats;
+import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkNodeStats;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -81,7 +81,7 @@ public class LocalClientStatsCSVCollector implements IStatsCollector {
     }
 
     @Override
-    public List<NodeBenchmarkStats> getFragmentStats() throws IOException, MddeRegistryException {
+    public Collection<BenchmarkNodeStats> getFragmentStats() throws IOException, MddeRegistryException {
         // Get which fragments belong to which nodes
         var knownFragments = _storeReadAccess.getAllFragmentIds();
         Map<String, Set<String>> fragmentsTuples = new HashMap<>();
@@ -96,7 +96,7 @@ public class LocalClientStatsCSVCollector implements IStatsCollector {
         }
 
         // Read results
-        Map<String, Map<String, FragmentBenchmarkStats>> res = new HashMap<>();
+        Map<String, Map<String, BenchmarkFragmentStats>> res = new HashMap<>();
 
         var fNamePattern = String.format("*.%s", ClientStatsCSVWriter.LOG_FILE_EXTENSION);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(_logsDir), fNamePattern)) {
@@ -111,7 +111,7 @@ public class LocalClientStatsCSVCollector implements IStatsCollector {
                     var nodeResList = res.get(nodeId);
                     var fragmentId = tupleFragment.get(nextLine[1]);
                     if(!nodeResList.containsKey(fragmentId)){
-                        nodeResList.put(fragmentId, new FragmentBenchmarkStats(fragmentId, 0));
+                        nodeResList.put(fragmentId, new BenchmarkFragmentStats(fragmentId, 0));
                     }
                     var fragmentStat = nodeResList.get(fragmentId);
                     if(nextLine[0].equals(LogActions.READ.toString())){
@@ -122,9 +122,9 @@ public class LocalClientStatsCSVCollector implements IStatsCollector {
         } catch (CsvValidationException e) {
             throw new IOException("Failed to read the stats log", e);
         }
-        List<NodeBenchmarkStats> result = new ArrayList<>();
+        List<BenchmarkNodeStats> result = new ArrayList<>();
         for(var entry: res.entrySet()){
-            var newNodeStats = new NodeBenchmarkStats(entry.getKey(), entry.getValue().values());
+            var newNodeStats = new BenchmarkNodeStats(entry.getKey(), entry.getValue().values());
             result.add(newNodeStats);
         }
         return result;

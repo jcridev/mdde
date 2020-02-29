@@ -2,11 +2,14 @@ package dev.jcri.mdde.registry.benchmark.ycsb;
 
 import dev.jcri.mdde.registry.benchmark.ycsb.cli.YCSBOutput;
 import dev.jcri.mdde.registry.benchmark.ycsb.cli.YCSBOutputParser;
+import dev.jcri.mdde.registry.benchmark.ycsb.stats.IStatsCollector;
 import dev.jcri.mdde.registry.benchmark.ycsb.stats.IStatsCollectorFactory;
 import dev.jcri.mdde.registry.configuration.benchmark.YCSBConfig;
+import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfiguration;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfigurationWriter;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.cli.EMddeArgs;
+import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkNodeStats;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
 import dev.jcri.mdde.registry.utility.ResourcesTools;
 import org.apache.logging.log4j.LogManager;
@@ -16,10 +19,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Class that runs YCSB and gets the output in the parsed form
@@ -57,6 +57,7 @@ public class YCSBRunner implements Closeable {
     private final YCSBOutputParser _ycsbParser = new YCSBOutputParser();
 
     private final IStatsCollectorFactory _statsCollectorFactory;
+    private IStatsCollector _statsCollector;
 
     private final EYCSBClients _defaultClient;
     /**
@@ -218,7 +219,34 @@ public class YCSBRunner implements Closeable {
         }
 
         var strOutput = executeYCSBCommand(_ycsbConfig.getYcsbBin(), command);
+        if(_statsCollectorFactory != null) {
+            _statsCollector = _statsCollectorFactory.getStatsCollector();
+        }
         return _ycsbParser.parse(strOutput);
+    }
+
+    /**
+     * Check if the stats are ready for collection
+     * @return True - stats are ready; False - not ready; null - no stats.
+     */
+    public Boolean statsResultsReady() throws IOException {
+        if(_statsCollector == null){
+            return null;
+        }
+        return _statsCollector.getStatsReady();
+    }
+
+    /**
+     * Retrieve collected stats for the run
+     * @return
+     * @throws IOException
+     * @throws MddeRegistryException
+     */
+    public Collection<BenchmarkNodeStats> getStats() throws IOException, MddeRegistryException {
+        if(!statsResultsReady()){
+            throw new IllegalStateException("No stats ready for collection");
+        }
+        return _statsCollector.getFragmentStats();
     }
 
     /**
@@ -235,6 +263,13 @@ public class YCSBRunner implements Closeable {
         }
         catch (Exception e){
             logger.error("Unable to delete temporary folder {}", _tempSubfolder, e);
+        }
+        try{
+            if(_statsCollector != null){
+                _statsCollector.close();
+            }
+        } catch (Exception e){
+            logger.error("Unable to clean out stats after the run", e);
         }
     }
 

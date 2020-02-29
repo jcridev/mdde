@@ -3,6 +3,7 @@ package dev.jcri.mdde.registry.shared.commands.containers.result.benchmark;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -25,7 +26,7 @@ public class BenchmarkRunResult {
     /**
      * Per node statistics resulted from benchmark
      */
-    private List<BenchmarkNodeStats> _nodes;
+    private Collection<BenchmarkNodeStats> _nodes;
     /**
      * If benchmark has failed for any reason, we return an error. Should be null if there was no issues running the
      * benchmark.
@@ -42,11 +43,11 @@ public class BenchmarkRunResult {
     }
 
     @JsonGetter(NODES_FIELD)
-    public List<BenchmarkNodeStats> getNodes() {
+    public Collection<BenchmarkNodeStats> getNodes() {
         return _nodes;
     }
     @JsonSetter(NODES_FIELD)
-    public void setNodes(List<BenchmarkNodeStats> nodes) {
+    public void setNodes(Collection<BenchmarkNodeStats> nodes) {
         this._nodes = nodes;
     }
 
