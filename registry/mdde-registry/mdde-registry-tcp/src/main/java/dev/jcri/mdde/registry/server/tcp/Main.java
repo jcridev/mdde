@@ -42,7 +42,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -267,7 +266,7 @@ public class Main {
 
         /**
          * Path to the MDDE config YAML
-         * @return
+         * @return Path to the configuration file
          */
         public String getPathToConfigFile() {
             return _pathToConfigFile;

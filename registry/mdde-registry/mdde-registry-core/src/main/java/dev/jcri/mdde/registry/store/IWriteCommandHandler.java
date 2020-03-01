@@ -127,7 +127,7 @@ public interface IWriteCommandHandler {
     boolean resetFragmentsMeta();
 
     /**
-     * Clear all meta, fragments and tuples from the registry, leaving only empty nodes
+     * Completely flush the store by removing all of the data
      */
     boolean flush() throws WriteOperationException;
 }

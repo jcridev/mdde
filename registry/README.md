@@ -1,9 +1,41 @@
+<!-- omit in toc -->
 # Registry
+
+The role of the registry is to provide MDDE with a "synthetic" distributed data management environment providing fine-grained control over the data allocation while not relying on the heuristics of any specific database. The registry is not containing any learner specific functionality. 
+
+Database nodes are used as simple data storage nodes with no knowledge of each other or explicit clustering mechanisms. Registry controls the placement, replication, and retrieval of any specific data record.
+
+Additionally, the registry provides the benchmarking capability allowing to run a series of tests on the current data distribution and returning the resulted metrics (ex. throughput).
+
+- [Requirements](#requirements)
+- [Dependencies](#dependencies)
+  - [YCSB](#ycsb)
+  - [Libraries](#libraries)
+- [Structure](#structure)
+- [Build](#build)
+- [Install shared dependencies](#install-shared-dependencies)
+- [Run](#run)
+  - [TCP Server](#tcp-server)
+- [Extension](#extension)
 
 ## Requirements
 
 * OpenJDK 11
 * Maven 3.6.x
+
+## Dependencies
+
+### YCSB
+
+To provide the benchmark functionality, we rely on the [YCSB](https://github.com/brianfrankcooper/YCSB) project. We provide our own [fork](https://github.com/jcridev/YCSB/tree/redis-mdde-client) of the project, where we add MDDE integration code to the original YCSB code base.
+
+### Libraries
+
+* [Netty 4](https://github.com/netty/netty) used to implement TCP API of the registry.
+* [Jackson](https://github.com/FasterXML/jackson) utilized for serialization and deserialization of data requests and replies in the provided data manipulation API.
+* [Log4j](https://github.com/apache/log4j) for logging.
+* [JUnit 5](https://github.com/junit-team/junit5) for running unit tests.
+* [Testcontainers](https://github.com/testcontainers/testcontainers-java) is used to simplify unit testing where additional infrastructure is required (ex. Redis nodes).
 
 ## Structure
 
@@ -14,6 +46,7 @@
     * `/mdde-registry-shared` enums for registry commands, error codes; serialization containers
     * `/mdde-registry-tcp-shared` tcp client and serialization containers
 
+**Note**: the shared projects are bult with the Java language level 8, while the main mdde-registry modules require the minimum language level 11.  
 
 ## Build
 
@@ -50,3 +83,7 @@ Parameters:
 * `-p` registry control interface TCP port (read, write, control queries)
 * `-b` registry benchmark TCP port
 * `-c` path to the configuration file
+
+## Extension
+
+...

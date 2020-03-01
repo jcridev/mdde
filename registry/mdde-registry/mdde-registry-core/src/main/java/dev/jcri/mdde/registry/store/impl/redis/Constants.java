@@ -37,10 +37,7 @@ public final class Constants {
      * Queue (LIST) of the data actions that should be later performed on the actual data nodes
      */
     public static final String DATA_SHUFFLE_QUEUE_KEY = "mdde/_dataqueue";
-    /**
-     * Key storing the default snapshot ID value. Snapshot with this ID will be used during the RESET call
-     */
-    public static final String DEFAULT_SNAPSHOT_ID_KEY = "mdde/_snapshot";
+
     /**
      * Private default constructor preventing creation of instances
      */

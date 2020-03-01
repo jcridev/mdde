@@ -210,7 +210,7 @@ public final class RegistryStateCommandHandler {
 
     /**
      * Retrieve the status of the latest executed or currently executing benchmark
-     * @return
+     * @return Current status of the benchmark run
      */
     public synchronized BenchmarkStatus retrieveLatestBenchmarkRunStatus(){
         return _benchmarkRunner.getBenchmarkStatus();
@@ -263,7 +263,7 @@ public final class RegistryStateCommandHandler {
 
     /**
      * Completely erase all records from the Registry and from the Data nodes
-     * @return
+     * @return True - flush all was a success
      */
     public synchronized boolean flushAll() throws MddeRegistryException, IOException {
         _commandExecutionLock.lock();
@@ -503,7 +503,7 @@ public final class RegistryStateCommandHandler {
     /**
      * Load snapshot from a file
      * @param snapshotId ID of the snapshot to load
-     * @return
+     * @return True - snapshot was restored successfully
      * @throws IOException
      */
     public synchronized boolean loadSnapshot(String snapshotId) throws IOException{
