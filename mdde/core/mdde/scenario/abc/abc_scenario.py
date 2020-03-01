@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Tuple, Union, Sequence
+from typing import Tuple, Union, Sequence, Dict
 
 import numpy as np
 
@@ -91,11 +91,47 @@ class ABCScenario(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def make_collective_step(self, actions: Dict[int, int]) -> None:
+        """
+        Override to implement an action execution for a dictionary of agents coupled with the ids of their respective
+        actions chosen by the learner.
+
+        Note: Reward is not returned right away and has to be explicitly requested by calling self.get_reward().
+        :param actions: Dict['agent_id', 'action id from the agent's action space']
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_reward(self) -> Dict[int, float]:
+        """
+        Override to return a dictionary of rewards per agent.
+
+        :return: Dict['agent_id', floating point reward]
+        """
+        raise NotImplementedError
+
+    def get_observation(self, registry_read: PRegistryReadClient) -> Dict[int, np.ndarray]:
+        """
+        Observations per client. Take in account only allocation, override this method with the observation composition
+        you require.
+
+        :param registry_read: Read-only client to the registry.
+        :return: Dict['agent_id':np.ndarray]
+        """
+        # retrieve full observation space for the scenario
+        agent_nodes, fragments, obs = self.get_full_allocation_observation(registry_read=registry_read)
+        obs_n: Dict[int, np.ndarray] = {}
+        for agent in self.get_agents():
+            obs_n[agent.id] = agent.filter_observation(agent_nodes, obs)
+        return obs_n
+
     def get_full_allocation_observation(self, registry_read: PRegistryReadClient) \
             -> Tuple[Tuple[NodeAgentMapping, ...], Tuple[str, ...], np.ndarray]:
         """
         Generate full observation space of the scenario.
         Override this method in case you require custom logic of forming full observation space.
+
         :param registry_read: Read-only client to the registry.
         :return: 1) Ordered IDs of the observed data nodes mapped to agents [agent ID, node ID]
                  2) Binary map of fragment allocation (x axis - fragments, y axis - nodes), order of y axis corresponds
@@ -114,7 +150,7 @@ class ABCScenario(ABC):
         obs_nodes = fragment_catalog['nodes']
         nodes = tuple(na for a in self.get_agents() for na in a.mapped_data_node_ids)
 
-        obs_dtype = np.int8 # https://numpy.org/devdocs/user/basics.types.html
+        obs_dtype = np.int8  # https://numpy.org/devdocs/user/basics.types.html
         obs_full = np.zeros((len(nodes), len(sorted_fragments)), dtype=obs_dtype)
         for node in nodes:
             obs_node_id = obs_nodes.get(node.node_id, None)

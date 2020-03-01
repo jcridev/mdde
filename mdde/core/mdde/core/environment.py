@@ -3,7 +3,6 @@ from typing import Set, Tuple, Dict
 
 import numpy as np
 
-from mdde.agent.abc import NodeAgentMapping
 from mdde.core.exception import EnvironmentInitializationError
 from mdde.registry.container import RegistryResponseHelper
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
@@ -23,7 +22,7 @@ class Environment:
                  registry_read: PRegistryReadClient):
         """
         Environment constructor
-        :param scenario: Scenario object implementing ABCScenario.
+        :param scenario: Scenario object implementing ABCScenario
         :param registry_ctrl: Control commands for the MDDE registry implementation
         :param registry_write: Write commands for the MDDE registry implementation
         :param registry_read: Read commands for the MDDE registry implementation
@@ -136,12 +135,11 @@ class Environment:
         reset_call_response = self._registry_ctrl.ctrl_reset()
         RegistryResponseHelper.raise_on_error(reset_call_response)
         # Retrieve the observations
-        #nodes, fragments, allocation = self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
         return self.observation_space
 
     debug_reward: float = 0.0  # TODO: Replace with the actual reward function
 
-    def step(self, action_n: Dict[str, int])\
+    def step(self, action_n: Dict[int, int])\
             -> Tuple[Dict[int, np.ndarray], Dict[int, float]]:
         """
         Execute actions chosen for each agent, get resulted rewards and new observations
@@ -151,6 +149,8 @@ class Environment:
         # TODO: Return reward per agent
         # execute actions
         # TODO: Execute actions logic in the scenario
+
+        self._scenario.make_collective_step(action_n)
 
         obs_n = self.observation_space
         reward_n = {}
@@ -166,15 +166,9 @@ class Environment:
     def observation_space(self) -> Dict[int, np.ndarray]:
         """
         Retrieve all observation spaces for all agents
-        :return:
+        :return: Dict['agent_id':np.ndarray]
         """
-        # TODO: Return observations per agent
-        # retrieve full observation space for the scenario
-        agent_nodes, fragments, obs = self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
-        obs_n: Dict[int, np.ndarray] = {}
-        for agent in self._scenario.get_agents():
-            obs_n[agent.id] = agent.filter_observation(agent_nodes, obs)
-        return obs_n
+        return self._scenario.get_observation(registry_read=self._registry_read)
 
     @property
     def action_space(self) -> Dict[int, int]:

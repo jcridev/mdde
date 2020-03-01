@@ -1,0 +1,71 @@
+version: '3.7'
+services:
+  registry_store:
+  # Registry storage DB
+    image: "redis:5"
+    container_name: mdde_registrystore
+    ports:
+      - "16379:6379"
+    networks:
+      back:
+        ipv4_address: 172.42.0.5
+        aliases:
+          - mdderegs
+  redis_node_0:
+  # Data storage node 0
+    image: "redis:5"
+    container_name: mdde_data0
+    ports:
+      - "16480:6379"
+    networks:
+      back:
+        ipv4_address: 172.42.0.100
+        aliases:
+          - mddedt0
+  redis_node_1:
+  # Data storage node 1
+    image: "redis:5"
+    container_name: mdde_data1
+    ports:
+      - "16481:6379"
+    networks:
+      back:
+        ipv4_address: 172.42.0.101
+        aliases:
+          - mddedt1
+  redis_node_2:
+  # Data storage node 2
+    image: "redis:5"
+    container_name: mdde_data2
+    ports:
+      - "16482:6379"
+    networks:
+      back:
+        ipv4_address: 172.42.0.102
+        aliases:
+          - mddedt2
+  redis_node_3:
+  # Data storage node 3
+    image: "redis:5"
+    container_name: mdde_data3
+    ports:
+      - "16483:6379"
+    networks:
+      back:
+        ipv4_address: 172.42.0.103
+        aliases:
+          - mddedt3
+networks:
+  front:
+  # Front facing network 
+    name: mdde
+    driver: bridge
+    internal: false
+  back:
+  # Network wiring up the MDDE containers
+    name: mddeback
+    internal: false
+    driver: bridge  
+    ipam:    
+      config:
+        - subnet: "172.42.0.0/16" 

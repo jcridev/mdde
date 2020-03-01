@@ -10,6 +10,7 @@ Additionally, the registry provides the benchmarking capability allowing to run 
 - [Requirements](#requirements)
 - [Dependencies](#dependencies)
   - [YCSB](#ycsb)
+  - [Data storage](#data-storage)
   - [Libraries](#libraries)
 - [Structure](#structure)
 - [Build](#build)
@@ -29,13 +30,19 @@ Additionally, the registry provides the benchmarking capability allowing to run 
 
 To provide the benchmark functionality, we rely on the [YCSB](https://github.com/brianfrankcooper/YCSB) project. We provide our own [fork](https://github.com/jcridev/YCSB/tree/redis-mdde-client) of the project, where we add MDDE integration code to the original YCSB code base.
 
+### Data storage
+
+Current implemenation of the registry supports [Redis](https://redis.io/) as a data storage medium for the registry store itself and the data nodes. 
+
 ### Libraries
 
 * [Netty 4](https://github.com/netty/netty) used to implement TCP API of the registry.
 * [Jackson](https://github.com/FasterXML/jackson) utilized for serialization and deserialization of data requests and replies in the provided data manipulation API.
 * [Log4j](https://github.com/apache/log4j) for logging.
+* [Jedis](https://github.com/xetorthio/jedis) used as Redis client.
 * [JUnit 5](https://github.com/junit-team/junit5) for running unit tests.
 * [Testcontainers](https://github.com/testcontainers/testcontainers-java) is used to simplify unit testing where additional infrastructure is required (ex. Redis nodes).
+
 
 ## Structure
 

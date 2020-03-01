@@ -165,7 +165,7 @@ class DefaultFragmenter(PFragmenter):
     @staticmethod
     def _split_list(items: [], target_splits: int) -> Sequence[Sequence[str]]:
         result = []
-        for i in reversed(range(1, target_splits)):
+        for i in reversed(range(1, target_splits + 1)):
             split_point = len(items) // i
             result.append(items[:split_point])
             items = items[split_point:]

@@ -1,8 +1,16 @@
+<!-- omit in toc -->
 # Multi-agent Data Distribution Environment
 
 This is the code that presents MDDE environment to the learners. It is the layer between a reinforcement learning framework and the data distribution infrastructure.
 
 This is the place where behavior of the agents, scenarios and the reward functions are defined.
+
+- [Installation](#installation)
+  - [Environment](#environment)
+  - [MDDE Core](#mdde-core)
+  - [Extensions](#extensions)
+- [Configuration](#configuration)
+- [Extending the code](#extending-the-code)
 
 ## Installation 
 
