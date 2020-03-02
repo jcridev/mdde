@@ -136,7 +136,7 @@ public class LocalClientStatsCSVCollector implements IStatsCollector {
      */
     @Override
     public void close() throws IOException {
-        var fNamePattern = String.format("*.{%s, %s}}",
+        var fNamePattern = String.format("*.{%s,%s}",
                 ClientStatsCSVWriter.STATUS_FILE_EXTENSION,
                 ClientStatsCSVWriter.LOG_FILE_EXTENSION);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(_logsDir), fNamePattern)) {

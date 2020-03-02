@@ -59,7 +59,7 @@ public class LocalClientStatsCSVCollectorFactory implements IStatsCollectorFacto
             return;
         }
         // Remove any previous run data
-        var fNamePattern = String.format("*.{%s, %s}}",
+        var fNamePattern = String.format("*.{%s,%s}",
                 ClientStatsCSVWriter.STATUS_FILE_EXTENSION,
                 ClientStatsCSVWriter.LOG_FILE_EXTENSION);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(_logsFolder), fNamePattern)) {
