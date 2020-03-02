@@ -73,7 +73,7 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
         else{
             final var selectedNodeIdx = containingNodes.get(0);
             _capacityCounter.increment(selectedNodeIdx);
-            return _nodes.get(containingNodes.get(selectedNodeIdx));
+            return _nodes.get(selectedNodeIdx);
         }
     }
 

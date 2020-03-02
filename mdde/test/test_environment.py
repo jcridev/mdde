@@ -45,11 +45,14 @@ class EnvironmentTestCase(unittest.TestCase):
         environment.initialize_registry()
 
         # Reset
-        r1, r2 = environment.reset()
+        reset = environment.reset()
 
         # Retrieve observation and action spaces
         osb = environment.observation_space
         act = environment.action_space
+
+        # Run benchmark
+        scenario._benchmark(registry_control=ctrl_client)
 
         # Make step
         environment.step(action_n={})

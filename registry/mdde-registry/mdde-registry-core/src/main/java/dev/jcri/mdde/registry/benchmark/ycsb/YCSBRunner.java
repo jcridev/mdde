@@ -21,6 +21,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+import static java.util.Optional.ofNullable;
+
 /**
  * Class that runs YCSB and gets the output in the parsed form
  */
@@ -163,7 +165,7 @@ public class YCSBRunner implements Closeable {
                 pathToWorkloadFile,
                 EMddeArgs.CONFIG_FILE,
                 pathToMDDENodesConfig);
-
+        logger.debug(command);
         var strOutput = executeYCSBCommand(_ycsbConfig.getYcsbBin(), command);
         return _ycsbParser.parse(strOutput);
     }
@@ -204,9 +206,13 @@ public class YCSBRunner implements Closeable {
                 pathToMDDENodesConfig);
 
         if(_statsCollectorFactory != null){
+            _statsCollectorFactory.prepare();
             var additionalParams = _statsCollectorFactory.getYCSBParams();
             if(additionalParams != null && additionalParams.size() > 0){
                 StringBuilder sb = new StringBuilder();
+                sb.append(String.format(" -p %s=%s",
+                        EMddeArgs.STATS_COLLECTOR.toString(),
+                        _statsCollectorFactory.getCollectorId().toString() ));
                 for(var entry: additionalParams.entrySet()){
                     var value=entry.getValue();
                     if(value != null){
@@ -217,11 +223,12 @@ public class YCSBRunner implements Closeable {
                 command += sb.toString();
             }
         }
-
+        logger.debug(command);
         var strOutput = executeYCSBCommand(_ycsbConfig.getYcsbBin(), command);
         if(_statsCollectorFactory != null) {
             _statsCollector = _statsCollectorFactory.getStatsCollector();
         }
+        logger.trace("runWorkload finished:\n\tYCSB OUT START:\n{}\n\tYCSB OUT END", strOutput);
         return _ycsbParser.parse(strOutput);
     }
 

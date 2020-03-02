@@ -68,7 +68,7 @@ public class LocalClientStatsCSVCollector implements IStatsCollector {
 
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(_logsDir), fNamePattern)) {
             for (Path file: stream) {
-                var fileName = file.getFileName();
+                var fileName = file.getFileName().toString();
                 if(fileName.startsWith(ClientStatsCSVWriter.STATUS_FILE_FINAL_PREFIX)){
                     doneFlagFiles++;
                 }

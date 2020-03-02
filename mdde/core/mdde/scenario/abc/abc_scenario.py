@@ -1,12 +1,13 @@
 import logging
 from abc import ABC, abstractmethod
 from typing import Tuple, Union, Sequence, Dict
+import time
 
 import numpy as np
 
 from mdde.agent.abc import ABCAgent, NodeAgentMapping
 from mdde.fragmentation.protocol import PFragmenter, PFragmentSorter
-from mdde.registry.protocol import PRegistryReadClient
+from mdde.registry.protocol import PRegistryReadClient, PRegistryControlClient
 
 
 class ABCScenario(ABC):
@@ -125,6 +126,20 @@ class ABCScenario(ABC):
         for agent in self.get_agents():
             obs_n[agent.id] = agent.filter_observation(agent_nodes, obs)
         return obs_n
+
+    def _benchmark(self, registry_control: PRegistryControlClient):
+        bench_start_result = registry_control.ctrl_start_benchmark(workload_id=self.get_benchmark_workload())
+        if bench_start_result.failed:
+            raise RuntimeError(bench_start_result.error)
+        while True:
+            time.sleep(15)
+            bench_status = registry_control.ctrl_get_benchmark()
+            if bench_status.failed:
+                raise RuntimeError(bench_status.error)
+            t = bench_status.result
+            if bench_status.result['completed']:
+                break
+        # TODO: Proper return value
 
     def get_full_allocation_observation(self, registry_read: PRegistryReadClient) \
             -> Tuple[Tuple[NodeAgentMapping, ...], Tuple[str, ...], np.ndarray]:

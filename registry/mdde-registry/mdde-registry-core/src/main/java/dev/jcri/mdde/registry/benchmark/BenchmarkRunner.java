@@ -21,6 +21,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static java.util.Optional.ofNullable;
+
 
 public class BenchmarkRunner {
     private static final Logger logger = LogManager.getLogger(BenchmarkRunner.class);
@@ -152,6 +154,7 @@ public class BenchmarkRunner {
      * @return Relevant statistics gathered during the benchmark run
      */
     public String executeBenchmark(String workload) {
+        logger.trace("Execute benchmark was called with the workload ID: '{}'", ofNullable(workload).orElse(""));
         var knownWorkload = EYCSBWorkloadCatalog.getWorkloadByTag(workload);
         return executeBenchmark(knownWorkload);
     }
@@ -166,8 +169,9 @@ public class BenchmarkRunner {
         _benchmarkRunnerLock.lock();
         try {
             if (_currentLoadState != EBenchmarkLoadStage.READY) {
-                throw new IllegalStateException(String.format("Benchmark data load is in incorrect state: %s",
-                        _currentLoadState.toString()));
+                var err = String.format("Benchmark data load is in incorrect state: %s", _currentLoadState.toString());
+                logger.trace(err);
+                throw new IllegalStateException(err);
             }
             if (_runnerState.getState() != EBenchmarkRunStage.READY) {
                 throw new IllegalStateException("Benchmark is already being executed");
@@ -181,7 +185,8 @@ public class BenchmarkRunner {
             _benchmarkRunnerLock.unlock();
         }
         _runnerState.setRunId(UUID.randomUUID().toString());
-        Thread t = new Thread(new BenchmarkThread(_runnerState, _ycsbRunner, workload ));
+        Thread bench_runner_t = new Thread(new BenchmarkThread(_runnerState, _ycsbRunner, workload ));
+        bench_runner_t.start();
         return _runnerState.getRunId();
     }
 
@@ -322,6 +327,8 @@ public class BenchmarkRunner {
     }
 
     private final class BenchmarkThread implements Runnable{
+
+        private final Logger logger = LogManager.getLogger(BenchmarkThread.class);
 
         final RunnerState _state;
         final YCSBRunner _ycsbRunner;
