@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Container class for Benchmark run results
@@ -33,6 +32,10 @@ public class BenchmarkRunResult {
      */
     private String _error;
 
+    /**
+     * Resulted benchmark run throughput
+     * @return Value returned by YCSB
+     */
     @JsonGetter(THROUGHPUT_FILED)
     public double getThroughput() {
         return _throughput;
@@ -42,6 +45,10 @@ public class BenchmarkRunResult {
         this._throughput = throughput;
     }
 
+    /**
+     * Node-tuple specific statistics
+     * @return Per-node statistics
+     */
     @JsonGetter(NODES_FIELD)
     public Collection<BenchmarkNodeStats> getNodes() {
         return _nodes;

@@ -8,12 +8,7 @@ import java.beans.Transient;
 
 
 public class BenchmarkFragmentStats {
-    public static final String FRAGMENT_ID = "id";
-    public static final String READS_FIELD = "reads";
-    /**
-     * Fragment ID
-     */
-    private String _fragmentId;
+    public static final String READS_FIELD = "r";
     /**
      * Count of the read operations within the benchmark run
      */
@@ -24,18 +19,8 @@ public class BenchmarkFragmentStats {
      */
     public BenchmarkFragmentStats(){}
 
-    public BenchmarkFragmentStats(String fragmentId, int initialRead){
-        _fragmentId = fragmentId;
+    public BenchmarkFragmentStats(int initialRead){
         _readCount = initialRead;
-    }
-
-    @JsonGetter(FRAGMENT_ID)
-    public String getFragmentId() {
-        return _fragmentId;
-    }
-    @JsonSetter(FRAGMENT_ID)
-    public void setFragmentId(String fragmentId) {
-        this._fragmentId = fragmentId;
     }
 
     @JsonGetter(READS_FIELD)

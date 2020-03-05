@@ -3,6 +3,9 @@ package dev.jcri.mdde.registry.shared.commands.containers.result.benchmark;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
+/**
+ * Container class for the benchmark status and results
+ */
 public class BenchmarkStatus {
     public static final String COMPLETED_FIELD = "completed";
     public static final String FAILED_FIELD = "failed";
@@ -42,6 +45,10 @@ public class BenchmarkStatus {
         _result = runResult;
     }
 
+    /**
+     * Completion status of the benchmark
+     * @return False - benchmark was not yet run or still running
+     */
     @JsonGetter(COMPLETED_FIELD)
     public boolean isCompleted() {
         return _isCompleted;
@@ -51,6 +58,10 @@ public class BenchmarkStatus {
         _isCompleted = completed;
     }
 
+    /**
+     * Error status
+     * @return True - there was an error during the benchmark run execution
+     */
     @JsonGetter(FAILED_FIELD)
     public boolean isFailed() {
         return _isFailed;
@@ -60,6 +71,10 @@ public class BenchmarkStatus {
         _isFailed = failed;
     }
 
+    /**
+     * Current execution stage
+     * @return String tag for the current state of the benchmark
+     */
     @JsonGetter(STAGE_FIELD)
     public String getCurrentStage() {
         return _currentStage;
@@ -69,6 +84,10 @@ public class BenchmarkStatus {
         this._currentStage = currentStage;
     }
 
+    /**
+     * If the benchmark was completed successfully, the field contains values returned by the benchmark
+     * @return Throughput, request frequencies, etc.
+     */
     @JsonGetter(RESULT_FIELD)
     public BenchmarkRunResult getResult() {
         return _result;
@@ -78,6 +97,11 @@ public class BenchmarkStatus {
         this._result = result;
     }
 
+    /**
+     * Unique identifier for the benchmark run. Not sequential values, simple UUIDs to distinguish one invocation of the
+     * benchmark run from another on the client side, when and if it's needed.
+     * @return String UUID
+     */
     @JsonGetter(RUN_ID_FIELD)
     public String getRunId() {
         return _runId;

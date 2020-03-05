@@ -8,6 +8,8 @@ class RegistryResponse(Generic[T]):
     MDDE Registry API response wrapper
     """
 
+    __slots__ = ['_result', '_error', '_error_code']
+
     def __init__(self, result: T, error: str, error_code: int):
         """
         Constructor
@@ -47,5 +49,3 @@ class RegistryResponse(Generic[T]):
     @property
     def failed(self) -> bool:
         return self._error is not None
-
-

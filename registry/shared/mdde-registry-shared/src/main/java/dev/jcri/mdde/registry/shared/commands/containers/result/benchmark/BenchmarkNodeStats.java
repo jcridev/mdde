@@ -5,11 +5,18 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 
 public class BenchmarkNodeStats {
+    public static final String CLIENT_ID_FIELD = "";
     public static final String NODE_ID_FIELD = "nodeId";
     public static final String FRAGMENTS_FIELD = "frags";
+
+    /**
+     * ID of the client instance making the data request
+     */
+    private String _clientId;
     /**
      * Node ID
      */
@@ -17,16 +24,26 @@ public class BenchmarkNodeStats {
     /**
      * Total # of reads from this node during the benchmark run
      */
-    private Collection<BenchmarkFragmentStats> _fragments;
+    private Map<String, BenchmarkFragmentStats> _fragments;
 
     /**
      * Default constructor
      */
     public BenchmarkNodeStats(){};
 
-    public BenchmarkNodeStats(String nodeId, Collection<BenchmarkFragmentStats> fragments){
+    public BenchmarkNodeStats(String clientId, String nodeId, Map<String, BenchmarkFragmentStats> fragments){
+        _clientId = clientId;
         _nodeId = nodeId;
         _fragments = fragments;
+    }
+
+    @JsonGetter(CLIENT_ID_FIELD)
+    public String getClientId() {
+        return _clientId;
+    }
+    @JsonSetter(CLIENT_ID_FIELD)
+    public void setClientId(String nodeId) {
+        this._clientId = nodeId;
     }
 
     @JsonGetter(NODE_ID_FIELD)
@@ -39,12 +56,11 @@ public class BenchmarkNodeStats {
     }
 
     @JsonGetter(FRAGMENTS_FIELD)
-    public Collection<BenchmarkFragmentStats> getFragments() {
+    public Map<String, BenchmarkFragmentStats> getFragments() {
         return _fragments;
     }
     @JsonSetter(FRAGMENTS_FIELD)
-    public void setFragments(List<BenchmarkFragmentStats> reads) {
+    public void setFragments(Map<String, BenchmarkFragmentStats> reads) {
         this._fragments = reads;
     }
-
 }

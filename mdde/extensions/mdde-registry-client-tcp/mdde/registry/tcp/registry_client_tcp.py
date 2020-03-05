@@ -1,9 +1,9 @@
 import socket
-from typing import Set, Dict, Union
+from typing import Set, Dict, List, Union
 
 from mdde.registry.protocol import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient
-from mdde.registry.container import RegistryResponse
-from mdde.registry.enums import ERegistryMode
+from mdde.registry.container import RegistryResponse, BenchmarkStatus, BenchmarkResult
+from mdde.registry.enums import ERegistryMode, EBenchmarkState
 from .registry_response_json import RegistryResponseJson
 
 from .serializer import Serializer
@@ -140,9 +140,54 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
         response = self._serialize_and_run_command('RUNBENCH', workload=workload_id)
         return RegistryResponseJson[Dict](response)
 
-    def ctrl_get_benchmark(self) -> RegistryResponse[Dict]:
+    def ctrl_get_benchmark(self) -> RegistryResponse[BenchmarkStatus]:
         response = self._serialize_and_run_command('BENCHSTATE')
-        return RegistryResponseJson[Dict](response)
+        benchmark_get_result: Union[None, BenchmarkStatus] = None
+
+        result_dict: Dict = response[RegistryResponseJson.R_RES]
+        if result_dict:
+            stage: Union[None, EBenchmarkState] = None
+            run_id: str = ''
+            failed: bool = False
+            completed: bool = False
+            result: Union[None, BenchmarkResult] = None
+            # Process basic properties of the benchmark response
+            r_stage = result_dict.get('stage')
+            if r_stage:
+                try:
+                    stage = EBenchmarkState(str(r_stage))
+                except ValueError:
+                    stage = None
+            r_failed = result_dict.get('failed')
+            if r_failed:
+                failed = r_failed
+            r_completed = result_dict.get('completed')
+            if r_completed:
+                completed = r_completed
+            r_id = result_dict.get('id')
+            if r_id:
+                run_id = r_id
+            # Process benchmark result
+            r_result = result_dict.get('result')
+            if r_result:
+                throughput: float = -1.0
+                error: Union[None, str] = None
+                nodes: Union[None, List[Dict]] = None
+                rr_error = r_result.get('error')
+                if rr_error:
+                    error = rr_error
+                rr_throughput = r_result.get('throughput')
+                if rr_throughput:
+                    throughput = float(rr_throughput)
+                rr_nodes = r_result.get('nodes')
+                if rr_nodes != None:
+                    nodes = rr_nodes
+                result = BenchmarkResult(throughput, error, nodes)
+            benchmark_get_result = BenchmarkStatus(stage, run_id, failed, completed, result)
+
+        return RegistryResponse[BenchmarkStatus](benchmark_get_result,
+                                                 response[RegistryResponseJson.R_ERR],
+                                                 response[RegistryResponseJson.R_ERRCODE])
 
     def ctrl_flush(self) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('FLUSHALL')

@@ -96,37 +96,44 @@ public class LocalClientStatsCSVCollector implements IStatsCollector {
         }
 
         // Read results
-        Map<String, Map<String, BenchmarkFragmentStats>> res = new HashMap<>();
+        List<BenchmarkNodeStats> result = new ArrayList<>();
 
         var fNamePattern = String.format("*.%s", ClientStatsCSVWriter.LOG_FILE_EXTENSION);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Paths.get(_logsDir), fNamePattern)) {
             for (Path logFile: stream) {
+                // <nodeId, <fragmentId, fragmentStats>>
+                Map<String, Map<String, BenchmarkFragmentStats>> collected_stats = new HashMap<>();
+                // Get client id
+                var clientId = logFile.getFileName()
+                        .toString()
+                        .replace(String.format(".%s", ClientStatsCSVWriter.LOG_FILE_EXTENSION), "");
                 var logReader = new ClientStatsCSVReader(logFile.toString()).reader();
                 String [] nextLine;
                 while ((nextLine = logReader.readNext()) != null) {
-                    var nodeId = nextLine[2];
-                    if (!res.containsKey(nodeId)){
-                        res.put(nodeId, new HashMap<>());
+                    var nodeId = nextLine[1];
+                    if (!collected_stats.containsKey(nodeId)){
+                        collected_stats.put(nodeId, new HashMap<>());
                     }
-                    var nodeResList = res.get(nodeId);
-                    var fragmentId = tupleFragment.get(nextLine[1]);
+                    var nodeResList = collected_stats.get(nodeId);
+                    var fragmentId = tupleFragment.get(nextLine[2]);
                     if(!nodeResList.containsKey(fragmentId)){
-                        nodeResList.put(fragmentId, new BenchmarkFragmentStats(fragmentId, 0));
+                        nodeResList.put(fragmentId, new BenchmarkFragmentStats(0));
                     }
                     var fragmentStat = nodeResList.get(fragmentId);
                     if(nextLine[0].equals(LogActions.READ.toString())){
                         fragmentStat.incrementReads();
                     }
                 }
+
+                for(var entry: collected_stats.entrySet()){
+                    var newNodeStats = new BenchmarkNodeStats(clientId, entry.getKey(), entry.getValue());
+                    result.add(newNodeStats);
+                }
             }
         } catch (CsvValidationException e) {
             throw new IOException("Failed to read the stats log", e);
         }
-        List<BenchmarkNodeStats> result = new ArrayList<>();
-        for(var entry: res.entrySet()){
-            var newNodeStats = new BenchmarkNodeStats(entry.getKey(), entry.getValue().values());
-            result.add(newNodeStats);
-        }
+
         return result;
     }
 

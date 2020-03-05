@@ -7,6 +7,7 @@ import dev.jcri.mdde.registry.benchmark.ycsb.YCSBRunner;
 import dev.jcri.mdde.registry.data.exceptions.KeyNotFoundException;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.benchmark.commands.LocateTuple;
+import dev.jcri.mdde.registry.shared.benchmark.enums.EBenchmarkRunStage;
 import dev.jcri.mdde.registry.shared.benchmark.responses.TupleLocation;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
@@ -108,7 +109,7 @@ public class BenchmarkRunner {
                 throw new IllegalStateException(String.format("Benchmark data load is in incorrect state: %s",
                         _currentLoadState.toString()));
             }
-            if (_runnerState.getState() != EBenchmarkRunStage.READY) {
+            if (isBenchmarkInAMiddleOfARun()) {
                 throw new IllegalStateException("Benchmark is already being executed");
             }
             _currentLoadState = EBenchmarkLoadStage.LOADING;
@@ -127,6 +128,11 @@ public class BenchmarkRunner {
         return true;
     }
 
+    private boolean isBenchmarkInAMiddleOfARun(){
+        return _runnerState.getState() != EBenchmarkRunStage.READY
+                && _runnerState.getState() != EBenchmarkRunStage.DONE;
+    }
+
     public boolean flushData(){
         _benchmarkRunnerLock.lock();
         try {
@@ -135,7 +141,7 @@ public class BenchmarkRunner {
                 throw new IllegalStateException(String.format("Benchmark data load is in incorrect state: %s",
                         _currentLoadState.toString()));
             }
-            if (_runnerState.getState() != EBenchmarkRunStage.READY) {
+            if (isBenchmarkInAMiddleOfARun()) {
                 throw new IllegalStateException("Benchmark is already being executed");
             }
             _currentLoadState = EBenchmarkLoadStage.EMPTY;
@@ -173,7 +179,7 @@ public class BenchmarkRunner {
                 logger.trace(err);
                 throw new IllegalStateException(err);
             }
-            if (_runnerState.getState() != EBenchmarkRunStage.READY) {
+            if (isBenchmarkInAMiddleOfARun()) {
                 throw new IllegalStateException("Benchmark is already being executed");
             }
             // Reset the state
@@ -192,7 +198,7 @@ public class BenchmarkRunner {
 
     /**
      * Retrieve the status of the benchmark run
-     * @return
+     * @return Info about the stage of the running benchmark or the latest generated benchmark result values
      */
     public BenchmarkStatus getBenchmarkStatus(){
         var result = this._runnerState.getResult();
@@ -201,7 +207,6 @@ public class BenchmarkRunner {
         var completed = this._runnerState.isCompeted; // read this flag last
         return new BenchmarkStatus(completed, failed, stage, result, this._runnerState.getRunId());
     }
-
 
     /**
      * Retrieves node where the requested tuple is located and records the retrieval statistic
@@ -239,26 +244,6 @@ public class BenchmarkRunner {
     }
 
     /**
-     * Stages of running the benchmark
-     */
-    private enum EBenchmarkRunStage {
-        READY("Ready"),
-        STARTING("Starting"),
-        RUNNING("Running"),
-        FINALIZING("Finalizing");
-
-        private String _stage;
-        EBenchmarkRunStage(String stage){
-            _stage = stage;
-        }
-
-        @Override
-        public String toString() {
-            return _stage;
-        }
-    }
-
-    /**
      * State holder for the current benchmark execution
      */
     public final class RunnerState{
@@ -284,35 +269,63 @@ public class BenchmarkRunner {
          */
         private boolean isCompeted = false;
 
+        /**
+         * Get a unique ID for the current benchmark run
+         * @return Benchmark run unique ID string
+         */
         public String getRunId() {
             return _runId;
         }
-
+        /**
+         * Set a unique ID for the current benchmark run
+         * @param runId Benchmark run unique ID string
+         */
         public void setRunId(String runId) {
             this._runId = runId;
         }
 
-
+        /**
+         * Ger the result of the benchmark run
+         * @return Result of the current benchmark run or null if the benchmark is still running
+         */
         public BenchmarkRunResult getResult() {
             return _result;
         }
-
+        /**
+         * Set the result of the benchmark
+         * @param result Result of the current benchmark run or null if the benchmark is still running
+         */
         public void setResult(BenchmarkRunResult result) {
             this._result = result;
         }
 
+        /**
+         * Get the current state of the benchmark run
+         * @return EBenchmarkRunStage
+         */
         public EBenchmarkRunStage getState() {
             return _state;
         }
-
+        /**
+         * Set the current state of the benchmark
+         * @param state EBenchmarkRunStage
+         */
         public void setState(EBenchmarkRunStage state) {
             this._state = state;
         }
 
+        /**
+         * Failed state
+         * @return True - the benchmark run has failed
+         */
         public boolean isFailed() {
             return isFailed;
         }
 
+        /**
+         * Set failed state
+         * @param failed True - the benchmark run has failed
+         */
         public void setFailed(boolean failed) {
             isFailed = failed;
         }
@@ -377,7 +390,7 @@ public class BenchmarkRunner {
             }
             finally {
                 this._state.setCompeted(true);
-                this._state.setState(EBenchmarkRunStage.READY);
+                this._state.setState(EBenchmarkRunStage.DONE);
             }
         }
     }

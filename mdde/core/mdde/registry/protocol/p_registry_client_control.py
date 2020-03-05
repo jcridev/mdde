@@ -8,7 +8,7 @@ try:
 except ImportError:
     from typing_extensions import Protocol
 
-from mdde.registry.container import RegistryResponse
+from mdde.registry.container import RegistryResponse, BenchmarkStatus
 
 
 class PRegistryControlClient(Protocol):
@@ -42,7 +42,7 @@ class PRegistryControlClient(Protocol):
         raise NotImplementedError()
 
     @abstractmethod
-    def ctrl_get_benchmark(self) -> RegistryResponse[Dict]:
+    def ctrl_get_benchmark(self) -> RegistryResponse[BenchmarkStatus]:
         """Get the latest benchmark run state"""
         raise NotImplementedError()
 
