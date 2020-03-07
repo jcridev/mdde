@@ -5,6 +5,9 @@ from mdde.registry.enums import EBenchmarkState
 
 
 class BenchmarkStatus:
+    """
+    Response to the benchmark status request
+    """
 
     __slots__ = ['_stage', '_run_id', '_failed', '_completed', '_result']
 

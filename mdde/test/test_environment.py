@@ -2,7 +2,7 @@ import unittest
 import logging
 
 from mdde.agent.default.default_agent import DefaultAgent
-from mdde.config import ConfigRegistry
+from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.core import Environment
 from mdde.registry.tcp import RegistryClientTCP
 from mdde.registry.protocol import PRegistryReadClient, PRegistryControlClient, PRegistryWriteClient
@@ -20,6 +20,9 @@ class EnvironmentTestCase(unittest.TestCase):
                             format='%(asctime)-15s %(name)s - %(levelname)s - %(message)s')
 
     def test_initialization(self):
+        # Scenario config
+        mdde_config = ConfigEnvironment('../../test/agents')
+
         # Create Registry client
         tcp_client = RegistryClientTCP(self.REGISTRY_HOST, self.REGISTRY_PORT)
         read_client: PRegistryReadClient = tcp_client
@@ -40,7 +43,7 @@ class EnvironmentTestCase(unittest.TestCase):
         scenario = DefaultScenario(100, agents)
 
         # Create environment
-        environment = Environment(scenario, ctrl_client, write_client, read_client)
+        environment = Environment(mdde_config, scenario, ctrl_client, write_client, read_client)
         # Re-generate data
         environment.initialize_registry()
 
@@ -52,7 +55,7 @@ class EnvironmentTestCase(unittest.TestCase):
         act = environment.action_space
 
         # Run benchmark
-        scenario._benchmark(registry_control=ctrl_client)
+        scenario.benchmark(registry_control=ctrl_client)
 
         # Make step
         environment.step(action_n={})

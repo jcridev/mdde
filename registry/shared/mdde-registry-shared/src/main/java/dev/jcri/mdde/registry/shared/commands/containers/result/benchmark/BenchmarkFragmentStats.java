@@ -6,7 +6,9 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 
 import java.beans.Transient;
 
-
+/**
+ * Benchmark statistics of a fragment
+ */
 public class BenchmarkFragmentStats {
     public static final String READS_FIELD = "r";
     /**
@@ -19,6 +21,10 @@ public class BenchmarkFragmentStats {
      */
     public BenchmarkFragmentStats(){}
 
+    /**
+     * Constructor
+     * @param initialRead Initial number of reads
+     */
     public BenchmarkFragmentStats(int initialRead){
         _readCount = initialRead;
     }
@@ -32,6 +38,10 @@ public class BenchmarkFragmentStats {
         this._readCount = readCount;
     }
 
+    /**
+     * Increase read count by 1
+     * @return New read count value
+     */
     @Transient
     @JsonIgnore
     public int incrementReads(){

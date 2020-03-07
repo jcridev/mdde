@@ -6,24 +6,31 @@ import time
 import numpy as np
 
 from mdde.agent.abc import ABCAgent, NodeAgentMapping
+from mdde.config import ConfigEnvironment
 from mdde.fragmentation.protocol import PFragmenter, PFragmentSorter
 from mdde.registry.protocol import PRegistryReadClient, PRegistryControlClient
 
 
 class ABCScenario(ABC):
-    """
-    Subclass this class overriding provided abstract methods to define a new scenario for the environment
-    """
+    """Subclass this class overriding provided abstract methods to define a new scenario for the environment"""
 
     # TODO: Declaration of the meta values (global and local)
-    # TODO: Reward function definition
 
     _DEFAULT_NAME = 'Unnamed scenario'
 
     @abstractmethod
     def __init__(self, scenario_name: str):
         self._scenario_name = scenario_name.strip()
+        self._env_config: Union[None, ConfigEnvironment] = None
         self._logger = logging.getLogger('Scenario.{}'.format(self.name.replace(' ', '_')))
+
+    def inject_config(self, env_config: ConfigEnvironment) -> None:
+        """
+        Method called by the core.environment during the initialization. It's guaranteed that this method will be
+        called to set the configuration object before any agent specific action is taken.
+        :param env_config: MDDE Environment configuration object
+        """
+        self._env_config = env_config
 
     @property
     def name(self) -> str:
@@ -114,20 +121,22 @@ class ABCScenario(ABC):
 
     def get_observation(self, registry_read: PRegistryReadClient) -> Dict[int, np.ndarray]:
         """
-        Observations per client. Take in account only allocation, override this method with the observation composition
-        you require.
+        Observations per client. The default implementation takes in account only allocation and returns it as full
+        observation space for each agent.
+
+        Override this method with a custom observation composition that suits your scenario.
 
         :param registry_read: Read-only client to the registry.
         :return: Dict['agent_id':np.ndarray]
         """
-        # retrieve full observation space for the scenario
+        # retrieve full allocation observation for the scenario
         agent_nodes, fragments, obs = self.get_full_allocation_observation(registry_read=registry_read)
         obs_n: Dict[int, np.ndarray] = {}
         for agent in self.get_agents():
             obs_n[agent.id] = agent.filter_observation(agent_nodes, obs)
         return obs_n
 
-    def _benchmark(self, registry_control: PRegistryControlClient):
+    def benchmark(self, registry_control: PRegistryControlClient):
         bench_start_result = registry_control.ctrl_start_benchmark(workload_id=self.get_benchmark_workload())
         if bench_start_result.failed:
             raise RuntimeError(bench_start_result.error)
@@ -136,23 +145,23 @@ class ABCScenario(ABC):
             bench_status = registry_control.ctrl_get_benchmark()
             if bench_status.failed:
                 raise RuntimeError(bench_status.error)
-            t = bench_status.result
-            if bench_status.result['completed']:
+            if bench_status.result.completed or bench_start_result.failed:
                 break
         # TODO: Proper return value
 
     def get_full_allocation_observation(self, registry_read: PRegistryReadClient) \
             -> Tuple[Tuple[NodeAgentMapping, ...], Tuple[str, ...], np.ndarray]:
         """
-        Generate full observation space of the scenario.
+        Generate full fragment allocation observation. Only returns the allocation binary map, actual observation space
+        returned to the learners must be shaped in the self.get_observation(...) method.
         Override this method in case you require custom logic of forming full observation space.
 
         :param registry_read: Read-only client to the registry.
         :return: 1) Ordered IDs of the observed data nodes mapped to agents [agent ID, node ID]
-                 2) Binary map of fragment allocation (x axis - fragments, y axis - nodes), order of y axis corresponds
+                 2) Ordered list of the fragment IDs corresponding to the x axis of the binary map
+                 3) Binary map of fragment allocation (x axis - fragments, y axis - nodes), order of y axis corresponds
                     to the order of IDs in the first return value
         """
-        # TODO: Meta values
         call_result = registry_read.read_get_all_fragments_with_meta(local_meta=None, global_meta=None)
         if call_result.failed:
             raise RuntimeError(call_result.error)

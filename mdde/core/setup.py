@@ -14,6 +14,7 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
 packages = find_namespace_packages(include=['mdde.*'], exclude=['mdde.test.*'])
 
 requirements = ['typing-extensions; python_version<"3.8"',
+                'tiledb>=0.5.6',  # conda install -c conda-forge tiledb-py
                 'PyYAML']
 
 setup(

@@ -1,8 +1,9 @@
 import logging
-from typing import Set, Tuple, Dict
+from typing import Set, Tuple, Dict, Union
 
 import numpy as np
 
+from mdde.config import ConfigEnvironment
 from mdde.core.exception import EnvironmentInitializationError
 from mdde.registry.container import RegistryResponseHelper
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
@@ -11,17 +12,17 @@ from mdde.registry.enums import ERegistryMode
 
 
 class Environment:
-    """
-    Entry point to MDDE. Reinforcement learning frameworks should be wrapped around this class to function
-    """
+    """Entry point to MDDE. Reinforcement learning frameworks should be wrapped around this class to function"""
 
     def __init__(self,
+                 config: Union[None, ConfigEnvironment],
                  scenario: ABCScenario,
                  registry_ctrl: PRegistryControlClient,
                  registry_write: PRegistryWriteClient,
                  registry_read: PRegistryReadClient):
         """
         Environment constructor
+        :param config: (optional) MDDE configuration object
         :param scenario: Scenario object implementing ABCScenario
         :param registry_ctrl: Control commands for the MDDE registry implementation
         :param registry_write: Write commands for the MDDE registry implementation
@@ -41,11 +42,19 @@ class Environment:
             raise TypeError("scenario can't be None")
 
         self._logger = logging.getLogger('Environment')
+        """Environment instance specific logger"""
 
-        self._scenario = scenario
-        self._registry_ctrl = registry_ctrl
-        self._registry_write = registry_write
-        self._registry_read = registry_read
+        self._scenario: ABCScenario = scenario
+        """Scenario executed within the current environment"""
+        self._registry_ctrl: PRegistryControlClient = registry_ctrl
+        """Control commands for the MDDE registry implementation"""
+        self._registry_write: PRegistryWriteClient = registry_write
+        """Write commands for the MDDE registry implementation"""
+        self._registry_read: PRegistryReadClient = registry_read
+        """Read commands for the MDDE registry implementation"""
+
+        self._config: Union[None, ConfigEnvironment] = config
+        """Environment config file, if required. Injected into the scenario"""
 
         self.activate_scenario()
 
@@ -53,6 +62,7 @@ class Environment:
         """
         Verify the current scenario and ensure it's basic correctness before the start of experiments
         """
+        self._scenario.inject_config(self._config)
         # Make sure the same data node isn't assigned to more than one agent at a time
         nodes_per_agent: [Set[str]] = []
         for agent in self._scenario.get_agents():
