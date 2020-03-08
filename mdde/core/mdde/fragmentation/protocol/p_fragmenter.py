@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import Tuple
 
 from mdde.registry.protocol import PRegistryReadClient, PRegistryWriteClient
 
@@ -13,7 +14,8 @@ class PFragmenter(Protocol):
     Protocol for the implementation of the algorithm controlling the formation of fragments from tuple.
     """
     @abstractmethod
-    def run_fragmentation(self, registry_reader: PRegistryReadClient, registry_writer: PRegistryWriteClient) -> bool:
+    def run_fragmentation(self, registry_reader: PRegistryReadClient, registry_writer: PRegistryWriteClient) \
+            -> Tuple[bool, Tuple[str, ...]]:
         """
         Override this method with the algorithm performing fragmentation of the tuples that are assigned to nodes in
         the registry but not yet assigned to fragments.
@@ -23,5 +25,6 @@ class PFragmenter(Protocol):
         :return Must return True if any tuple manipulations were performed except formation of fragments (copies,
         deletions). False, if only READ operations were executed against the registry and the only WRITE operations were
         fragment formation.
+        Additionally returns the tuple of all create fragment IDs.
         """
         raise NotImplementedError

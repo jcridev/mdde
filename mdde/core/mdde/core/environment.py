@@ -1,11 +1,12 @@
 import logging
+import time
 from typing import Set, Tuple, Dict, Union
 
 import numpy as np
 
 from mdde.config import ConfigEnvironment
 from mdde.core.exception import EnvironmentInitializationError
-from mdde.registry.container import RegistryResponseHelper
+from mdde.registry.container import RegistryResponseHelper, BenchmarkStatus
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.scenario.abc import ABCScenario
 from mdde.registry.enums import ERegistryMode
@@ -107,12 +108,13 @@ class Environment:
         # Run initial fragmentation
         self._logger.info("Fragment generation starting")
         fragmenter = self._scenario.get_fragmenter()
-        fragmentation_requires_shuffle = fragmenter.run_fragmentation(self._registry_read, self._registry_write)
-        self._logger.info("Finished fragmentation, shuffle required: %r", fragmentation_requires_shuffle)
+        requires_shuffle, fragments_ids = fragmenter.run_fragmentation(self._registry_read, self._registry_write)
+        self._scenario.inject_fragments(fragments_ids)
+        self._logger.info("Finished fragmentation, shuffle required: %r", requires_shuffle)
         # Switch to shuffle
         self._set_registry_mode(ERegistryMode.shuffle)
         # Shuffle tuples if fragmentation introduced any changes in the registry
-        if fragmentation_requires_shuffle:
+        if requires_shuffle:
             registry_to_data_sync_result = self._registry_ctrl.ctrl_sync_registry_to_data()
             if registry_to_data_sync_result.failed:
                 err = EnvironmentInitializationError(data_gen_result.error)
@@ -149,7 +151,7 @@ class Environment:
 
     debug_reward: float = 0.0  # TODO: Replace with the actual reward function
 
-    def step(self, action_n: Dict[int, int])\
+    def step(self, action_n: Dict[int, int]) \
             -> Tuple[Dict[int, np.ndarray], Dict[int, float]]:
         """
         Execute actions chosen for each agent, get resulted rewards and new observations
@@ -190,6 +192,30 @@ class Environment:
         for agent in self._scenario.get_agents():
             act_n[agent.id] = agent.get_actions()
         return act_n
+
+    def benchmark(self, without_waiting: bool = False) -> Union[None, BenchmarkStatus]:
+        """Execute benchmark run"""
+        bench_start_result = self._registry_ctrl.ctrl_start_benchmark(
+            workload_id=self._scenario.get_benchmark_workload())
+
+        if bench_start_result.failed:
+            raise RuntimeError(bench_start_result.error)
+        if without_waiting:
+            return None  # Don't wait for the benchmark to end
+        while True:
+            time.sleep(15)
+            bench_status_response = self.benchmark_status()
+            if bench_status_response.completed or bench_start_result.failed:
+                break
+
+        self._scenario.process_benchmark_stats(bench_status_response)
+        return bench_status_response
+
+    def benchmark_status(self) -> BenchmarkStatus:
+        bench_status = self._registry_ctrl.ctrl_get_benchmark()
+        if bench_status.failed:
+            raise RuntimeError(bench_status.error)
+        return bench_status.result
 
     def _initialize_action_space(self):
         """

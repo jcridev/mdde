@@ -1,7 +1,7 @@
 import itertools
 import logging
 import math
-from typing import Dict, Set, Sequence
+from typing import Dict, Set, Sequence, Tuple
 from functools import reduce
 
 from mdde.fragmentation.exceptions import FragmentationError
@@ -35,7 +35,8 @@ class DefaultFragmenter(PFragmenter):
         self._target_n_fragments = number_of_fragments
         self._logger = logging.getLogger('DefaultFragmenter')
 
-    def run_fragmentation(self, registry_reader: PRegistryReadClient, registry_writer: PRegistryWriteClient) -> bool:
+    def run_fragmentation(self, registry_reader: PRegistryReadClient, registry_writer: PRegistryWriteClient) \
+            -> Tuple[bool, Tuple[str, ...]]:
         """
         Execute default fragmentation
         :param registry_reader: Read access to the registry
@@ -68,6 +69,7 @@ class DefaultFragmenter(PFragmenter):
         node_keys_processed = []
         sequential_fragment_id = itertools.count()
         created_fragments = 0
+        fragment_ids_ordered = list()
         for processing_node in node_keys:
             processing_node_tuples = node_contents[processing_node]
             for other_node_key, other_node_tuples in [(k, v) for k, v in node_contents.items()
@@ -129,12 +131,14 @@ class DefaultFragmenter(PFragmenter):
         for node_key, node_tuples in node_contents.items():
             splits = self._split_list(list(node_tuples), node_splits[node_key])
             for split in splits:
+                next_frag_id = str(next(sequential_fragment_id))
                 self._form_fragment(registry_writer,
-                                    str(next(sequential_fragment_id)),
+                                    next_frag_id,
                                     set(split),
                                     optimal_fragment_size)
+                fragment_ids_ordered.append(next_frag_id)
 
-        return False  # We don't modify the registry outside of formation of fragments
+        return False, tuple(fragment_ids_ordered)  # We don't modify the registry outside of formation of fragments
 
     @staticmethod
     def _find_nodes_containing(nodes: Dict[str, Set[str]], items: [str]) -> []:

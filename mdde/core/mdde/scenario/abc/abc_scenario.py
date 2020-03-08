@@ -1,14 +1,14 @@
 import logging
 from abc import ABC, abstractmethod
 from typing import Tuple, Union, Sequence, Dict
-import time
 
 import numpy as np
 
 from mdde.agent.abc import ABCAgent, NodeAgentMapping
 from mdde.config import ConfigEnvironment
 from mdde.fragmentation.protocol import PFragmenter, PFragmentSorter
-from mdde.registry.protocol import PRegistryReadClient, PRegistryControlClient
+from mdde.registry.container import BenchmarkStatus
+from mdde.registry.protocol import PRegistryReadClient
 
 
 class ABCScenario(ABC):
@@ -24,6 +24,9 @@ class ABCScenario(ABC):
         self._env_config: Union[None, ConfigEnvironment] = None
         self._logger = logging.getLogger('Scenario.{}'.format(self.name.replace(' ', '_')))
 
+        self._nodes_order: Union[None, Tuple[NodeAgentMapping, ...]] = None
+        self._actual_fragments: Union[None, Tuple[str, ...]] = None
+
     def inject_config(self, env_config: ConfigEnvironment) -> None:
         """
         Method called by the core.environment during the initialization. It's guaranteed that this method will be
@@ -31,6 +34,13 @@ class ABCScenario(ABC):
         :param env_config: MDDE Environment configuration object
         """
         self._env_config = env_config
+
+    def inject_fragments(self, fragments: Tuple[str, ...]) -> None:
+        """
+        Method called by the core.environment during the initialization.
+        :param fragments: Ordered IDs of the created fragments
+        """
+        self._actual_fragments = fragments
 
     @property
     def name(self) -> str:
@@ -119,6 +129,37 @@ class ABCScenario(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def do_run_benchmark(self) -> bool:
+        """
+        Running a benchmark is an expensive operation, so it's reasonable not to run it every step. However, the exact
+        frequency of benchmark execution must be decided by the specific scenario.
+        Override this method to return True when it's necessary for your scenario to request new statistics from the
+        database cluster.
+
+        If this method returns True, after the benchmark run is done, self.process_benchmark_stats() will be invoked, to
+        pass the result values of the benchmark to the scenario.
+
+        :return: True - execute benchmark run.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def process_benchmark_stats(self, bench_end_result: BenchmarkStatus) -> None:
+        """
+        When environment successfully executes a benchmark, the results will be passed to the scenario via this
+        method. Override it to process the received statistics any way that makes sense for your scenario.
+        :param bench_end_result: Benchmark run results
+        """
+        raise NotImplementedError
+
+    def flush(self) -> None:
+        """
+        Override this method if your scenario requires any specific leaning up (ex. remove temp files, db records)
+        before it's initially started and after it finished.
+        """
+        pass
+
     def get_observation(self, registry_read: PRegistryReadClient) -> Dict[int, np.ndarray]:
         """
         Observations per client. The default implementation takes in account only allocation and returns it as full
@@ -136,18 +177,14 @@ class ABCScenario(ABC):
             obs_n[agent.id] = agent.filter_observation(agent_nodes, obs)
         return obs_n
 
-    def benchmark(self, registry_control: PRegistryControlClient):
-        bench_start_result = registry_control.ctrl_start_benchmark(workload_id=self.get_benchmark_workload())
-        if bench_start_result.failed:
-            raise RuntimeError(bench_start_result.error)
-        while True:
-            time.sleep(15)
-            bench_status = registry_control.ctrl_get_benchmark()
-            if bench_status.failed:
-                raise RuntimeError(bench_status.error)
-            if bench_status.result.completed or bench_start_result.failed:
-                break
-        # TODO: Proper return value
+    def get_ordered_nodes(self) -> Tuple[NodeAgentMapping, ...]:
+        """
+        Make and cash the order of nodes in the scenario.
+        :return: Statically ordered Nodes known by the scenario
+        """
+        if not self._nodes_order:
+            self._nodes_order = tuple(na for a in self.get_agents() for na in a.mapped_data_node_ids)
+        return self._nodes_order
 
     def get_full_allocation_observation(self, registry_read: PRegistryReadClient) \
             -> Tuple[Tuple[NodeAgentMapping, ...], Tuple[str, ...], np.ndarray]:
@@ -172,7 +209,7 @@ class ABCScenario(ABC):
         sorted_fragments = self.get_fragment_sorter().sort(list(obs_frags.values()))
 
         obs_nodes = fragment_catalog['nodes']
-        nodes = tuple(na for a in self.get_agents() for na in a.mapped_data_node_ids)
+        nodes = self.get_ordered_nodes()
 
         obs_dtype = np.int8  # https://numpy.org/devdocs/user/basics.types.html
         obs_full = np.zeros((len(nodes), len(sorted_fragments)), dtype=obs_dtype)

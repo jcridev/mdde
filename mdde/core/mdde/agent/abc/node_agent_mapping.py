@@ -7,3 +7,7 @@ class NodeAgentMapping(NamedTuple):
     """
     agent_id: int
     node_id: str
+
+    def __eq__(self, other):
+        return self.agent_id == other.agent_id \
+               and self.node_id == other.node_id

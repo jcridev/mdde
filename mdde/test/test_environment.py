@@ -55,7 +55,7 @@ class EnvironmentTestCase(unittest.TestCase):
         act = environment.action_space
 
         # Run benchmark
-        scenario.benchmark(registry_control=ctrl_client)
+        environment.benchmark()
 
         # Make step
         environment.step(action_n={})
