@@ -134,7 +134,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
             idx += 1
 
         # Create scenario
-        scenario = DefaultScenario(100, agents)
+        scenario = DefaultScenario(4, 100, agents)
 
         # Create environment
         environment = Environment(scenario, ctrl_client, write_client, read_client)

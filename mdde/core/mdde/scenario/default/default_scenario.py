@@ -7,6 +7,7 @@ import pathlib
 from tiledb.libtiledb import TileDBError
 
 from mdde.agent.abc import ABCAgent
+from mdde.agent.enums import EActionResult
 from mdde.config import ConfigEnvironment
 from mdde.fragmentation.default import DefaultFragmenter, DefaultFragmentSorter
 from mdde.fragmentation.protocol import PFragmentSorter, PFragmenter
@@ -47,6 +48,9 @@ class DefaultScenario(ABCScenario):
         """Raw throughput value received from the previous benchmark run"""
         self.__selected_actions: Union[None, np.ndarray] = None
 
+        self.__benchmark_data_ready: bool = False
+        """Flag: Set to true after the benchmark run was executed and the results passed to the scenario"""
+
     def inject_config(self, env_config: ConfigEnvironment) -> None:
         super(DefaultScenario, self).inject_config(env_config)
         # Initialize TileDB storage needed for the scenario specific data
@@ -80,6 +84,10 @@ class DefaultScenario(ABCScenario):
         return None
 
     def make_collective_step(self, actions: Dict[int, int]) -> None:
+        # Default values for the initial step in the row
+        if self._current_step == 0:
+            self._action_history.fill(-1)
+        # Execute actions
         step_action_res = np.zeros((len(self._agents), 2), dtype=np.int16)
         step_action_res.fill(-1)
         for agent_id, action in actions.items():
@@ -90,9 +98,7 @@ class DefaultScenario(ABCScenario):
         self._action_history[self._current_step] = step_action_res
 
     def do_run_benchmark(self) -> bool:
-        if self._current_step == 0:
-            self._action_history.fill(-1)
-        if self._current_step == self._num_steps_before_bench-1:
+        if self._current_step == self._num_steps_before_bench - 1:
             self._current_step = 0
             return True
         self._current_step += 1
@@ -125,13 +131,33 @@ class DefaultScenario(ABCScenario):
 
         self._write_stats(result)
         self.__throughput = bench_stats.throughput
+        self.__benchmark_data_ready = True
 
     def get_reward(self) -> Dict[int, float]:
-        # TODO: Replace debug placeholder with the actual reward function
-        reward_n = {}
-        for agent in self.get_agents():
-            reward_n[agent.id] = 0.0
-        return reward_n
+        if self.__benchmark_data_ready:
+            # TODO: Replace debug placeholder with the actual reward function
+            if self._current_step == 0:
+                reward_n = {}
+                for agent in self.get_agents():
+                    reward_n[agent.id] = 0.0
+                return reward_n
+        else:
+            step = self._action_history[self._current_step - 1]
+            reward_n = {}
+            i = 0
+            agents = self.get_agents()
+            while i in range(len(agents)):
+                i += 1
+                aid = agents[i].id
+                a_step = step[i]
+                if a_step[0] != 1:
+                    reward_n[aid] = 0.0
+                else:
+                    if a_step[1] == EActionResult.denied.value:
+                        reward_n[aid] = -1.0
+                    else:
+                        reward_n[aid] = 0.0
+            return reward_n
 
     def get_observation(self, registry_read: PRegistryReadClient) -> Dict[int, np.ndarray]:
         agent_nodes, fragments, obs = self.get_full_allocation_observation(registry_read=registry_read)
@@ -157,8 +183,8 @@ class DefaultScenario(ABCScenario):
                 and tiledb.array_exists(self.__tiledb_stats_array):
             return
         # Create array with one dense dimension to store read statistics from the latest benchmark run.
-        dom = tiledb.Domain(tiledb.Dim(name='n', domain=(0, shape[0]-1), tile=shape[0]-1, dtype=np.int64),
-                            tiledb.Dim(name='f', domain=(0, shape[1]-1), tile=(shape[1]-1), dtype=np.int64))
+        dom = tiledb.Domain(tiledb.Dim(name='n', domain=(0, shape[0] - 1), tile=shape[0] - 1, dtype=np.int64),
+                            tiledb.Dim(name='f', domain=(0, shape[1] - 1), tile=(shape[1] - 1), dtype=np.int64))
         # Schema contains one attribute for READ count
         schema = tiledb.ArraySchema(domain=dom, sparse=False, attrs=[tiledb.Attr(name='read', dtype=np.float32)])
         # Create the (empty) array on disk.
