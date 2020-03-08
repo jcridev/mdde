@@ -14,7 +14,7 @@ class PRegistryWriteClient(Protocol):
     """
 
     @abstractmethod
-    def write_fragment_create(self, fragment_id: str, tuple_ids: Set[str]) -> RegistryResponse[str]:
+    def write_fragment_create(self, fragment_id: str, tuple_ids: Set[str]) -> RegistryResponse[bool]:
         """
         Form a new fragment containing unassigned tuples on a specific node
         :param fragment_id:  Id of a newly created fragment
@@ -35,7 +35,8 @@ class PRegistryWriteClient(Protocol):
         raise NotImplementedError()
 
     @abstractmethod
-    def write_fragment_replicate(self, fragment_id: str, source_node_id: str, destination_node_id: str):
+    def write_fragment_replicate(self, fragment_id: str, source_node_id: str, destination_node_id: str) \
+            -> RegistryResponse[bool]:
         """
         Replicate (COPY) fragment from one node to another
         :param fragment_id: ID of the fragment to be copied
@@ -46,7 +47,7 @@ class PRegistryWriteClient(Protocol):
         raise NotImplementedError()
 
     @abstractmethod
-    def write_fragment_delete_exemplar(self, fragment_id: str, node_id: str) -> RegistryResponse[str]:
+    def write_fragment_delete_exemplar(self, fragment_id: str, node_id: str) -> RegistryResponse[bool]:
         """
         Remove a copy of a fragment from the specified node.
         It's only possible to remove a copy of a fragment if there is at least one copy still present on some other

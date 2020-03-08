@@ -3,6 +3,7 @@ from typing import Sequence, Union, Tuple, AnyStr
 import numpy as np
 
 from mdde.agent.abc import NodeAgentMapping
+from mdde.agent.enums import EActionResult
 from mdde.registry.protocol import PRegistryReadClient, PRegistryWriteClient
 
 
@@ -20,9 +21,9 @@ class ABCAgent(ABC):
                  ):
         """
         Constructor
-        :param agent_name: Agent name
+        :param agent_name: Agent name (for logging and debugging)
         :param data_node_ids: A set of the data node IDs associated with the agent
-        :param agent_id
+        :param agent_id Unique integer id assigned to the agent (passed as an id to the learner)
         """
         if agent_id is None:
             raise TypeError("Agent ID must of type int")
@@ -83,7 +84,7 @@ class ABCAgent(ABC):
     def get_actions(self) -> int:
         """
         Get the number of actions from 0 to n, each discrete number within the range correspond to a specific action.
-        :return: number of actions
+        :return: Number of available actions N_a. Each action is mapped to an index within range [0, N_a)
         """
         raise NotImplementedError
 
@@ -103,17 +104,18 @@ class ABCAgent(ABC):
         accordance to the simulated scenario.
         :param nodes: Description of the observation space nodes
         :param fragments: Ordered sequence of fragments
-        :param obs:
-        :return:
+        :param obs: Observation space
+        :return: Number of available actions N_a. Each action is mapped to an index within range [0, N_a)
         """
         raise NotImplementedError
 
     @abstractmethod
-    def do_action(self, action_id: int):
+    def do_action(self, action_id: int) -> EActionResult:
         """
         Execute an action corresponding to the specified action id [0,self.get_actions())
-        :param action_id:
-        :return:
+        :param action_id: Action id as defined in the action space
+        :return: EActionResult for an action that was processed correctly. If a general error (error without an MDDE
+        error code is returned, then a general exception must be raised instead)
         """
         raise NotImplementedError
 
@@ -124,6 +126,6 @@ class ABCAgent(ABC):
         :param obs_descr: Observation space description
         :param obs: full_observation: Full observation space provided by the environment
         :return: agents can have full or limited observation spaces. In case of the latter, provide the filtering logic
-                 within this function and return a filtered out observation space
+        within this function and return a filtered out observation space
         """
         raise NotImplementedError

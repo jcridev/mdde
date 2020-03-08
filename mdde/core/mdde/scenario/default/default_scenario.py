@@ -4,6 +4,8 @@ import numpy as np
 import tiledb
 import pathlib
 
+from tiledb.libtiledb import TileDBError
+
 from mdde.agent.abc import ABCAgent
 from mdde.config import ConfigEnvironment
 from mdde.fragmentation.default import DefaultFragmenter, DefaultFragmentSorter
@@ -18,15 +20,32 @@ class DefaultScenario(ABCScenario):
     Full observation space multi-agent data distribution scenario with read-only workload
     """
 
-    def __init__(self, num_fragments: int, agents: Sequence[ABCAgent]):
+    def __init__(self,
+                 num_fragments: int,
+                 num_steps_before_bench: int,
+                 agents: Sequence[ABCAgent]):
         super().__init__('Default scenario')
         self._default_workload = 'read10000'
 
         self._num_fragments: int = num_fragments
         self._agents: Tuple[ABCAgent, ...] = tuple(agents)
 
-        self.__tiledb_group_name = 'def_tdb_arrays'
-        self.__tiledb_stats_array = None
+        if num_steps_before_bench < 1:
+            raise ValueError("num_steps_before_bench must be > 0")
+
+        self._num_steps_before_bench = num_steps_before_bench
+        self._current_step = 0
+        """Step counter, incremented at every self.do_run_benchmark until reaches self._num_steps_before_bench - 1"""
+        self._action_history = np.zeros((self._num_steps_before_bench, len(self._agents), 2), dtype=np.int16)
+        self._action_history.fill(-1)
+
+        self.__tiledb_group_name: str = 'def_tdb_arrays'
+        """Tile DB group of arrays where all scenario arrays are located"""
+        self.__tiledb_stats_array: Union[None, str] = None
+        """Array of statistics received from the previous benchmark run"""
+        self.__throughput: float = -0.1
+        """Raw throughput value received from the previous benchmark run"""
+        self.__selected_actions: Union[None, np.ndarray] = None
 
     def inject_config(self, env_config: ConfigEnvironment) -> None:
         super(DefaultScenario, self).inject_config(env_config)
@@ -54,20 +73,30 @@ class DefaultScenario(ABCScenario):
     def get_agents(self) -> Tuple[ABCAgent]:
         return self._agents
 
-    def get_fragment_instance_meta_fields(self) -> Union[Sequence, None]:
+    def get_fragment_instance_meta_fields(self) -> Union[Sequence[str], None]:
         return None
 
-    def get_fragment_global_meta_fields(self) -> Union[Sequence, None]:
+    def get_fragment_global_meta_fields(self) -> Union[Sequence[str], None]:
         return None
 
     def make_collective_step(self, actions: Dict[int, int]) -> None:
+        step_action_res = np.zeros((len(self._agents), 2), dtype=np.int16)
+        step_action_res.fill(-1)
         for agent_id, action in actions.items():
             s_agent: ABCAgent = self._agents[agent_id]
-            s_agent.do_action(action)
+            aa_res = s_agent.do_action(action)
+            aa_val = np.full(2, [1, aa_res.value], dtype=np.int16)
+            step_action_res[agent_id] = aa_val
+        self._action_history[self._current_step] = step_action_res
 
     def do_run_benchmark(self) -> bool:
-        # TODO: Actual decision logic for running or not the benchmark
-        return True
+        if self._current_step == 0:
+            self._action_history.fill(-1)
+        if self._current_step == self._num_steps_before_bench-1:
+            self._current_step = 0
+            return True
+        self._current_step += 1
+        return False
 
     def process_benchmark_stats(self, bench_end_result: BenchmarkStatus) -> None:
         if bench_end_result.failed or not bench_end_result.completed:
@@ -77,8 +106,7 @@ class DefaultScenario(ABCScenario):
             raise TypeError("Benchmark results are empty")
 
         bench_stats = bench_end_result.result
-        # TODO: Process throughput
-        # TODO: Process per node stats
+
         nodes = self.get_ordered_nodes()
         fragments = self._actual_fragments
         result = np.zeros((len(nodes), len(fragments)), dtype=np.int32)
@@ -96,10 +124,14 @@ class DefaultScenario(ABCScenario):
                     result[node_idx, frag_idx] = result[node_idx, frag_idx] + frag.get('r', 0)
 
         self._write_stats(result)
+        self.__throughput = bench_stats.throughput
 
     def get_reward(self) -> Dict[int, float]:
-        # TODO: Reward function
-        pass
+        # TODO: Replace debug placeholder with the actual reward function
+        reward_n = {}
+        for agent in self.get_agents():
+            reward_n[agent.id] = 0.0
+        return reward_n
 
     def get_observation(self, registry_read: PRegistryReadClient) -> Dict[int, np.ndarray]:
         agent_nodes, fragments, obs = self.get_full_allocation_observation(registry_read=registry_read)
@@ -121,11 +153,12 @@ class DefaultScenario(ABCScenario):
     def _initialize_stat_values_store_if_needed(self, shape: Tuple[int, ...]) -> None:
         """Initialize storage for the benchmark statistics if it wasn't created yet"""
 
-        if tiledb.array_exists(self.__tiledb_stats_array):
+        if self.__tiledb_stats_array is not None \
+                and tiledb.array_exists(self.__tiledb_stats_array):
             return
         # Create array with one dense dimension to store read statistics from the latest benchmark run.
         dom = tiledb.Domain(tiledb.Dim(name='n', domain=(0, shape[0]-1), tile=shape[0]-1, dtype=np.int64),
-                            tiledb.Dim(name='f', domain=(0, shape[1]-1), tile=(shape[1]-1)//4, dtype=np.int64))
+                            tiledb.Dim(name='f', domain=(0, shape[1]-1), tile=(shape[1]-1), dtype=np.int64))
         # Schema contains one attribute for READ count
         schema = tiledb.ArraySchema(domain=dom, sparse=False, attrs=[tiledb.Attr(name='read', dtype=np.float32)])
         # Create the (empty) array on disk.
@@ -137,8 +170,10 @@ class DefaultScenario(ABCScenario):
 
     def _clear_arrays(self) -> None:
         """Clear out local stat values"""
-        if tiledb.array_exists(self.__tiledb_group_name):
+        try:
             tiledb.remove(self.__tiledb_group_name)
+        except TileDBError:
+            self._logger.debug("No TileDB group to clear out.")
 
     def _retrieve_stats(self) -> np.ndarray:
         """Get read values stored locally"""

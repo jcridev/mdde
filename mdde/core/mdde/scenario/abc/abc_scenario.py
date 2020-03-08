@@ -92,7 +92,7 @@ class ABCScenario(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_fragment_instance_meta_fields(self) -> Union[Sequence, None]:
+    def get_fragment_instance_meta_fields(self) -> Union[Sequence[str], None]:
         """
         Override to return a list of meta values that are attached to every instance of a fragment.
         Return None if no meta values needed
@@ -101,7 +101,7 @@ class ABCScenario(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_fragment_global_meta_fields(self) -> Union[Sequence, None]:
+    def get_fragment_global_meta_fields(self) -> Union[Sequence[str], None]:
         """
         Override to return a list of meta values that are attached to a fragment globally.
         Return None if no meta values needed

@@ -40,7 +40,7 @@ class EnvironmentTestCase(unittest.TestCase):
             idx += 1
 
         # Create scenario
-        scenario = DefaultScenario(100, agents)
+        scenario = DefaultScenario(100, 2, agents)
 
         # Create environment
         environment = Environment(mdde_config, scenario, ctrl_client, write_client, read_client)
@@ -55,11 +55,23 @@ class EnvironmentTestCase(unittest.TestCase):
         act = environment.action_space
 
         # Run benchmark
-        environment.benchmark()
+        # environment.benchmark()
 
         # Make step
-        environment.step(action_n={})
+        action_n = {}
+        for k, v in act.items():
+            action_n[k] = 2
+        environment.step(action_n=action_n)
 
+        action_n = {}
+        for k, v in act.items():
+            action_n[k] = 3
+        environment.step(action_n=action_n)
+
+        action_n = {}
+        for k, v in act.items():
+            action_n[k] = 1
+        environment.step(action_n=action_n)
 
 if __name__ == '__main__':
     unittest.main()

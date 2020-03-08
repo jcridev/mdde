@@ -62,7 +62,7 @@ public enum EErrorCode {
      */
     FAILED_TO_DELETE_SNAPSHOT(0x09EC),
 
-
+    // Range [2600, 3000) is reserved for the logical error codes which indicate specific logical operation constraints.
     /**
      * Value:2601
      */
@@ -83,6 +83,7 @@ public enum EErrorCode {
      * Value:2605
      */
     SEED_NON_EMPTY_REGISTRY(0x0A2D),
+
 
     /**
      * Value: 3100
@@ -117,6 +118,14 @@ public enum EErrorCode {
     @Override
     public String toString() {
         return getErrorCodeBase16();
+    }
+
+    /**
+     * Check if the error is a constraint error and not a code related error
+     * @return True - is logical constraint
+     */
+    public boolean isConstraintError(){
+        return _errorCode >= 2600 && _errorCode <3000;
     }
 
     /**

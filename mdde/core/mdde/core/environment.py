@@ -149,8 +149,6 @@ class Environment:
         # Retrieve the observations
         return self.observation_space
 
-    debug_reward: float = 0.0  # TODO: Replace with the actual reward function
-
     def step(self, action_n: Dict[int, int]) \
             -> Tuple[Dict[int, np.ndarray], Dict[int, float]]:
         """
@@ -158,19 +156,16 @@ class Environment:
         :param action_n: Dict['agent_id':action_id]
         :return: Dict['agent_id':np.ndarray], Dict['agent_id':float]
         """
-        # TODO: Return reward per agent
-        # execute actions
-        # TODO: Execute actions logic in the scenario
-
+        # Act
         self._scenario.make_collective_step(action_n)
-
+        # Measure
+        if self._scenario.do_run_benchmark():
+            # Run the benchmark now if appropriate for the current scenario
+            self.benchmark()
+        # Observe
         obs_n = self.observation_space
-        reward_n = {}
-
-        for agent in self._scenario.get_agents():
-            reward_n[agent.id] = self.debug_reward
-
-        self.debug_reward += 1.0  # TODO: Remove later
+        # Get the reward
+        reward_n = self._scenario.get_reward()
 
         return obs_n, reward_n
 

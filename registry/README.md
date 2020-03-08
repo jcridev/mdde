@@ -40,6 +40,7 @@ Current implemenation of the registry supports [Redis](https://redis.io/) as a d
 * [Jackson](https://github.com/FasterXML/jackson) utilized for serialization and deserialization of data requests and replies in the provided data manipulation API.
 * [Log4j](https://github.com/apache/log4j) for logging.
 * [Jedis](https://github.com/xetorthio/jedis) used as Redis client.
+* [SQLite JDBC Driver](https://github.com/xerial/sqlite-jdbc) used to store snapshots related information in a local file SQLite DB format. 
 * [JUnit 5](https://github.com/junit-team/junit5) for running unit tests.
 * [Testcontainers](https://github.com/testcontainers/testcontainers-java) is used to simplify unit testing where additional infrastructure is required (ex. Redis nodes).
 

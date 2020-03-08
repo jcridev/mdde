@@ -2,8 +2,8 @@ from typing import List, Tuple, Sequence, NamedTuple, Union
 
 import numpy as np
 
-#from mdde.registry.container import RegistryResponseHelper
 from mdde.agent.abc import ABCAgent, NodeAgentMapping
+from mdde.agent.enums import EActionResult
 
 
 class DefaultAgent(ABCAgent):
@@ -11,14 +11,24 @@ class DefaultAgent(ABCAgent):
     def __init__(self, agent_name: str, agent_id: int, data_node_ids: List[str]):
         super().__init__(agent_name, agent_id, data_node_ids)
         self._actions: Union[np.ndarray, None] = None
+        """Agent's action space"""
 
     class Action(NamedTuple):
+        """
+        Specific action for the action space.
+
+        node_source_id: Node where the action is originated (where the tuple is removed from if del operation)
+        node_destination_id: Destination node for copy operations
+        fragment_id: Id of the affected fragment
+        is_del: del for own nodes, false - meaning it's a copy action (foreign nodes)
+        """
         node_source_id: Union[str, None]
         node_destination_id: Union[str, None]
         fragment_id: Union[str, None]
-        is_del: bool  # del for own nodes, false - meaning it's a copy action (foreign nodes)
+        is_del: bool
 
     def get_actions(self) -> int:
+        """Number of actions where indexes of actions are within [0, number_of_actions)"""
         return len(self._actions)
 
     def create_action_space(self,
@@ -74,35 +84,51 @@ class DefaultAgent(ABCAgent):
         self._actions = a_actions
         return len(self._actions)
 
-    def do_action(self, action_id: int):
-        if self._actions <= action_id or action_id < 0:
+    def do_action(self, action_id: int) -> EActionResult:
+        """
+        Execute the selected action
+        :param action_id: Index of the action within [0, number_of_actions)
+        :return: EActionResult value
+        :raises: In case action resulted in a runtime or code level error that is not an expected logical constraint
+        violation error.
+        """
+        if self.get_actions() <= action_id or action_id < 0:
             raise IndexError("Action id '{}' is out of actions space: 0 - {}".format(action_id, self._actions))
 
         if action_id == 0:
-            return  # do nothing
+            return EActionResult.done  # do nothing (agent is done for the learning round)
 
         selected_action: DefaultAgent.Action = self._actions[action_id]
 
         if selected_action.is_del:
             # delete action
-            self._invoke_delete_from_self(selected_action.node_source_id,
-                                          selected_action.fragment_id)
+            action_result = self._invoke_delete_from_self(selected_action.node_source_id,
+                                                          selected_action.fragment_id)
         else:
             # copy actions
-            self._invoke_copy_to_self(selected_action.node_source_id,
-                                      selected_action.node_destination_id,
-                                      selected_action.fragment_id)
+            action_result = self._invoke_copy_to_self(selected_action.node_source_id,
+                                                      selected_action.node_destination_id,
+                                                      selected_action.fragment_id)
+        if action_result:
+            return EActionResult.ok
+        return EActionResult.denied
 
     def filter_observation(self, obs_descr: Tuple[NodeAgentMapping, ...], obs: np.ndarray) -> np.ndarray:
-        """
-        Return full observation space
-        """
+        """Return full observation space without modifications"""
         return obs
 
-    def _invoke_copy_to_self(self, source_node: str, destination_node: str, fragment: str):
+    def _invoke_copy_to_self(self, source_node: str, destination_node: str, fragment: str) -> bool:
         copy_result = self._registry_write.write_fragment_replicate(fragment, source_node, destination_node)
-        #RegistryResponseHelper.raise_on_error(copy_result)
+        if not copy_result.failed:
+            return True
+        if copy_result.is_constraint_error:
+            return False
+        raise RuntimeError(copy_result.error)
 
-    def _invoke_delete_from_self(self, node: str, fragment: str):
+    def _invoke_delete_from_self(self, node: str, fragment: str) -> bool:
         delete_result = self._registry_write.write_fragment_delete_exemplar(fragment, node)
-        #RegistryResponseHelper.raise_on_error(delete_result)
+        if not delete_result.failed:
+            return True
+        if delete_result.is_constraint_error:
+            return False
+        raise RuntimeError(delete_result.error)

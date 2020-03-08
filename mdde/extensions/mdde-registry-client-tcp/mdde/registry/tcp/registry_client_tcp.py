@@ -254,22 +254,23 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
 
     # WRITE commands
 
-    def write_fragment_create(self, fragment_id: str, tuple_ids: Set[str]) -> RegistryResponse[str]:
+    def write_fragment_create(self, fragment_id: str, tuple_ids: Set[str]) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('FRAGMAKE', fid=fragment_id, tids=tuple_ids)
-        return RegistryResponseJson[str](response)
+        return RegistryResponseJson[bool](response)
 
     def write_fragment_append_tuple(self, fragment_id: str, tuple_id: str) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('FRAGAPPEND', fid=fragment_id, tid=tuple_id)
         return RegistryResponseJson[bool](response)
 
-    def write_fragment_replicate(self, fragment_id: str, source_node_id: str, destination_node_id: str):
+    def write_fragment_replicate(self, fragment_id: str, source_node_id: str, destination_node_id: str) \
+            -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('DCOPYFRAG',
                                                    fid=fragment_id, nid=source_node_id, nidb=destination_node_id)
-        return RegistryResponseJson[str](response)
+        return RegistryResponseJson[bool](response)
 
-    def write_fragment_delete_exemplar(self, fragment_id: str, node_id: str) -> RegistryResponse[str]:
+    def write_fragment_delete_exemplar(self, fragment_id: str, node_id: str) -> RegistryResponse[bool]:
         response = self._serialize_and_run_command('DDELFRAGEX', fid=fragment_id, nid=node_id)
-        return RegistryResponseJson[str](response)
+        return RegistryResponseJson[bool](response)
 
     def write_fragment_meta_on_copy(self,
                                     fragment_id: str,

@@ -67,7 +67,8 @@ public abstract class CommandParserWriteBase<TOut, TArgs>
             throws UnknownEntityIdException, WriteOperationException, CommandException;
 
     protected abstract boolean processFormFragmentCommand(TArgs arguments)
-            throws WriteOperationException, IllegalRegistryActionException, UnknownEntityIdException, DuplicateEntityRecordException, CommandException;
+            throws WriteOperationException, IllegalRegistryActionException, UnknownEntityIdException,
+            DuplicateEntityRecordException, CommandException;
 
     protected abstract boolean processAppendToFragmentCommand(TArgs arguments)
             throws WriteOperationException, DuplicateEntityRecordException, UnknownEntityIdException, CommandException;
@@ -76,7 +77,8 @@ public abstract class CommandParserWriteBase<TOut, TArgs>
             throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, CommandException;
 
     protected abstract boolean processDeleteFragmentExemplar(TArgs arguments)
-            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, CommandException, ReadOperationException;
+            throws WriteOperationException, UnknownEntityIdException, IllegalRegistryActionException, CommandException,
+            ReadOperationException;
 
     protected abstract String processDestroyFragment(TArgs arguments)
             throws UnknownEntityIdException, CommandException, WriteOperationException, ReadOperationException;
