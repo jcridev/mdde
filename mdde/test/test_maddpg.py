@@ -7,9 +7,9 @@ from ray.tune import run_experiments
 from ray.tune.registry import register_trainable, register_env
 from ray.rllib.contrib.maddpg.maddpg import MADDPGTrainer
 
-from mdde.core import Environment
+#from mdde.core import Environment
 from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
-
+from mdde.config import ConfigEnvironment
 
 # https://ray.readthedocs.io/en/latest/installation.html
 
@@ -18,6 +18,8 @@ class MaddpgTestCases(unittest.TestCase):  #
     REGISTRY_HOST = 'localhost'
     REGISTRY_PORT = 8942
     TEST_CONFIG_FILE = '../../test/registry_config.yml'
+
+    TEST_ENV_TEMP_FOLDER = '../../test/agents'
 
     TEST_RESULT_DIR = '/mnt/hdd-a500/Temp/debug/result' #'../../test/debug/result'
     """
@@ -57,6 +59,7 @@ class MaddpgTestCases(unittest.TestCase):  #
         temp_dir_full_path = os.path.realpath(self.TEST_TEMP_DIR)
         result_dur_full_path = os.path.realpath(self.TEST_RESULT_DIR)
         config_file_full_path = os.path.realpath(self.TEST_CONFIG_FILE)
+        temp_env_dir = os.path.realpath(self.TEST_ENV_TEMP_FOLDER)
 
         ray.init(redis_max_memory=int(ray.utils.get_system_memory() * 0.4),
                  memory=int(ray.utils.get_system_memory() * 0.2),
@@ -65,10 +68,12 @@ class MaddpgTestCases(unittest.TestCase):  #
                  num_cpus=4,
                  temp_dir=temp_dir_full_path)
 
-        MADDPGAgent = MADDPGTrainer.with_updates(
+        maddpg_agent = MADDPGTrainer.with_updates(
             mixins=[MaddpgTestCases.CustomStdOut]
         )
-        register_trainable("MADDPG", MADDPGAgent)
+        register_trainable("MADDPG", maddpg_agent)
+
+        mdde_config = ConfigEnvironment(temp_env_dir)
 
         # Create and initialize environment before passing it to Ray
         # This makes it impossible to run multiple instances of the environment, however it's intentional due to the
@@ -76,7 +81,8 @@ class MaddpgTestCases(unittest.TestCase):  #
         # easily created and destroyed as a simple local game-like environment
         env_instance = MddeMultiAgentEnv(host=self.REGISTRY_HOST,
                                          port=self.REGISTRY_PORT,
-                                         config=config_file_full_path)
+                                         reg_config=config_file_full_path,
+                                         env_config=mdde_config)
 
         def env_creator(kvargs):
             return MddeMultiAgentEnv(**kvargs)
@@ -127,7 +133,8 @@ class MaddpgTestCases(unittest.TestCase):  #
                     "env_config": {
                         "host": self.REGISTRY_HOST,
                         "port": self.REGISTRY_PORT,
-                        "config": config_file_full_path
+                        "reg_config": config_file_full_path,
+                        "env_config": mdde_config
                     },
                     "num_envs_per_worker": 1,
                     "horizon": self.EPISODE_LEN,

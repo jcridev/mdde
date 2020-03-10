@@ -6,7 +6,7 @@ import numpy as np
 
 from mdde.config import ConfigEnvironment
 from mdde.core.exception import EnvironmentInitializationError
-from mdde.registry.container import RegistryResponseHelper, BenchmarkStatus
+from mdde.registry.container import BenchmarkStatus
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.scenario.abc import ABCScenario
 from mdde.registry.enums import ERegistryMode
@@ -145,7 +145,8 @@ class Environment:
         # Call reset
         self._set_registry_mode(ERegistryMode.benchmark)
         reset_call_response = self._registry_ctrl.ctrl_reset()
-        RegistryResponseHelper.raise_on_error(reset_call_response)
+        if reset_call_response.failed:
+            raise RuntimeError(reset_call_response.error)
         # Retrieve the observations
         return self.observation_space
 
@@ -256,4 +257,5 @@ class Environment:
                 set_bench_result = self._registry_ctrl.ctrl_set_shuffle_mode()
             else:
                 raise RuntimeError("Illegal registry mode switch attempt")
-            RegistryResponseHelper.raise_on_error(set_bench_result)
+            if set_bench_result.failed:
+                raise RuntimeError(set_bench_result.error)

@@ -1,4 +1,5 @@
 from typing import Sequence, Tuple
+import natsort
 
 from mdde.fragmentation.protocol import PFragmentSorter
 
@@ -10,4 +11,4 @@ class DefaultFragmentSorter(PFragmentSorter):
     fragments do no change over the course of the scenario run).
     """
     def sort(self, fragments: Sequence[str]) -> Tuple[str, ...]:
-        return tuple(sorted(fragments, key=lambda fragment: fragment))
+        return tuple(natsort.natsorted(fragments, key=lambda fragment: fragment))

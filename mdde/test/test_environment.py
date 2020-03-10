@@ -43,7 +43,7 @@ class EnvironmentTestCase(unittest.TestCase):
             idx += 1
 
         # Create scenario
-        scenario = DefaultScenario(100, 2, agents)
+        scenario = DefaultScenario(100, 5, agents)
 
         # Create environment
         environment = Environment(mdde_config, scenario, ctrl_client, write_client, read_client)
@@ -66,7 +66,7 @@ class EnvironmentTestCase(unittest.TestCase):
             action_n = {}
             for k, v in act.items():
                 action_n[k] = random.randrange(0, v-1)
-            environment.step(action_n=action_n)
+            obs_s, reward_s = environment.step(action_n=action_n)
 
         # Reset
         reset = environment.reset()

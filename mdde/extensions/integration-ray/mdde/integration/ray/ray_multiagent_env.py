@@ -4,9 +4,9 @@ from gym.spaces import Discrete, Box
 from ray import rllib
 import numpy as np
 
-from mdde.agent.default import DefaultAgent
-from mdde.config import ConfigRegistry
 from mdde.core import Environment
+from mdde.agent.default import DefaultAgent
+from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.registry.tcp import RegistryClientTCP
 from mdde.scenario.default import DefaultScenario
@@ -111,10 +111,13 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         act_n: Dict[int, Discrete] = {}
         for k, v in self._env.action_space.items():
             act_n[k] = Discrete(v)
-
         return act_n
 
-    def _make_env(self, host: str, port: int, config: str) -> Environment:
+    def _make_env(self,
+                  host: str,
+                  port: int,
+                  reg_config: str,
+                  env_config: ConfigEnvironment) -> Environment:
         # TODO: Configurable scenario initialization
 
         # Create Registry client
@@ -123,10 +126,11 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         write_client: PRegistryWriteClient = tcp_client
         ctrl_client: PRegistryControlClient = tcp_client
 
-        # Create agents
+        # Registry configuration
         config_container = ConfigRegistry()
-        config_container.read(config)
+        config_container.read(reg_config)
 
+        # Create agents
         agents = list()
         idx = 0
         for node in config_container.get_nodes():
@@ -134,10 +138,10 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
             idx += 1
 
         # Create scenario
-        scenario = DefaultScenario(4, 100, agents)
+        scenario = DefaultScenario(100, 5, agents)  # TODO: Configure number of fragments and steps per bench
 
         # Create environment
-        environment = Environment(scenario, ctrl_client, write_client, read_client)
+        environment = Environment(env_config, scenario, ctrl_client, write_client, read_client)
         # Re-generate data
         environment.initialize_registry()
 

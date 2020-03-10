@@ -165,6 +165,11 @@ class DefaultScenario(ABCScenario):
         # default values if no benchmark values yet available
         self._initialize_stat_values_store_if_needed(obs.shape)
         stats = self._retrieve_stats()
+        # Normalize stats  # TODO: Workload dependant upper bound
+        normalizer = np.vectorize(lambda x: np.where(x > 0, x / 1000, x))  # TODO: proper normalization
+        stats = normalizer(stats)
+        # Create the final observation space shape
+        obs = obs.astype(np.float32)
         obs = obs[..., np.newaxis]
         obs = np.insert(obs, 1, stats, axis=2)
         # Feed to agents for "filtering"
@@ -186,12 +191,12 @@ class DefaultScenario(ABCScenario):
         dom = tiledb.Domain(tiledb.Dim(name='n', domain=(0, shape[0] - 1), tile=shape[0] - 1, dtype=np.int64),
                             tiledb.Dim(name='f', domain=(0, shape[1] - 1), tile=(shape[1] - 1), dtype=np.int64))
         # Schema contains one attribute for READ count
-        schema = tiledb.ArraySchema(domain=dom, sparse=False, attrs=[tiledb.Attr(name='read', dtype=np.float32)])
+        schema = tiledb.ArraySchema(domain=dom, sparse=False, attrs=[tiledb.Attr(name='read', dtype=np.int32)])
         # Create the (empty) array on disk.
         tiledb.DenseArray.create(self.__tiledb_stats_array, schema)
         # Fill with zeroes
         with tiledb.DenseArray(self.__tiledb_stats_array, mode='w') as rr:
-            zero_data = np.zeros(shape)
+            zero_data = np.zeros(shape, dtype=np.int32)
             rr[:] = zero_data
 
     def _clear_arrays(self) -> None:
