@@ -5,6 +5,8 @@ import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.shared.commands.EWriteCommand;
 import dev.jcri.mdde.registry.store.exceptions.*;
 import dev.jcri.mdde.registry.store.exceptions.action.IllegalRegistryActionException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Objects;
 
@@ -16,6 +18,7 @@ import java.util.Objects;
 public abstract class CommandParserWriteBase<TOut, TArgs>
         implements ICommandParser<TOut, EWriteCommand, TArgs> {
 
+    private static final Logger logger = LogManager.getLogger(CommandParserWriteBase.class);
     protected final ResponseSerializerBase<TOut> _serializer;
 
     protected CommandParserWriteBase(ResponseSerializerBase<TOut> serializer){
@@ -53,6 +56,7 @@ public abstract class CommandParserWriteBase<TOut, TArgs>
             }
         }
         catch (Exception ex){
+            logger.error(ex);
             return _serializer.serializeException(ex);
         }
     }

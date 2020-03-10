@@ -44,7 +44,7 @@ public class ClientStatsCSVWriter implements IClientStatsWriter {
      * Constructor
      * @param statsDir Directory where the client logs should be written
      * @param clientId  Unique ID of the client
-     * @param delimiter
+     * @param delimiter CSV delimiter
      * @throws IOException
      */
     public ClientStatsCSVWriter(String statsDir,

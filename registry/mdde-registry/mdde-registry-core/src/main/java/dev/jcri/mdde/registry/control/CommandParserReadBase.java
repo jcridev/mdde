@@ -7,6 +7,8 @@ import dev.jcri.mdde.registry.shared.store.response.FragmentCatalog;
 import dev.jcri.mdde.registry.shared.store.response.FullRegistryAllocation;
 import dev.jcri.mdde.registry.store.exceptions.ReadOperationException;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Objects;
 import java.util.Set;
@@ -19,6 +21,7 @@ import java.util.Set;
 public abstract class CommandParserReadBase<TOut, TArgs>
         implements ICommandParser<TOut, EReadCommand, TArgs> {
 
+    private static final Logger logger = LogManager.getLogger(CommandParserReadBase.class);
     protected final ResponseSerializerBase<TOut> _serializer;
 
     protected CommandParserReadBase(ResponseSerializerBase<TOut> serializer){
@@ -60,6 +63,7 @@ public abstract class CommandParserReadBase<TOut, TArgs>
             }
         }
         catch (Exception ex){
+            logger.error(ex);
             return _serializer.serializeException(ex);
         }
     }

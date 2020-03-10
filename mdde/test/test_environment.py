@@ -1,5 +1,8 @@
+from typing import Dict
+
 import unittest
 import logging
+import random
 
 from mdde.agent.default.default_agent import DefaultAgent
 from mdde.config import ConfigRegistry, ConfigEnvironment
@@ -52,26 +55,29 @@ class EnvironmentTestCase(unittest.TestCase):
 
         # Retrieve observation and action spaces
         osb = environment.observation_space
-        act = environment.action_space
+        act: Dict[int, int] = environment.action_space
 
         # Run benchmark
         # environment.benchmark()
 
-        # Make step
-        action_n = {}
-        for k, v in act.items():
-            action_n[k] = 2
-        environment.step(action_n=action_n)
+        # Make steps
+        for i in range(0, 20):
+            osb = environment.observation_space
+            action_n = {}
+            for k, v in act.items():
+                action_n[k] = random.randrange(0, v-1)
+            environment.step(action_n=action_n)
 
-        action_n = {}
-        for k, v in act.items():
-            action_n[k] = 3
-        environment.step(action_n=action_n)
+        # Reset
+        reset = environment.reset()
 
-        action_n = {}
-        for k, v in act.items():
-            action_n[k] = 1
-        environment.step(action_n=action_n)
+        # Make steps
+        for i in range(0, 20):
+            osb = environment.observation_space
+            action_n = {}
+            for k, v in act.items():
+                action_n[k] = random.randrange(0, v-1)
+            environment.step(action_n=action_n)
 
 if __name__ == '__main__':
     unittest.main()

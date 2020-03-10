@@ -2,6 +2,9 @@ package dev.jcri.mdde.registry.store.exceptions.action;
 
 import dev.jcri.mdde.registry.exceptions.EErrorCode;
 
+/**
+ * Attempt to replicate fragment to the node that already contains the fragment
+ */
 public class DuplicateFragmentReplicationException extends IllegalRegistryActionException {
     private final static EErrorCode _exCode = EErrorCode.DUPLICATE_FRAGMENT_REPLICATION;
 

@@ -60,13 +60,14 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
             var consumedCapacity = _capacityCounter.read(containingNodes.toArray(new Integer[0]));
             var result = consumedCapacity[containingNodes.get(0)];
             var sIdx = containingNodes.get(0);
-            for(var idx: containingNodes){
-                if(containingNodes.get(idx) < result){
-                    result = containingNodes.get(idx);
-                    sIdx = idx;
+            for (int i = 0; i < containingNodes.size(); i++) {
+                var nodeIdx = containingNodes.get(i);
+                if (consumedCapacity[nodeIdx] < result) {
+                    result = consumedCapacity[nodeIdx];
+                    sIdx = nodeIdx;
                 }
             }
-            final var selectedNodeIdx = containingNodes.get(sIdx);
+            final var selectedNodeIdx = sIdx;
             _capacityCounter.increment(selectedNodeIdx);
             return _nodes.get(selectedNodeIdx);
         }

@@ -7,6 +7,8 @@ import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.store.exceptions.UnknownRegistryCommandExceptions;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -20,6 +22,7 @@ import java.util.Set;
 public abstract class CommandParserControlBase<TOut, TArgs>
         implements ICommandParser<TOut, EStateControlCommand, TArgs> {
 
+    private static final Logger logger = LogManager.getLogger(CommandParserControlBase.class);
     protected final ResponseSerializerBase<TOut> _serializer;
 
     protected CommandParserControlBase(ResponseSerializerBase<TOut> serializer){
@@ -59,6 +62,7 @@ public abstract class CommandParserControlBase<TOut, TArgs>
             }
         }
         catch (Exception ex){
+            logger.error(ex);
             return _serializer.serializeException(ex);
         }
     }

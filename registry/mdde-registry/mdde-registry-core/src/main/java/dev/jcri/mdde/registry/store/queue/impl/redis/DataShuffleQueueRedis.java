@@ -44,13 +44,14 @@ public class DataShuffleQueueRedis implements IDataShuffleQueue {
     @Override
     public int size() throws IOException {
         try(Jedis jedis = _redisConnectionHelper.getRedisCommands()){
-            return Math.toIntExact(jedis.llen(_redisListKey));
+            long queueLength = jedis.llen(_redisListKey);
+            return Math.toIntExact(queueLength);
         }
     }
 
     @Override
     public boolean isEmpty() throws IOException {
-        return size() != 0;
+        return size() == 0;
     }
 
     @Override

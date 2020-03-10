@@ -1,6 +1,5 @@
 package dev.jcri.mdde.registry.store.queue.impl.redis;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dev.jcri.mdde.registry.store.queue.actions.DataCopyAction;
 
 import java.util.Set;

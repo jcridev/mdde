@@ -25,11 +25,13 @@ class RegistryErrorCodes(enum.Enum):
 
     FAILED_TO_DELETE_SNAPSHOT = 0x09EC
 
+    # Range [2600, 3000) is reserved for the logical error codes which indicate specific logical operation constraints.
     DUPLICATE_FRAGMENT_REPLICATION = 0x0A29
     LOCAL_FRAGMENT_REPLICATION = 0x0A2A
     NON_COLOCATED_FRAGMENT_FORMATION = 0x0A2B
     UNIQUE_FRAGMENT_REMOVAL = 0x0A2C
     SEED_NON_EMPTY_REGISTRY = 0x0A2D
+    INCORRECT_FRAGMENT_LOCATION = 0x0A2E
 
     DATA_KEY_NOT_FOUND = 0x0C1C
 

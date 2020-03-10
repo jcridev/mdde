@@ -326,6 +326,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
         if(sourceNodeId.equals(destinationNodeId)){
             throw new LocalFragmentReplicationException("Source and destination nodes can't be the same");
         }
+        if(!readCommandHandler.getIsNodeContainsFragment(sourceNodeId, fragmentId)){
+            throw new IncorrectFragmentLocation(
+                    String.format("Source node %s doesn't have fragment %s", sourceNodeId, fragmentId));
+        }
         if(readCommandHandler.getIsNodeContainsFragment(destinationNodeId, fragmentId)){
             throw new DuplicateFragmentReplicationException(
                     String.format("Destination node %s already contains fragment %s", destinationNodeId, fragmentId));
@@ -343,6 +347,10 @@ public abstract class WriteCommandHandler implements IWriteCommandHandler {
         }
         if (!readCommandHandler.getIsNodeExists(nodeId)) {
             throw new UnknownEntityIdException(RegistryEntityType.Node, nodeId);
+        }
+        if(!readCommandHandler.getIsNodeContainsFragment(nodeId, fragmentId)){
+            throw new IncorrectFragmentLocation(
+                    String.format("Node %s doesn't have fragment %s", nodeId, fragmentId));
         }
         return runDeleteFragmentExemplar(fragmentId, nodeId);
     }

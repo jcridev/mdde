@@ -146,8 +146,7 @@ class DefaultScenario(ABCScenario):
             reward_n = {}
             i = 0
             agents = self.get_agents()
-            while i in range(len(agents)):
-                i += 1
+            while i < len(agents):
                 aid = agents[i].id
                 a_step = step[i]
                 if a_step[0] != 1:
@@ -157,6 +156,7 @@ class DefaultScenario(ABCScenario):
                         reward_n[aid] = -1.0
                     else:
                         reward_n[aid] = 0.0
+                i += 1
             return reward_n
 
     def get_observation(self, registry_read: PRegistryReadClient) -> Dict[int, np.ndarray]:

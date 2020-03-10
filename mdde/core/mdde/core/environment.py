@@ -190,9 +190,22 @@ class Environment:
 
     def benchmark(self, without_waiting: bool = False) -> Union[None, BenchmarkStatus]:
         """Execute benchmark run"""
+        # Execute the shuffle queue
+        self._set_registry_mode(target_mode=ERegistryMode.shuffle)
+        self._logger.info("Executing the shuffle queue")
+        sync_data_result = self._registry_ctrl.ctrl_sync_registry_to_data()
+        if sync_data_result.failed:
+            raise RuntimeError(sync_data_result.error)
+        s_queue_res_msg = "Shuffle queue executed: {}".format(sync_data_result.result)
+        if not sync_data_result.result:
+            self._logger.warning(s_queue_res_msg)
+        else:
+            self._logger.info(s_queue_res_msg)
+        # Execute the benchmark
+        self._set_registry_mode(target_mode=ERegistryMode.benchmark)
+        self._logger.info("Executing the benchmark")
         bench_start_result = self._registry_ctrl.ctrl_start_benchmark(
             workload_id=self._scenario.get_benchmark_workload())
-
         if bench_start_result.failed:
             raise RuntimeError(bench_start_result.error)
         if without_waiting:
@@ -202,7 +215,9 @@ class Environment:
             bench_status_response = self.benchmark_status()
             if bench_status_response.completed or bench_start_result.failed:
                 break
-
+        # Switch back to shuffle
+        self._set_registry_mode(target_mode=ERegistryMode.shuffle)
+        # Return the result
         self._scenario.process_benchmark_stats(bench_status_response)
         return bench_status_response
 

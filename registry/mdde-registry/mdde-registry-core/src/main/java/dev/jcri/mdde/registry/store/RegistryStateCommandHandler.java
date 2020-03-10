@@ -2,6 +2,7 @@ package dev.jcri.mdde.registry.store;
 
 import dev.jcri.mdde.registry.benchmark.BenchmarkRunner;
 import dev.jcri.mdde.registry.data.IDataShuffler;
+import dev.jcri.mdde.registry.data.ShuffleKeysResult;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkStatus;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
@@ -9,7 +10,6 @@ import dev.jcri.mdde.registry.store.exceptions.IllegalRegistryModeException;
 import dev.jcri.mdde.registry.store.exceptions.RegistryModeAlreadySetException;
 import dev.jcri.mdde.registry.store.exceptions.WriteOperationException;
 import dev.jcri.mdde.registry.store.exceptions.action.IllegalRegistryActionException;
-import dev.jcri.mdde.registry.store.exceptions.snapshot.FailedToDeleteSnapshot;
 import dev.jcri.mdde.registry.store.queue.IDataShuffleQueue;
 import dev.jcri.mdde.registry.store.queue.actions.DataCopyAction;
 import dev.jcri.mdde.registry.store.queue.actions.DataDeleteAction;
@@ -19,7 +19,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.List;
@@ -329,34 +328,48 @@ public final class RegistryStateCommandHandler {
     public synchronized boolean syncRegistryToNodes() throws IOException {
         _commandExecutionLock.lock();
         try {
-            if(_registryState ==  ERegistryState.benchmark){
-                throw new IllegalStateException("Registry is already in the benchmark mode");
+            if(_registryState == ERegistryState.benchmark){
+                throw new IllegalStateException("Registry is in the benchmark mode");
             }
-            while(_dataShuffleQueue.isEmpty()){
+            logger.info("Starting the data shuffle queue execution.");
+            while(!_dataShuffleQueue.isEmpty()){
                 var nextAction = _dataShuffleQueue.poll();
+                ShuffleKeysResult shuffleResult = null;
                 switch (nextAction.getActionType()){
                     case DELETE:
                         DataDeleteAction delAction = (DataDeleteAction) nextAction;
-                        _dataShuffler.deleteTuples(delAction.getDataNode(), delAction.getTupleIds());
+                        logger.info("Executing DELETE action from queue: Del '{}' from node '{}'",
+                                String.join(";", delAction.getTupleIds()),delAction.getDataNode());
+                        shuffleResult = _dataShuffler.deleteTuples(delAction.getDataNode(), delAction.getTupleIds());
                         break;
                     case COPY:
                         DataCopyAction cpyAction = (DataCopyAction) nextAction;
-                        _dataShuffler.copyTuples(cpyAction.getSourceNode(),
-                                                    cpyAction.getDestinationNode(),
-                                                    cpyAction.getTupleIds());
+                        logger.info("Executing COPY action from queue: Copy '{}' from node '{}' to node '{}'",
+                                String.join(";", cpyAction.getTupleIds()),
+                                cpyAction.getSourceNode(),
+                                cpyAction.getDestinationNode());
+                        shuffleResult= _dataShuffler.copyTuples(cpyAction.getSourceNode(),
+                                                                cpyAction.getDestinationNode(),
+                                                                cpyAction.getTupleIds());
                         break;
                     default:
                         throw new RuntimeException(String.format("Unknown data type returned from the queue: %s",
                                                                 nextAction.getActionType().getTag()));
                 }
+                if(shuffleResult.getError() != null){
+                    throw shuffleResult.getError();
+                }
             }
+            logger.info("Finished the data shuffle queue execution.");
             return true;
         }
-        catch (Exception ex){
+        catch (IOException ex){
             logger.error("Failed during synchronization of registry and data nodes", ex);
             throw ex;
-        }
-        finally {
+        } catch (Throwable e) {
+            logger.error("Failed during synchronization of registry and data nodes", e);
+            throw new IOException(e);
+        } finally {
             _commandExecutionLock.unlock();
         }
     }

@@ -85,6 +85,7 @@ public class RedisDataShuffler implements IDataShuffler {
                 for (var key : tupleIds) {
                     keyTypes.put(key, p.type(key));
                 }
+                p.sync();
             }
         }
 

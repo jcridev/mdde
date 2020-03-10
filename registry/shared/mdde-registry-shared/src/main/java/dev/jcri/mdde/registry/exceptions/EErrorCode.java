@@ -83,6 +83,10 @@ public enum EErrorCode {
      * Value:2605
      */
     SEED_NON_EMPTY_REGISTRY(0x0A2D),
+    /**
+     * Value:2606
+     */
+    INCORRECT_FRAGMENT_LOCATION(0x0A2E),
 
 
     /**
