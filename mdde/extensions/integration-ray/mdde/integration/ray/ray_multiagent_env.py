@@ -77,7 +77,14 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
                                     "car_1": {},  # info for car_1
                                 }
         """
-        obs, reward = self._env.step(action_dict)
+        discrete_actions = {}
+        for k, v in action_dict.items():
+            if hasattr(type(v), '__iter__'):
+                a_idx = np.argmax(v)  # Assuming the result is a flat array of probabilities
+                discrete_actions[k] = a_idx
+            else:
+                discrete_actions[k] = v
+        obs, reward = self._env.step(discrete_actions)
         obs_n = {}
         done_dict = {}
         info_dict = {}
@@ -86,7 +93,9 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
             done_dict[k] = False  # TODO: real dictionary of the terminal states
             info_dict[k] = {"done": done_dict[k]}  # TODO: return something meaningful here
         done_dict["__all__"] = all(d for d in done_dict.values())
-
+        print(reward)
+        print(isinstance(reward, dict))
+        print(isinstance(dict(reward), dict))
         return obs_n, reward, done_dict, info_dict
 
     @property
@@ -99,7 +108,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         # MultiBinary(v) Currently not supported by Ray MADDPG, making a Box instead
         for k, v in self._env.observation_space.items():
             v_float = v.astype(np.float32).flatten()
-            obs_n[k] = Box(low=0., high=1., shape=v_float.shape)
+            obs_n[k] = Box(low=0.0, high=1.0, shape=v_float.shape)
         return obs_n
 
     @property

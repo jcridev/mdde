@@ -136,11 +136,10 @@ class DefaultScenario(ABCScenario):
     def get_reward(self) -> Dict[int, float]:
         if self.__benchmark_data_ready:
             # TODO: Replace debug placeholder with the actual reward function
-            if self._current_step == 0:
-                reward_n = {}
-                for agent in self.get_agents():
-                    reward_n[agent.id] = 0.0
-                return reward_n
+            reward_n = {}
+            for agent in self.get_agents():
+                reward_n[agent.id] = 0.0
+            return reward_n
         else:
             step = self._action_history[self._current_step - 1]
             reward_n = {}

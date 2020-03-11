@@ -10,6 +10,7 @@ from mdde.registry.container import BenchmarkStatus
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.scenario.abc import ABCScenario
 from mdde.registry.enums import ERegistryMode
+from mdde.util import assert_with_log
 
 
 class Environment:
@@ -157,6 +158,7 @@ class Environment:
         :param action_n: Dict['agent_id':action_id]
         :return: Dict['agent_id':np.ndarray], Dict['agent_id':float]
         """
+        print(action_n)
         # Act
         self._scenario.make_collective_step(action_n)
         # Measure
@@ -167,6 +169,9 @@ class Environment:
         obs_n = self.observation_space
         # Get the reward
         reward_n = self._scenario.get_reward()
+
+        assert_with_log(obs_n is not None, "Unable to retrieve observations", self._logger)
+        assert_with_log(reward_n is not None, "Unable to retrieve rewards", self._logger)
 
         return obs_n, reward_n
 
