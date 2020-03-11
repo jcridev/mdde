@@ -93,9 +93,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
             done_dict[k] = False  # TODO: real dictionary of the terminal states
             info_dict[k] = {"done": done_dict[k]}  # TODO: return something meaningful here
         done_dict["__all__"] = all(d for d in done_dict.values())
-        print(reward)
-        print(isinstance(reward, dict))
-        print(isinstance(dict(reward), dict))
+
         return obs_n, reward, done_dict, info_dict
 
     @property

@@ -158,7 +158,6 @@ class Environment:
         :param action_n: Dict['agent_id':action_id]
         :return: Dict['agent_id':np.ndarray], Dict['agent_id':float]
         """
-        print(action_n)
         # Act
         self._scenario.make_collective_step(action_n)
         # Measure
