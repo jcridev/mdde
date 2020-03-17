@@ -26,10 +26,16 @@ class DefaultScenario(ABCScenario):
                  num_steps_before_bench: int,
                  agents: Sequence[ABCAgent]):
         super().__init__('Default scenario')
+
         self._default_workload = 'read10000'
+        """Workload used for the scenario"""
+        self._TOTAL_READS = 10000  # TODO: Workload dependant upper bound instead of a manually set value
+        """Total number of read operations per benchmark run"""
 
         self._num_fragments: int = num_fragments
+        """Target number of fragments to form from the generated data"""
         self._agents: Tuple[ABCAgent, ...] = tuple(agents)
+        """Pool of agents"""
 
         if num_steps_before_bench < 1:
             raise ValueError("num_steps_before_bench must be > 0")
@@ -38,6 +44,12 @@ class DefaultScenario(ABCScenario):
         self._current_step = 0
         """Step counter, incremented at every self.do_run_benchmark until reaches self._num_steps_before_bench - 1"""
         self._action_history = np.zeros((self._num_steps_before_bench, len(self._agents), 2), dtype=np.int16)
+        """Array used as a ring buffer for the step results history per agent. 
+        self._action_history[0] - first step after the benchmark, array of all agents.
+        self._action_history[0][0] - first step result for the first agent.
+        self._action_history[0][0][0] - 1 - agent took action during the step, 0 - no action was taken
+        self._action_history[0][0][1] - EActionResult
+        """
         self._action_history.fill(-1)
 
         self.__tiledb_group_name: str = 'def_tdb_arrays'
@@ -135,12 +147,39 @@ class DefaultScenario(ABCScenario):
 
     def get_reward(self) -> Dict[int, float]:
         if self.__benchmark_data_ready:
-            # TODO: Replace debug placeholder with the actual reward function
-            reward_n = {}
-            for agent in self.get_agents():
-                reward_n[agent.id] = 0.0
+            # Return the reward taking in account the latest benchmark run
+            reward_n = {}  # agent_id : float reward
+            current_throughput = self.__throughput  # latest throughput value, same for all agents
+            nodes = self.get_ordered_nodes()
+            stats = self._retrieve_stats()
+            total_reads = np.sum(stats)
+            for agent_idx in range(0, len(self.get_agents())):
+                # Calculate individual reward for each agent based on the throughput and results of actions taken
+                agent_obj = self.get_agents()[agent_idx]
+                agent_node_idx = []
+                for node_idx in range(0, len(nodes)):
+                    if nodes[node_idx].agent_id == agent_obj.id:
+                        agent_node_idx.append(node_idx)
+                # Summarize all reads for the run for all of the nodes mapped to the agent
+                agent_reads = 0
+                for a_node_idx in agent_node_idx:
+                    a_node_stats = stats[a_node_idx]
+                    agent_reads = np.sum(a_node_stats)
+                # Get the summarized result of actions correctness
+                agent_correctness_multiplier = 0.0
+                for a_act_history_step in range(0, self._num_steps_before_bench):
+                    a_act = self._action_history[a_act_history_step][agent_idx]
+                    # Increase the multiplier for each correct action taken, if no correct actions were taken,
+                    # the final agent reward will be 0
+                    if a_act[0] == 1 and a_act[1] != EActionResult.denied.value:
+                        agent_correctness_multiplier += 1.0 / self._num_steps_before_bench
+                # Agent reward
+                reward_n[agent_obj.id] = current_throughput \
+                                         * (agent_reads / total_reads) \
+                                         * agent_correctness_multiplier
             return reward_n
         else:
+            # In between benchmark runs, return  pseudo-reward that indicates only the correctness of the action
             step = self._action_history[self._current_step - 1]
             reward_n = {}
             i = 0
@@ -164,8 +203,8 @@ class DefaultScenario(ABCScenario):
         # default values if no benchmark values yet available
         self._initialize_stat_values_store_if_needed(obs.shape)
         stats = self._retrieve_stats()
-        # Normalize stats  # TODO: Workload dependant upper bound
-        normalizer = np.vectorize(lambda x: np.where(x > 0, x / 1000, x))  # TODO: proper normalization
+        # Normalize stats
+        normalizer = np.vectorize(lambda x: np.where(x > 0, x / self._TOTAL_READS, x))
         stats = normalizer(stats)
         # Create the final observation space shape
         obs = obs.astype(np.float32)

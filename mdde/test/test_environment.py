@@ -43,7 +43,7 @@ class EnvironmentTestCase(unittest.TestCase):
             idx += 1
 
         # Create scenario
-        scenario = DefaultScenario(100, 5, agents)
+        scenario = DefaultScenario(100, 2, agents)
 
         # Create environment
         environment = Environment(mdde_config, scenario, ctrl_client, write_client, read_client)
