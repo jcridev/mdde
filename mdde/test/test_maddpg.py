@@ -7,14 +7,14 @@ from ray.tune import run_experiments
 from ray.tune.registry import register_trainable, register_env
 from ray.rllib.contrib.maddpg.maddpg import MADDPGTrainer
 
-#from mdde.core import Environment
+from mdde.core import Environment
 from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
 from mdde.config import ConfigEnvironment
 
 # https://ray.readthedocs.io/en/latest/installation.html
 
 
-class MaddpgTestCases(unittest.TestCase):  #
+class MaddpgTestCases:  #
     REGISTRY_HOST = 'localhost'
     REGISTRY_PORT = 8942
     TEST_CONFIG_FILE = '../../test/registry_config.yml'

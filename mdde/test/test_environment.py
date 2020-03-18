@@ -4,9 +4,9 @@ import unittest
 import logging
 import random
 
+from mdde.core import Environment
 from mdde.agent.default.default_agent import DefaultAgent
 from mdde.config import ConfigRegistry, ConfigEnvironment
-from mdde.core import Environment
 from mdde.registry.tcp import RegistryClientTCP
 from mdde.registry.protocol import PRegistryReadClient, PRegistryControlClient, PRegistryWriteClient
 from mdde.scenario.default import DefaultScenario
