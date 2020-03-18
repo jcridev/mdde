@@ -23,7 +23,7 @@ setup(
     description='Benchmark statistics processor for Multi-agent Data Distribution Environment',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/jcridev/mdde",
+    url="https://github.com/akharitonov/mdde",
 
     keywords="mdde data-distribution reinforcement-learning deep-learning python",
     classifiers=[

@@ -17,4 +17,4 @@ MDDE consists out a the following key components
 
 ### Workload generator (benchmark)
 
-To provide the benchmark functionality, we rely on the [YCSB](https://github.com/brianfrankcooper/YCSB) project. We provide our own [fork](https://github.com/jcridev/YCSB/tree/redis-mdde-client) of the project, where we add MDDE integration code to the original YCSB code base.
+To provide the benchmark functionality, we rely on the [YCSB](https://github.com/brianfrankcooper/YCSB) project. We provide our own [fork](https://github.com/akharitonov/YCSB/tree/redis-mdde-client) of the project, where we add MDDE integration code to the original YCSB code base.

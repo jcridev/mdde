@@ -12,10 +12,10 @@ ENV SCALA_VERSION=2.12
 
 LABEL org.label-schema.name="mdde/kafka"
 LABEL org.label-schema.description="Apache Kafka"
-LABEL org.label-schema.vcs-url="https://github.com/jcridev/mdde/docker/kafka"
+LABEL org.label-schema.vcs-url="https://github.com/akharitonov/mdde/docker/kafka"
 LABEL org.label-schema.version="${SCALA_VERSION}_${KAFKA_VERSION}"
 LABEL org.label-schema.schema-version="1.0"
-LABEL maintainer="https://github.com/jcridev/"
+LABEL maintainer="https://github.com/akharitonov/"
  
 ENV SCRIPTSPATH /usr/bin
 

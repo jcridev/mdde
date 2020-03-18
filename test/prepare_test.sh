@@ -35,10 +35,10 @@ mvn clean install -DskipTests
 cd $TEST_DIR
 ycsb_git=ycsb_git
 if [ ! -d "$ycsb_git" ] ; then
-    git clone --single-branch --branch redis-mdde-client https://github.com/jcridev/YCSB.git $ycsb_git
+    git clone --single-branch --branch redis-mdde-client https://github.com/akharitonov/YCSB.git $ycsb_git
 else
     cd $ycsb_git
-    git pull https://github.com/jcridev/YCSB.git
+    git pull https://github.com/akharitonov/YCSB.git
     cd ..
 fi
 
