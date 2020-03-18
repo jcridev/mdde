@@ -3,7 +3,6 @@
 Current directory `test` is the working directory.
 
 Pre-requisites:
-* Python 3.7 (3.8)
 * Anaconda 1.7 
 * OpenJDK 11
 * Maven 3.6
@@ -25,7 +24,7 @@ Open another window and start the Registry server
 5. `java -jar ../registry/mdde-registry/mdde-registry-tcp/target/mdde-registry-tcp.jar -p 8942 -b 8954 -c registry_config.yml`
 
 
-Activate conda environment.
+In yet another terminal window, activate conda environment.
 
 6. `conda activate mdde-p37`
 
