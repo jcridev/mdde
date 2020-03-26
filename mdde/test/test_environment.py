@@ -1,3 +1,4 @@
+import os
 from typing import Dict
 
 import unittest
@@ -24,7 +25,10 @@ class EnvironmentTestCase(unittest.TestCase):
 
     def test_initialization(self):
         # Scenario config
-        mdde_config = ConfigEnvironment('../../test/agents')
+        agents_path = '../../test/agents'
+        mdde_config = ConfigEnvironment(agents_path)
+
+        os.makedirs(os.path.abspath(agents_path), exist_ok=True)
 
         # Create Registry client
         tcp_client = RegistryClientTCP(self.REGISTRY_HOST, self.REGISTRY_PORT)
@@ -65,7 +69,7 @@ class EnvironmentTestCase(unittest.TestCase):
             osb = environment.observation_space
             action_n = {}
             for k, v in act.items():
-                action_n[k] = random.randrange(0, v-1)
+                action_n[k] = random.randrange(0, v - 1)
             obs_s, reward_s = environment.step(action_n=action_n)
 
         # Reset
@@ -76,8 +80,9 @@ class EnvironmentTestCase(unittest.TestCase):
             osb = environment.observation_space
             action_n = {}
             for k, v in act.items():
-                action_n[k] = random.randrange(0, v-1)
+                action_n[k] = random.randrange(0, v - 1)
             environment.step(action_n=action_n)
+
 
 if __name__ == '__main__':
     unittest.main()

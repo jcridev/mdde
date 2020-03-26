@@ -38,10 +38,12 @@ Setup MDDE.
     
 10. `pip install -e ./extensions/integration-ray`
 
-11. `cd test`
-
-
-Now run test configuration:
-
-* Debug, without a learner:  `python test_environment.py`
-* MADDPG: `python test_maddpg.py`
+11. Run debug or sample configuration
+    *  Debug, without a learner:
+        1.  `cd test`
+        2.  `python test_environment.py`
+    *  Sample:
+        1.  `cd samples`
+        2.  Ray RLlib MADDPG: `python test_maddpg.py` 
+            1.  *[optional]* argument `--result-dir` - Path to results dir (tensorboard)
+            2.  *[optional]* argument `--temp-dir` - Path to where Ray should store temp folder. Make sure it's not too long for the plasma store, otherwise ray will fail.

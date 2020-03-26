@@ -1,4 +1,5 @@
 import os
+import argparse
 
 import ray
 from ray import utils
@@ -7,22 +8,25 @@ from ray.tune import run_experiments
 from ray.tune.registry import register_trainable, register_env
 from ray.rllib.contrib.maddpg.maddpg import MADDPGTrainer
 
+from mdde.core import Environment
 from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
+from mdde.config import ConfigEnvironment
 
 
 # https://ray.readthedocs.io/en/latest/installation.html
 
 
-class MaddpgTestCases():  #
+class DQNTestSample:
     REGISTRY_HOST = 'localhost'
     REGISTRY_PORT = 8942
     TEST_CONFIG_FILE = '../../test/registry_config.yml'
+    TEST_ENV_TEMP_FOLDER = '../../test/agents'
 
-    TEST_RESULT_DIR = '../../test/debug/result'
+    TEST_RESULT_DIR: str = None
+    TEST_TEMP_DIR: str = None
     """
     For tests, make sure "TEST_TEMP_DIR" not too long for the plasma store, otherwise ray will fail
     """
-    TEST_TEMP_DIR = '/mnt/hdd-a500/Temp'  #'../../test/debug/temp'
 
     NUM_EPISODES = 1000
     EPISODE_LEN = 25
@@ -30,8 +34,6 @@ class MaddpgTestCases():  #
     NUM_ADVERSARIES = 0
     SAMPLE_BATCH_SIZE = 25
     TRAIN_BATCH_SIZE = 100
-    ADV_POLICY = 'maddpg'
-    GOOD_POLICY = 'maddpg'
 
     def setUp(self) -> None:
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # {'0': 'DEBUG', '1': 'INFO', '2': 'WARNING', '3': 'ERROR'}
@@ -56,6 +58,9 @@ class MaddpgTestCases():  #
         temp_dir_full_path = os.path.realpath(self.TEST_TEMP_DIR)
         result_dur_full_path = os.path.realpath(self.TEST_RESULT_DIR)
         config_file_full_path = os.path.realpath(self.TEST_CONFIG_FILE)
+        temp_env_dir = os.path.realpath(self.TEST_ENV_TEMP_FOLDER)
+
+        os.makedirs(os.path.abspath(temp_env_dir), exist_ok=True)
 
         ray.init(redis_max_memory=int(ray.utils.get_system_memory() * 0.4),
                  memory=int(ray.utils.get_system_memory() * 0.2),
@@ -64,10 +69,7 @@ class MaddpgTestCases():  #
                  num_cpus=4,
                  temp_dir=temp_dir_full_path)
 
-        MADDPGAgent = MADDPGTrainer.with_updates(
-            mixins=[MaddpgTestCases.CustomStdOut]
-        )
-        register_trainable("MADDPG", MADDPGAgent)
+        mdde_config = ConfigEnvironment(temp_env_dir)
 
         # Create and initialize environment before passing it to Ray
         # This makes it impossible to run multiple instances of the environment, however it's intentional due to the
@@ -75,7 +77,8 @@ class MaddpgTestCases():  #
         # easily created and destroyed as a simple local game-like environment
         env_instance = MddeMultiAgentEnv(host=self.REGISTRY_HOST,
                                          port=self.REGISTRY_PORT,
-                                         config=config_file_full_path)
+                                         config=config_file_full_path,
+                                         env_config=mdde_config)
 
         def env_creator(kvargs):
             return MddeMultiAgentEnv(**kvargs)
@@ -102,7 +105,7 @@ class MaddpgTestCases():  #
         def policy_mapping_fn(agent_id):
             return policy_ids[agent_id]
 
-        exp_name = "MADDPG_MDDE_DEBUG"
+        exp_name = "DQN_MDDE_DEBUG"
 
         trainer = DQNTrainer
 
@@ -162,6 +165,19 @@ class MaddpgTestCases():  #
 
 
 if __name__ == '__main__':
-    runner = MaddpgTestCases()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--result-dir',
+                        help='Results dir (tensorboard)',
+                        default='../../test/debug/result')
+    parser.add_argument('--temp-dir',
+                        help='Temp folder (ray temporary files)',
+                        default='../../test/debug/temp')
+
+    config = parser.parse_args()
+
+    DQNTestSample.TEST_RESULT_DIR = config.result_dir
+    DQNTestSample.TEST_TEMP_DIR = config.temp_dir
+
+    runner = DQNTestSample()
     runner.setUp()
     runner.test_dqn()

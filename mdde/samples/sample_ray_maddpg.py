@@ -1,5 +1,5 @@
-import unittest
 import os
+import argparse
 
 import ray
 from ray import utils
@@ -14,18 +14,17 @@ from mdde.config import ConfigEnvironment
 # https://ray.readthedocs.io/en/latest/installation.html
 
 
-class MaddpgTestCases:  #
+class MaddpgSample:  #
     REGISTRY_HOST = 'localhost'
     REGISTRY_PORT = 8942
     TEST_CONFIG_FILE = '../../test/registry_config.yml'
-
     TEST_ENV_TEMP_FOLDER = '../../test/agents'
 
-    TEST_RESULT_DIR = '/mnt/hdd-a500/Temp/debug/result' #'../../test/debug/result'
+    TEST_RESULT_DIR: str = None
+    TEST_TEMP_DIR: str = None
     """
     For tests, make sure "TEST_TEMP_DIR" not too long for the plasma store, otherwise ray will fail
     """
-    TEST_TEMP_DIR = '/mnt/hdd-a500/Temp/debug/temp'  #'../../test/debug/temp'
 
     NUM_EPISODES = 1000
     EPISODE_LEN = 25
@@ -61,6 +60,8 @@ class MaddpgTestCases:  #
         config_file_full_path = os.path.realpath(self.TEST_CONFIG_FILE)
         temp_env_dir = os.path.realpath(self.TEST_ENV_TEMP_FOLDER)
 
+        os.makedirs(os.path.abspath(temp_env_dir), exist_ok=True)
+
         ray.init(redis_max_memory=int(ray.utils.get_system_memory() * 0.4),
                  memory=int(ray.utils.get_system_memory() * 0.2),
                  object_store_memory=int(ray.utils.get_system_memory() * 0.2),
@@ -69,7 +70,7 @@ class MaddpgTestCases:  #
                  temp_dir=temp_dir_full_path)
 
         maddpg_agent = MADDPGTrainer.with_updates(
-            mixins=[MaddpgTestCases.CustomStdOut]
+            mixins=[MaddpgSample.CustomStdOut]
         )
         register_trainable("MADDPG", maddpg_agent)
 
@@ -180,7 +181,19 @@ class MaddpgTestCases:  #
 
 
 if __name__ == '__main__':
-    runner = MaddpgTestCases()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--result-dir',
+                        help='Results dir (tensorboard)',
+                        default='../../test/debug/result')
+    parser.add_argument('--temp-dir',
+                        help='Temp folder (ray temporary files)',
+                        default='../../test/debug/temp')
+
+    config = parser.parse_args()
+
+    MaddpgSample.TEST_RESULT_DIR = config.result_dir
+    MaddpgSample.TEST_TEMP_DIR = config.temp_dir
+
+    runner = MaddpgSample()
     runner.setUp()
     runner.test_maddpg()
-    #unittest.main()
