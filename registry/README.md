@@ -85,7 +85,7 @@ mvn clean install
 Starting the server with the provided example configuration
 
 ```
-java -jar ./mdde-registry/mdde-registry-tcp/target/mdde-registry-tcp.jar -p 8942 -b 8954 -c ../test/registry_config.yml
+java -jar ./mdde-registry/mdde-registry-tcp/target/mdde-registry-tcp.jar -p 8942 -b 8954 -c ../debug/registry_config.yml
 ```
 Parameters:
 * `-p` registry control interface TCP port (read, write, control queries)

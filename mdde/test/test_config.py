@@ -4,7 +4,7 @@ from mdde.config import ConfigRegistry
 
 
 class ConfigTestCase(unittest.TestCase):
-    TEST_CONFIG_FILE = '../../test/registry_config.yml'
+    TEST_CONFIG_FILE = '../../debug/registry_config.yml'
 
     def test_initialization(self):
         config_container = ConfigRegistry()

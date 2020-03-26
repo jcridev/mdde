@@ -1,6 +1,6 @@
 # Debug environment set up
 
-Current directory `test` is the working directory.
+Current directory `debug` is the working directory.
 
 Pre-requisites:
 * Anaconda 1.7 

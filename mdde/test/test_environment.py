@@ -16,7 +16,7 @@ from mdde.scenario.default import DefaultScenario
 class EnvironmentTestCase(unittest.TestCase):
     REGISTRY_HOST = 'localhost'
     REGISTRY_PORT = 8942
-    TEST_CONFIG_FILE = '../../test/registry_config.yml'
+    TEST_CONFIG_FILE = '../../debug/registry_config.yml'
 
     def setUp(self) -> None:
         # Init logging
@@ -25,7 +25,7 @@ class EnvironmentTestCase(unittest.TestCase):
 
     def test_initialization(self):
         # Scenario config
-        agents_path = '../../test/agents'
+        agents_path = '../../debug/agents'
         mdde_config = ConfigEnvironment(agents_path)
 
         os.makedirs(os.path.abspath(agents_path), exist_ok=True)

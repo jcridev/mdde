@@ -17,8 +17,8 @@ from mdde.config import ConfigEnvironment
 class MaddpgSample:  #
     REGISTRY_HOST = 'localhost'
     REGISTRY_PORT = 8942
-    TEST_CONFIG_FILE = '../../test/registry_config.yml'
-    TEST_ENV_TEMP_FOLDER = '../../test/agents'
+    TEST_CONFIG_FILE = '../../debug/registry_config.yml'
+    TEST_ENV_TEMP_FOLDER = '../../debug/agents'
 
     TEST_RESULT_DIR: str = None
     TEST_TEMP_DIR: str = None
@@ -184,10 +184,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--result-dir',
                         help='Results dir (tensorboard)',
-                        default='../../test/debug/result')
+                        default='../../debug/debug/result')
     parser.add_argument('--temp-dir',
                         help='Temp folder (ray temporary files)',
-                        default='../../test/debug/temp')
+                        default='../../debug/debug/temp')
 
     config = parser.parse_args()
 
