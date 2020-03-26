@@ -11,36 +11,34 @@ Pre-requisites:
 
 1. `sh prepare_test.sh`
    
-2. `conda env create -f ../mdde/support/conda-p37.yml`
-   
-3. `sh start_redis_docker_compose.sh`
-   
-4. `sudo docker-compose -f ../docker/redis_nodes.docker-compose.yml up`
+2. `conda env create -f ../mdde/support/conda-p37.yml`   
+  
+3. `sudo docker-compose -f ../docker/redis_nodes.docker-compose.yml up`
 
 Leave the databases running. To shut down the Redis nodes, press Ctrl-C in the terminal window where the `up` command was executed (wuthout `-d`) or `sudo docker-compose -f ../docker/redis_nodes.docker-compose.yml down` in another.
 
 Open another window and start the Registry server
 
-5. `java -jar ../registry/mdde-registry/mdde-registry-tcp/target/mdde-registry-tcp.jar -p 8942 -b 8954 -c registry_config.yml`
+4. `java -jar ../registry/mdde-registry/mdde-registry-tcp/target/mdde-registry-tcp.jar -p 8942 -b 8954 -c registry_config.yml`
 
 
 In yet another terminal window, activate conda environment.
 
-6. `conda activate mdde-p37`
+5. `conda activate mdde-p37`
 
 Setup MDDE.
 
-7. `cd ../mdde`
+6. `cd ../mdde`
    
-8. `pip install -e ./core`
+7. `pip install -e ./core`
    
-9.  `pip install -e ./extensions/mdde-registry-client-tcp`
+8.  `pip install -e ./extensions/mdde-registry-client-tcp`
     
-10. `pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.8.0.dev3-cp36-cp36m-manylinux1_x86_64.whl`
+9. `pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.8.0.dev3-cp37-cp37m-manylinux1_x86_64.whl`
     
-11. `pip install -e ./extensions/integration-ray`
+10. `pip install -e ./extensions/integration-ray`
 
-12. `cd test`
+11. `cd test`
 
 
 Now run test configuration:
