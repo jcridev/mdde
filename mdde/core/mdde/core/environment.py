@@ -4,6 +4,7 @@ from typing import Set, Tuple, Dict, Union
 
 import numpy as np
 
+from mdde.agent.abc import ABCAgent
 from mdde.config import ConfigEnvironment
 from mdde.core.exception import EnvironmentInitializationError
 from mdde.registry.container import BenchmarkStatus
@@ -173,6 +174,16 @@ class Environment:
         assert_with_log(reward_n is not None, "Unable to retrieve rewards", self._logger)
 
         return obs_n, reward_n
+
+    @property
+    def agents(self) -> Union[None, Tuple[ABCAgent]]:
+        """
+        If the scenario is set, return the agents defined in the active scenario
+        :return: Tuple of agents
+        """
+        if self._scenario is None:
+            return None
+        return self._scenario.get_agents()
 
     @property
     def observation_space(self) -> Dict[int, np.ndarray]:

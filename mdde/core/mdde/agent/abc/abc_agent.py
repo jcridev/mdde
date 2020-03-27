@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Sequence, Union, Tuple, AnyStr
+import re
+
 import numpy as np
 
 from mdde.agent.abc import NodeAgentMapping
@@ -8,6 +10,8 @@ from mdde.registry.protocol import PRegistryReadClient, PRegistryWriteClient
 
 
 class ABCAgent(ABC):
+    DEFAULT_GROUP: str = 'agent'
+
     """
     Base class for the agents definition.
     Every agent must have a name (id) assigned in the constructor. Additionally, every agent at runtime has access to
@@ -17,13 +21,16 @@ class ABCAgent(ABC):
     def __init__(self,
                  agent_name: AnyStr,
                  agent_id: int,
-                 data_node_ids: Union[Sequence[str], str]
+                 data_node_ids: Union[Sequence[str], str],
+                 group: str = DEFAULT_GROUP
                  ):
         """
         Constructor
         :param agent_name: Agent name (for logging and debugging)
         :param data_node_ids: A set of the data node IDs associated with the agent
-        :param agent_id Unique integer id assigned to the agent (passed as an id to the learner)
+        :param agent_id: Unique integer id assigned to the agent (passed as an id to the learner)
+        :param group: Name of the group to which the agent belongs. Only letters and digits are allowed, special
+        characters, punctuation and spaces will be stripped
         """
         if agent_id is None:
             raise TypeError("Agent ID must of type int")
@@ -31,6 +38,12 @@ class ABCAgent(ABC):
             raise TypeError("Data node ID must of type String")
         self._agent_name: agent_name
         self._agent_id: int = agent_id
+
+        if group is None:
+            raise TypeError("Agent group can't be None.")
+        self._group: str = re.sub('[^A-Za-z0-9_]+', '', group)
+        if not self._group:
+            raise ValueError("Agent group can't be empty")
 
         # At least one data node must be specified
         if len(data_node_ids) < 1:
@@ -55,9 +68,18 @@ class ABCAgent(ABC):
     def id(self) -> int:
         """
         Get agent id
-        :return: String agent id
+        :return: Numerical agent id
         """
         return self._agent_id
+
+    @property
+    def group(self) -> str:
+        """
+        Group tittle to which agent belongs
+        :return: String group name. All spaces and special characters are stripped to ensure better compatibility with
+        RL frameworks that would use this property
+        """
+        return self._group
 
     def attach_registry(self, registry_read: PRegistryReadClient, registry_write: PRegistryWriteClient):
         """

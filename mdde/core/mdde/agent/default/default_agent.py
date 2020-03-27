@@ -8,8 +8,12 @@ from mdde.agent.enums import EActionResult
 
 class DefaultAgent(ABCAgent):
 
-    def __init__(self, agent_name: str, agent_id: int, data_node_ids: List[str]):
-        super().__init__(agent_name, agent_id, data_node_ids)
+    def __init__(self,
+                 agent_name: str,
+                 agent_id: int,
+                 data_node_ids: List[str],
+                 group: str = super().DEFAULT_GROUP):
+        super().__init__(agent_name, agent_id, data_node_ids, group)
         self._actions: Union[np.ndarray, None] = None
         """Agent's action space"""
 
