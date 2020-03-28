@@ -71,8 +71,12 @@ class DefaultScenario(ABCScenario):
             self.__tiledb_group_name = abs_path.as_uri()
             self.__tiledb_stats_array = abs_path.joinpath('stats').as_uri()
         # Create the tileDB group of arrays used by this scenario
-        if not tiledb.array_exists(self.__tiledb_group_name):
+        tdb_gtype = tiledb.object_type(self.__tiledb_group_name)
+        if tdb_gtype is None:  # Group does not exist
             tiledb.group_create(self.__tiledb_group_name)
+        elif tdb_gtype == 'array':  # Exist but an array
+            tiledb.remove(self.__tiledb_group_name)  # Remove the array
+            tiledb.group_create(self.__tiledb_group_name)  # Create a group instead
 
     def get_benchmark_workload(self) -> str:
         return self._default_workload
@@ -240,7 +244,7 @@ class DefaultScenario(ABCScenario):
     def _clear_arrays(self) -> None:
         """Clear out local stat values"""
         try:
-            tiledb.remove(self.__tiledb_group_name)
+            tiledb.ls(self.__tiledb_group_name, lambda tdb_obj, tdb_type: tiledb.remove(tdb_obj))
         except TileDBError:
             self._logger.debug("No TileDB group to clear out.")
 
