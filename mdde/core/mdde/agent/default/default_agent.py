@@ -12,7 +12,7 @@ class DefaultAgent(ABCAgent):
                  agent_name: str,
                  agent_id: int,
                  data_node_ids: List[str],
-                 group: str = super().DEFAULT_GROUP):
+                 group: str = ABCAgent.DEFAULT_GROUP):
         super().__init__(agent_name, agent_id, data_node_ids, group)
         self._actions: Union[np.ndarray, None] = None
         """Agent's action space"""
