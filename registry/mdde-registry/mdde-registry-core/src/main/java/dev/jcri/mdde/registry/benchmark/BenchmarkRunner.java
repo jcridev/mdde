@@ -100,7 +100,7 @@ public class BenchmarkRunner {
     /**
      * LOAD initial data into the data nodes
      * @param workload Selected workload.
-     * @return
+     * @return True - data was loaded successfully.
      */
     public boolean generateData(EYCSBWorkloadCatalog workload){
         _benchmarkRunnerLock.lock();
@@ -119,6 +119,7 @@ public class BenchmarkRunner {
         }
         try{
             var ycsbRunOutput = this._ycsbRunner.loadWorkload(workload);
+            logger.trace(ycsbRunOutput);
         } catch (IOException e) {
             logger.error("Error loading workload", e);
             return false;
@@ -159,10 +160,10 @@ public class BenchmarkRunner {
      *                 into the activate database.
      * @return Relevant statistics gathered during the benchmark run
      */
-    public String executeBenchmark(String workload) {
+    public String executeBenchmark(String workload, Integer workers) {
         logger.trace("Execute benchmark was called with the workload ID: '{}'", ofNullable(workload).orElse(""));
         var knownWorkload = EYCSBWorkloadCatalog.getWorkloadByTag(workload);
-        return executeBenchmark(knownWorkload);
+        return executeBenchmark(knownWorkload, workers);
     }
     /**
      * Execute workload RUN.
@@ -171,7 +172,7 @@ public class BenchmarkRunner {
      *                 into the activate database.
      * @return ID of the new Run
      */
-    public String executeBenchmark(EYCSBWorkloadCatalog workload){
+    public String executeBenchmark(EYCSBWorkloadCatalog workload, Integer workers){
         _benchmarkRunnerLock.lock();
         try {
             if (_currentLoadState != EBenchmarkLoadStage.READY) {
@@ -191,7 +192,8 @@ public class BenchmarkRunner {
             _benchmarkRunnerLock.unlock();
         }
         _runnerState.setRunId(UUID.randomUUID().toString());
-        Thread bench_runner_t = new Thread(new BenchmarkThread(_runnerState, _ycsbRunner, workload ));
+        var benchRunnable = new BenchmarkThread(_runnerState, _ycsbRunner, workload, workers);
+        Thread bench_runner_t = new Thread(benchRunnable);
         bench_runner_t.start();
         return _runnerState.getRunId();
     }
@@ -246,7 +248,7 @@ public class BenchmarkRunner {
     /**
      * State holder for the current benchmark execution
      */
-    public final class RunnerState{
+    public static final class RunnerState{
         /**
          * When benchmark execution is invoked a new ID is generated
          */
@@ -330,6 +332,10 @@ public class BenchmarkRunner {
             isFailed = failed;
         }
 
+        /**
+         * Completion flag
+         * @return True the latest run was finished
+         */
         public boolean isCompeted() {
             return isCompeted;
         }
@@ -339,18 +345,31 @@ public class BenchmarkRunner {
         }
     }
 
-    private final class BenchmarkThread implements Runnable{
+    private static final class BenchmarkThread implements Runnable{
 
         private final Logger logger = LogManager.getLogger(BenchmarkThread.class);
 
         final RunnerState _state;
         final YCSBRunner _ycsbRunner;
         final EYCSBWorkloadCatalog _workload;
+        final Integer _workers;
 
-        private BenchmarkThread(RunnerState stateObj, YCSBRunner runner, EYCSBWorkloadCatalog workload) {
+        /**
+         * Constructor
+         * @param stateObj Object containing state of the benchmark that can be read by the command handler.
+         * @param runner Configured instance of the YCSB runner.
+         * @param workload Workload configuration.
+         * @param workers Number of workers executing the run workload. If null, the default value of the YCSB config is
+         *                used instead.
+         */
+        private BenchmarkThread(RunnerState stateObj,
+                                YCSBRunner runner,
+                                EYCSBWorkloadCatalog workload,
+                                Integer workers) {
             _state = stateObj;
             _ycsbRunner = runner;
             _workload = workload;
+            _workers = workers;
         }
 
         @Override
@@ -358,7 +377,7 @@ public class BenchmarkRunner {
             try {
                 this._state.setCompeted(false);
                 this._state.setState(EBenchmarkRunStage.RUNNING);
-                var ycsbRunOutput = this._ycsbRunner.runWorkload(this._workload);
+                var ycsbRunOutput = this._ycsbRunner.runWorkload(this._workload, _workers);
                 this._state.setState(EBenchmarkRunStage.FINALIZING);
                 var result = new BenchmarkRunResult();
                 result.setError(null);

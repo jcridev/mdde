@@ -70,7 +70,7 @@ class EnvironmentTestCase(unittest.TestCase):
             action_n = {}
             for k, v in act.items():
                 action_n[k] = random.randrange(0, v - 1)
-            obs_s, reward_s = environment.step(action_n=action_n)
+            obs_s, reward_s, done = environment.step(action_n=action_n)
 
         # Reset
         reset = environment.reset()
@@ -81,7 +81,7 @@ class EnvironmentTestCase(unittest.TestCase):
             action_n = {}
             for k, v in act.items():
                 action_n[k] = random.randrange(0, v - 1)
-            environment.step(action_n=action_n)
+            obs_s, reward_s, done = environment.step(action_n=action_n)
 
 
 if __name__ == '__main__':

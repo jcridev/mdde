@@ -136,8 +136,8 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
         response = self._serialize_and_run_command('RUNSHUFFLE')
         return RegistryResponseJson[bool](response)
 
-    def ctrl_start_benchmark(self, workload_id: str) -> RegistryResponse[Dict]:
-        response = self._serialize_and_run_command('RUNBENCH', workload=workload_id)
+    def ctrl_start_benchmark(self, workload_id: str, num_workers: int) -> RegistryResponse[Dict]:
+        response = self._serialize_and_run_command('RUNBENCH', workload=workload_id, workers=num_workers)
         return RegistryResponseJson[Dict](response)
 
     def ctrl_get_benchmark(self) -> RegistryResponse[BenchmarkStatus]:

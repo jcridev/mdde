@@ -225,7 +225,8 @@ class Environment:
         self._set_registry_mode(target_mode=ERegistryMode.benchmark)
         self._logger.info("Executing the benchmark")
         bench_start_result = self._registry_ctrl.ctrl_start_benchmark(
-            workload_id=self._scenario.get_benchmark_workload())
+            workload_id=self._scenario.get_benchmark_workload(),
+            num_workers=1)
         if bench_start_result.failed:
             raise RuntimeError(bench_start_result.error)
         if without_waiting:

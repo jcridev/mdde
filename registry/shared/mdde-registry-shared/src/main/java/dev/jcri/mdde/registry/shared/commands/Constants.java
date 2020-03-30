@@ -22,6 +22,7 @@ public final class Constants {
     public static final String ArgFragmentIdField = "fid";
 
     public static final String ArgWorkloadIdField = "workload";
+    public static final String ArgWorkloadWorkersField = "workers";
 
     public static final String ArgFragmentMetaTag = "fmtag";
     public static final String ArgFragmentLocalMetaTags = "fmtagsloc";

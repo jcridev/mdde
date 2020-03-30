@@ -31,6 +31,7 @@ public class MddeBenchmarkHandler extends ChannelInboundHandlerAdapter {
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         try {
             if(_lastReceivedMessage != null) {
+                logger.trace(_lastReceivedMessage);
                 ctx.write(processCommand(_lastReceivedMessage));
             }
             ctx.flush();

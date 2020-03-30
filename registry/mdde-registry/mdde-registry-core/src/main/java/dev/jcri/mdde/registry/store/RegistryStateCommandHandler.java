@@ -190,7 +190,7 @@ public final class RegistryStateCommandHandler {
      * Run benchmark within the prepared environment and return the results
      * @return
      */
-    public synchronized String executeBenchmark(String workloadId) throws MddeRegistryException {
+    public synchronized String executeBenchmark(String workloadId, Integer workers) throws MddeRegistryException {
         _commandExecutionLock.lock();
         logger.trace("Benchmark execution was called");
         try {
@@ -198,7 +198,7 @@ public final class RegistryStateCommandHandler {
                 logger.warn("Registry is in the shuffle mode, unable to execute benchmark");
                 throw new IllegalRegistryModeException(_registryState, ERegistryState.benchmark);
             }
-            return _benchmarkRunner.executeBenchmark(workloadId);
+            return _benchmarkRunner.executeBenchmark(workloadId, workers);
         }
         catch (Exception ex){
             logger.error("Failed executing benchmark", ex);

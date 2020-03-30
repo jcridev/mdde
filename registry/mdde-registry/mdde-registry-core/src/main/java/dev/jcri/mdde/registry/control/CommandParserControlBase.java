@@ -1,7 +1,6 @@
 package dev.jcri.mdde.registry.control;
 
 import dev.jcri.mdde.registry.control.exceptions.CommandException;
-import dev.jcri.mdde.registry.control.exceptions.IllegalCommandArgumentException;
 import dev.jcri.mdde.registry.control.serialization.ResponseSerializerBase;
 import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.commands.EStateControlCommand;

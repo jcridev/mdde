@@ -1,3 +1,3 @@
 from .e_ycsb_distribution import EYCSBWorkloadRequestDistribution
-from .e_default_ycsb_workload import EDefaultYCSBWorkload
 from .ycsb_workload_info import YCSBWorkloadInfo
+from .e_default_ycsb_workload import EDefaultYCSBWorkload

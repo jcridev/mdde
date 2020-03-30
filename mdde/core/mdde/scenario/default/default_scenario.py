@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple, Union, Sequence, Dict
 import pathlib
 
@@ -26,6 +27,7 @@ class DefaultScenario(ABCScenario):
                  num_steps_before_bench: int,
                  agents: Sequence[ABCAgent]):
         super().__init__('Default scenario')
+        self._logger = logging.getLogger('Default scenario')
 
         self.__workload_info = EDefaultYCSBWorkload.READ_10000_ZIPFIAN.value
 
@@ -153,6 +155,7 @@ class DefaultScenario(ABCScenario):
 
     def get_reward(self) -> Dict[int, float]:
         if self.__benchmark_data_ready:
+            self.__benchmark_data_ready = False
             # Return the reward taking in account the latest benchmark run
             reward_n = {}  # agent_id : float reward
             current_throughput = self.__throughput  # latest throughput value, same for all agents
@@ -180,9 +183,13 @@ class DefaultScenario(ABCScenario):
                     if a_act[0] == 1 and a_act[1] != EActionResult.denied.value:
                         agent_correctness_multiplier += 1.0 / self._num_steps_before_bench
                 # Agent reward
-                reward_n[agent_obj.id] = current_throughput \
-                                         * (agent_reads / total_reads) \
-                                         * agent_correctness_multiplier
+
+                self._logger.debug("Real reward: current_throughput={};agent_reads={};total_reads={};"
+                                   "agent_correctness_multiplier={}".format(current_throughput,
+                                                                            agent_reads,
+                                                                            total_reads,
+                                                                            agent_correctness_multiplier))
+                reward_n[agent_obj.id] = current_throughput * (agent_reads / total_reads) * agent_correctness_multiplier
             return reward_n
         else:
             # In between benchmark runs, return  pseudo-reward that indicates only the correctness of the action

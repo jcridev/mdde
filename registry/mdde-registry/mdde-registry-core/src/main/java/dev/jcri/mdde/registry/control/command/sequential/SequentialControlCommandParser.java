@@ -67,7 +67,8 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
         var workloadId = CommandParserHelper.sharedInstance().getPositionalArgumentAsString(arguments, thisCommand, ARG_WORKLOAD_ID);
-        return _stateCommandHandler.executeBenchmark(workloadId);
+        var workloadWorkers = CommandParserHelper.sharedInstance().getPositionalArgumentAsInteger(arguments, thisCommand, ARG_WORKLOAD_WORKERS);
+        return _stateCommandHandler.executeBenchmark(workloadId, workloadWorkers);
     }
 
     @Override

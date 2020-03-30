@@ -173,18 +173,24 @@ public class YCSBRunner implements Closeable {
     /**
      * Run the specified workload
      * @param workload Selected YCSB workload
-     * @return
-     * @throws IOException
+     * @return Parsed YCSB workload run results
+     * @throws IOException Error running YCSB (e.g. binary not found or process failing to start)
      */
-    public YCSBOutput runWorkload(EYCSBWorkloadCatalog workload) throws IOException {
+    public YCSBOutput runWorkload(EYCSBWorkloadCatalog workload, Integer workers) throws IOException {
         var pathToTempWorkload = Paths.get(_tempSubfolder.toString(), workload.getResourceBaseFileName());
         if(!Files.exists(pathToTempWorkload)) {
             ResourcesTools.copyResourceToFileSystem(workload.getResourceFileName(), pathToTempWorkload);
         }
 
+        Integer workerThreads = workers;
+        if(workerThreads == null){
+            workerThreads = _ycsbConfig.getYcsbWorkerThreads();
+        }
+
         return runWorkload(pathToTempWorkload.toString(),
-                getTempClientConfigFilePath().toString(),
-                _defaultClient.getClientName(), _ycsbConfig.getYcsbWorkerThreads());
+                           getTempClientConfigFilePath().toString(),
+                           _defaultClient.getClientName(),
+                           workerThreads);
     }
 
     /**

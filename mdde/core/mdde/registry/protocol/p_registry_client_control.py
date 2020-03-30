@@ -37,7 +37,7 @@ class PRegistryControlClient(Protocol):
         raise NotImplementedError()
 
     @abstractmethod
-    def ctrl_start_benchmark(self, workload_id: str) -> RegistryResponse[Dict]:  # TODO: Explicit result type
+    def ctrl_start_benchmark(self, workload_id: str, num_workers: int) -> RegistryResponse[Dict]:  # TODO: Explicit result type
         """Run benchmark and retrieve the result"""
         raise NotImplementedError()
 

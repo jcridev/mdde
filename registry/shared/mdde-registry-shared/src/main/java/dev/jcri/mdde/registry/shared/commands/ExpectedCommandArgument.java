@@ -5,20 +5,20 @@ package dev.jcri.mdde.registry.shared.commands;
  */
 public enum ExpectedCommandArgument{
     ARG_TUPLE_ID("Tuple ID",
-            Constants.ArgTupleIdField, ExpectedCommandArgument.ArgumentType.STRING),
+            Constants.ArgTupleIdField, ArgumentType.STRING),
     ARG_TUPLE_IDs("Tuple IDs",
-            Constants.ArgTupleIdsField, ExpectedCommandArgument.ArgumentType.SET_STRINGS),
+            Constants.ArgTupleIdsField, ArgumentType.SET_STRINGS),
     ARG_NODE_ID("Node ID",
-            Constants.ArgNodeIdField, ExpectedCommandArgument.ArgumentType.STRING),
+            Constants.ArgNodeIdField, ArgumentType.STRING),
     ARG_NODE_IDs("Node IDs",
-            Constants.ArgNodeIdsField, ExpectedCommandArgument.ArgumentType.SET_STRINGS),
+            Constants.ArgNodeIdsField, ArgumentType.SET_STRINGS),
     ARG_NODE_ID_B("2nd Node ID", // Typically used as a destination node (example: COPY)
-            Constants.ArgSecondNodeIdFiled, ExpectedCommandArgument.ArgumentType.STRING),
+            Constants.ArgSecondNodeIdFiled, ArgumentType.STRING),
     ARG_FRAGMENT_ID("Fragment ID",
-            Constants.ArgFragmentIdField, ExpectedCommandArgument.ArgumentType.STRING),
+            Constants.ArgFragmentIdField, ArgumentType.STRING),
 
     ARG_FRAGMENT_META_TAG("Fragment meta tag",
-            Constants.ArgFragmentMetaTag, ExpectedCommandArgument.ArgumentType.STRING),
+            Constants.ArgFragmentMetaTag, ArgumentType.STRING),
 
     ARG_FRAGMENT_META_TAGS_LOCAL("Set of local meta tags",
             Constants.ArgFragmentLocalMetaTags, ArgumentType.SET_STRINGS),
@@ -26,10 +26,12 @@ public enum ExpectedCommandArgument{
             Constants.ArgFragmentGlobalMetaTags, ArgumentType.SET_STRINGS),
 
     ARG_FRAGMENT_META_VALUE("Fragment meta value",
-            Constants.ArgFragmentMetaValue, ExpectedCommandArgument.ArgumentType.STRING),
+            Constants.ArgFragmentMetaValue, ArgumentType.STRING),
 
     ARG_WORKLOAD_ID("Benchmark workload ID",
-            Constants.ArgWorkloadIdField, ExpectedCommandArgument.ArgumentType.STRING),
+            Constants.ArgWorkloadIdField, ArgumentType.STRING),
+    ARG_WORKLOAD_WORKERS("Number of YCSB workers",
+            Constants.ArgWorkloadWorkersField, ArgumentType.INTEGER),
     ARG_DEFAULT_SNAPSHOT_FLAG("Snapshot ID assigned as default",
             Constants.ArgSnapshotDefaultField, ArgumentType.BOOLEAN),
     ARG_SNAPSHOT_ID("Snapshot ID",
@@ -45,7 +47,7 @@ public enum ExpectedCommandArgument{
      * @param argumentType Argument type
      * @param tag Tag
      */
-    private ExpectedCommandArgument(String title, String tag, ArgumentType argumentType) {
+    ExpectedCommandArgument(String title, String tag, ArgumentType argumentType) {
         if(title == null || title.isEmpty()){
             throw new IllegalArgumentException("Argument title can't be null or empty");
         }
@@ -63,6 +65,7 @@ public enum ExpectedCommandArgument{
      */
     public enum ArgumentType{
         STRING("String"),
+        INTEGER("Integer"),
         SET_STRINGS("Set of strings"),
         BOOLEAN("Boolean");
 
@@ -71,6 +74,10 @@ public enum ExpectedCommandArgument{
             _description = description;
         }
 
+        /**
+         * Argument type description
+         * @return String description
+         */
         public String getDescription() {
             return _description;
         }
@@ -82,21 +89,25 @@ public enum ExpectedCommandArgument{
     }
 
     /**
-     * Returns argument title
-     * @return
+     * Returns argument description title
+     * @return Tag, type, tile
      */
     @Override
     public String toString() {
         return  this.getTag() + "[" + this.getArgumentType() +"] - " + this.getTitle();
     }
 
+    /**
+     * Unique argument title
+     * @return Argument title
+     */
     public String getTitle(){
         return _title;
     }
 
     /**
      * Expected type of the argument
-     * @return
+     * @return Argument type description
      */
     public ArgumentType getArgumentType(){
         return _argumentType;
@@ -104,7 +115,7 @@ public enum ExpectedCommandArgument{
 
     /**
      * Get argument tag used in serialization and deserialization
-     * @return
+     * @return Tag that should be used in the command serialization (e.g. JSON, XML)
      */
     public String getTag(){
         return _tag;
