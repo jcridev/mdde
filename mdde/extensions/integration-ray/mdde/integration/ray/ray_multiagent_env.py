@@ -84,15 +84,15 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
                 discrete_actions[k] = a_idx
             else:
                 discrete_actions[k] = v
-        obs, reward = self._env.step(discrete_actions)
+        obs, reward, done = self._env.step(discrete_actions)
         obs_n = {}
         done_dict = {}
         info_dict = {}
         for k, v in obs.items():
             obs_n[k] = v.astype(np.float32).flatten()
-            done_dict[k] = False  # TODO: real dictionary of the terminal states
-            info_dict[k] = {"done": done_dict[k]}  # TODO: return something meaningful here
-        done_dict["__all__"] = all(d for d in done_dict.values())
+            done_dict[k] = done[k]
+            info_dict[k] = {}  # TODO: return something meaningful here
+        done_dict["__all__"] = all(d for d in done.values())
 
         return obs_n, reward, done_dict, info_dict
 

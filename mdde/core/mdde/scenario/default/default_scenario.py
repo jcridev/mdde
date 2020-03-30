@@ -108,7 +108,7 @@ class DefaultScenario(ABCScenario):
         step_action_res.fill(-1)
         for agent_id, action in actions.items():
             s_agent: ABCAgent = self._agents[agent_id]
-            aa_res = s_agent.do_action(action)
+            aa_res: EActionResult = s_agent.do_action(action)
             aa_val = np.full(2, [1, aa_res.value], dtype=np.int16)
             step_action_res[agent_id] = aa_val
         self._action_history[self._current_step] = step_action_res
@@ -221,7 +221,14 @@ class DefaultScenario(ABCScenario):
         return obs_n
 
     def flush(self) -> None:
+        # Delete arrays when finished
         self._clear_arrays()
+
+    def reset(self) -> None:
+        # Reset agents
+        super().reset()
+        # Flush arrays, no point to store these between episodes
+        self.flush()
 
     def _initialize_stat_values_store_if_needed(self, shape: Tuple[int, ...]) -> None:
         """Initialize storage for the benchmark statistics if it wasn't created yet"""

@@ -56,10 +56,10 @@ class DefaultAgent(ABCAgent):
                                    fragment_id=None, is_del=False)  # do nothing action
         act_cnt: int = 1
         for node in nodes:
-            is_own_node = node.node_id in self.get_data_node_ids
+            is_own_node = node.node_id in self.data_node_ids
             if not is_own_node:
                 # we can only copy from a foreign node to own node
-                for own_node in self.get_data_node_ids:
+                for own_node in self.data_node_ids:
                     for fragment in fragments:
                         # copy action from foreign to own node
                         a_actions[act_cnt] = self.Action(node_source_id=node.node_id,
@@ -69,7 +69,7 @@ class DefaultAgent(ABCAgent):
                         act_cnt += 1
             else:
                 # we can copy fragments between own nodes and remove fragments from own nodes
-                for own_node in [n for n in self.get_data_node_ids if n != node.node_id]:
+                for own_node in [n for n in self.data_node_ids if n != node.node_id]:
                     for fragment in fragments:
                         # copy action from own to own node
                         a_actions[act_cnt] = self.Action(node_source_id=node.node_id,

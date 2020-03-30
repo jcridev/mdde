@@ -10,13 +10,15 @@ from mdde.registry.protocol import PRegistryReadClient, PRegistryWriteClient
 
 
 class ABCAgent(ABC):
-    DEFAULT_GROUP: str = 'agent'
-
     """
     Base class for the agents definition.
-    Every agent must have a name (id) assigned in the constructor. Additionally, every agent at runtime has access to
-    the read instructions of the
+    Every agent must have a unique id assigned in the constructor. Additionally, every agent at runtime has access to
+    the read instructions and write API of the registry to facilitate actions execution.
     """
+
+    DEFAULT_GROUP: str = 'agent'
+    """Default agent group name."""
+
     @abstractmethod
     def __init__(self,
                  agent_name: AnyStr,
@@ -37,7 +39,9 @@ class ABCAgent(ABC):
         if data_node_ids is None:
             raise TypeError("Data node ID must of type String")
         self._agent_name: agent_name
+        """Name of the agent. Used for information and logging only"""
         self._agent_id: int = agent_id
+        """ID of the agent, must be unique within the current scenario run"""
 
         if group is None:
             raise TypeError("Agent group can't be None.")
@@ -62,13 +66,18 @@ class ABCAgent(ABC):
         # These properties will have the implementation of the protocols assigned to them at the time of execution,
         # Use these to create actions affecting the registry (write) and the agent observation space (read).
         self._registry_read: Union[PRegistryReadClient, None] = None
+        """Read access to the registry."""
         self._registry_write: Union[PRegistryWriteClient, None] = None
+        """Write access to the registry."""
+
+        self.done: bool = False
+        """'Done' flag. Set to True if the agent should no longer do anything within the current episode"""
 
     @property
     def id(self) -> int:
         """
-        Get agent id
-        :return: Numerical agent id
+        Get the ID of the agent, unique within the running scenario
+        :return: Numerical agent ID
         """
         return self._agent_id
 
@@ -83,24 +92,34 @@ class ABCAgent(ABC):
 
     def attach_registry(self, registry_read: PRegistryReadClient, registry_write: PRegistryWriteClient):
         """
-        Method is used by the environment to provide agent access to the registry
+        Method is used by the environment to provide agent access to the registry.
         :param registry_write: Write access to the registry
         :param registry_read: Read-only access to the registry.
         """
         self._registry_read = registry_read
         self._registry_write = registry_write
 
-    @property
-    def get_data_node_ids(self) -> Tuple[str, ...]:
+    def reset(self) -> None:
         """
-        Get the node ids associated with this agent
-        :return:
+        Method is called by the Scenario when the Environment being reset.
+        By default, sets the agents done flag to False. Override this method if additional cleanup is required.
+        """
+        self.done = False
+
+    @property
+    def data_node_ids(self) -> Tuple[str, ...]:
+        """
+        Get the data node IDs (string) associated with this agent
+        :return: Tuple of the data node ID strings managed by the agent
         """
         return self._data_node_id
 
     @property
     def mapped_data_node_ids(self) -> Tuple[NodeAgentMapping, ...]:
-        return tuple(NodeAgentMapping(self.id, node) for node in self.get_data_node_ids)
+        """Data nodes managed by the agent as NodeAgentMapping tuples
+        :return: Ordered tuple of NodeAgentMapping tuples
+        """
+        return tuple(NodeAgentMapping(self.id, node) for node in self.data_node_ids)
 
     @abstractmethod
     def get_actions(self) -> int:

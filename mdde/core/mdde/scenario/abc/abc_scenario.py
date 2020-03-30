@@ -155,10 +155,18 @@ class ABCScenario(ABC):
 
     def flush(self) -> None:
         """
-        Override this method if your scenario requires any specific leaning up (ex. remove temp files, db records)
+        Override this method if your scenario requires any specific cleaning up (ex. remove temp files, db records)
         before it's initially started and after it finished.
         """
         pass
+
+    def reset(self) -> None:
+        """
+        Method is called by the Environment when it's being reset. By default, sets the agents done flag to False.
+        Override this method if additional cleanup is required.
+        """
+        for agent in self.get_agents():
+            agent.reset()
 
     def get_observation(self, registry_read: PRegistryReadClient) -> Dict[int, np.ndarray]:
         """

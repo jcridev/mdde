@@ -69,7 +69,7 @@ class Environment:
         # Make sure the same data node isn't assigned to more than one agent at a time
         nodes_per_agent: [Set[str]] = []
         for agent in self._scenario.get_agents():
-            nodes_per_agent.append(set(agent.get_data_node_ids))
+            nodes_per_agent.append(set(agent.data_node_ids))
         if len(set.intersection(*nodes_per_agent)) > 0:
             raise ValueError("The same data node id can't be assigned to more than one agent at the time")
         # Attach registry clients to the agents
@@ -144,20 +144,22 @@ class Environment:
 
     def reset(self) -> Dict[int, np.ndarray]:
         self._logger.info("Resetting the environment")
-        # Call reset
+        # Call registry reset
         self._set_registry_mode(ERegistryMode.benchmark)
         reset_call_response = self._registry_ctrl.ctrl_reset()
         if reset_call_response.failed:
             raise RuntimeError(reset_call_response.error)
+        # Reset agents state
+        self._scenario.reset()
         # Retrieve the observations
         return self.observation_space
 
     def step(self, action_n: Dict[int, int]) \
-            -> Tuple[Dict[int, np.ndarray], Dict[int, float]]:
+            -> Tuple[Dict[int, np.ndarray], Dict[int, float], Dict[int, bool]]:
         """
         Execute actions chosen for each agent, get resulted rewards and new observations
         :param action_n: Dict['agent_id':action_id]
-        :return: Dict['agent_id':np.ndarray], Dict['agent_id':float]
+        :return: Dict['agent_id':'np.ndarray of observations'], Dict['agent_id':'reward'], Dict['agent_id':'done flag']
         """
         # Act
         self._scenario.make_collective_step(action_n)
@@ -169,11 +171,13 @@ class Environment:
         obs_n = self.observation_space
         # Get the reward
         reward_n = self._scenario.get_reward()
+        # Get the done flag
+        done_n = {a.id: a.done for a in self._scenario.get_agents()}
 
         assert_with_log(obs_n is not None, "Unable to retrieve observations", self._logger)
         assert_with_log(reward_n is not None, "Unable to retrieve rewards", self._logger)
 
-        return obs_n, reward_n
+        return obs_n, reward_n, done_n
 
     @property
     def agents(self) -> Union[None, Tuple[ABCAgent]]:
