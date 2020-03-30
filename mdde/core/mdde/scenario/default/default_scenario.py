@@ -1,9 +1,8 @@
 from typing import Tuple, Union, Sequence, Dict
+import pathlib
 
 import numpy as np
 import tiledb
-import pathlib
-
 from tiledb.libtiledb import TileDBError
 
 from mdde.agent.abc import ABCAgent
@@ -13,6 +12,7 @@ from mdde.fragmentation.default import DefaultFragmenter, DefaultFragmentSorter
 from mdde.fragmentation.protocol import PFragmentSorter, PFragmenter
 from mdde.registry.container import BenchmarkStatus
 from mdde.registry.protocol import PRegistryReadClient
+from mdde.registry.workload import EDefaultYCSBWorkload
 from mdde.scenario.abc import ABCScenario
 
 
@@ -27,9 +27,11 @@ class DefaultScenario(ABCScenario):
                  agents: Sequence[ABCAgent]):
         super().__init__('Default scenario')
 
-        self._default_workload = 'read10000'
+        self.__workload_info = EDefaultYCSBWorkload.READ_10000_ZIPFIAN.value
+
+        self._default_workload = self.__workload_info.tag
         """Workload used for the scenario"""
-        self._TOTAL_READS = 10000  # TODO: Workload dependant upper bound instead of a manually set value
+        self._TOTAL_READS = self.__workload_info.operation_count
         """Total number of read operations per benchmark run"""
 
         self._num_fragments: int = num_fragments
