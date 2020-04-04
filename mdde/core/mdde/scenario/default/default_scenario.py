@@ -25,7 +25,16 @@ class DefaultScenario(ABCScenario):
     def __init__(self,
                  num_fragments: int,
                  num_steps_before_bench: int,
-                 agents: Sequence[ABCAgent]):
+                 agents: Sequence[ABCAgent],
+                 benchmark_clients: int = 1):
+        """
+        Constructor
+        :param num_fragments: Target number of fragments to be generated out of data record present in data nodes
+        :param num_steps_before_bench: Number of joint steps taken by the agents before benchmark is executed
+        :param agents: Collection of configured agents
+        :param benchmark_clients: Number of the benchmark clients to be created during the benchmark run.
+        Default value is 1. Values ∈ (0, inf)
+        """
         super().__init__('Default scenario')
         self._logger = logging.getLogger('Default scenario')
 
@@ -33,6 +42,9 @@ class DefaultScenario(ABCScenario):
 
         self._default_workload = self.__workload_info.tag
         """Workload used for the scenario"""
+        self._benchmark_clients = benchmark_clients
+        """Number of YCSB clients per benchmark run"""
+
         self._TOTAL_READS = self.__workload_info.operation_count
         """Total number of read operations per benchmark run"""
 
@@ -87,6 +99,9 @@ class DefaultScenario(ABCScenario):
 
     def get_data_generator_workload(self) -> str:
         return self._default_workload
+
+    def get_benchmark_num_clients(self) -> int:
+        return self._benchmark_clients
 
     def get_fragmenter(self) -> PFragmenter:
         return DefaultFragmenter(self._num_fragments)

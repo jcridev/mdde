@@ -67,6 +67,14 @@ class ABCScenario(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def get_benchmark_num_clients(self) -> int:
+        """
+        Override this method to return the number of YCSB clients that must be created per benchmark run
+        :return: Non-negative, non-zero integer value
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def get_agents(self) -> Tuple[ABCAgent]:
         """
         Override this method to return the list of agents that are to be used within the environment. Make sure that

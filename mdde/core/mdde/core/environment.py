@@ -212,7 +212,7 @@ class Environment:
         """Execute benchmark run"""
         # Execute the shuffle queue
         self._set_registry_mode(target_mode=ERegistryMode.shuffle)
-        self._logger.info("Executing the shuffle queue")
+        self._logger.info('Executing the shuffle queue')
         sync_data_result = self._registry_ctrl.ctrl_sync_registry_to_data()
         if sync_data_result.failed:
             raise RuntimeError(sync_data_result.error)
@@ -223,10 +223,18 @@ class Environment:
             self._logger.info(s_queue_res_msg)
         # Execute the benchmark
         self._set_registry_mode(target_mode=ERegistryMode.benchmark)
-        self._logger.info("Executing the benchmark")
+        # ensure scenario generates a valid number of clients value
+        num_bench_clients = self._scenario.get_benchmark_num_clients()
+        if not isinstance(num_bench_clients, int):
+            raise TypeError("scenario.get_benchmark_num_clients must return an integer")
+        if num_bench_clients < 1:
+            raise ValueError("Number of benchmark clients must be 1 or more, "
+                             "instead received from the scenario: {}".format(num_bench_clients))
+
+        self._logger.info('Executing the benchmark')
         bench_start_result = self._registry_ctrl.ctrl_start_benchmark(
             workload_id=self._scenario.get_benchmark_workload(),
-            num_workers=1)
+            num_workers=num_bench_clients)
         if bench_start_result.failed:
             raise RuntimeError(bench_start_result.error)
         if without_waiting:
