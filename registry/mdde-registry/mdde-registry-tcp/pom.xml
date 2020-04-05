@@ -28,6 +28,9 @@
                         <manifest>
                             <mainClass>dev.jcri.mdde.registry.server.tcp.Main</mainClass>
                         </manifest>
+                        <manifestEntries>
+                            <Multi-Release>true</Multi-Release>
+                        </manifestEntries>
                     </archive>
                     <finalName>${project.artifactId}</finalName>
                     <outputDirectory>${project.parent.basedir}/packaged</outputDirectory>
