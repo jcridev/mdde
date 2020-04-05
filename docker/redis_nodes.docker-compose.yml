@@ -1,5 +1,24 @@
 version: '3.7'
 services:
+  # TODO: Add Python environement
+  registry:
+  # Registry
+    build: 
+      context: ./
+      dockerfile: client.Dockerfile
+    image: mdde/registry:redis-latest
+    ports:
+      - "8942:8942"
+      - "8954:8954"
+    depends_on: [registry_store]
+    networks:
+      back:
+        ipv4_address: 172.42.0.10
+        aliases:
+          - registry
+    volumes:
+      - mdde_reg_logs:/mdde/registry-logs
+      - mdde_shared:/mdde/shared
   registry_store:
   # Registry storage DB
     image: "redis:5"
@@ -69,3 +88,8 @@ networks:
     ipam:    
       config:
         - subnet: "172.42.0.0/16" 
+volumes:
+  mdde_reg_logs: # MDDE registry logs
+    name: mdde_reg_logs_v
+  mdde_shared: # MDDE shared volume
+    name: mdde_shared_v

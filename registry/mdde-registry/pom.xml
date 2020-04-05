@@ -12,10 +12,11 @@
     <properties>
         <!-- MDDE Version -->
         <revision>0.5.0-SNAPSHOT</revision>
-
+        <!-- JDK -->
         <maven.compiler.target>11</maven.compiler.target>
         <maven.compiler.source>11</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Libs -->
         <jackson.version>2.10.1</jackson.version>
         <log4j.version>2.13.0</log4j.version>
         <testcontainers.version>1.12.4</testcontainers.version>
@@ -23,8 +24,8 @@
 
     <modules>
         <!-- Shared (projects imported by external tools integrating with this registry (ex. YCSB MDDE client))-->
-        <module>../shared/mdde-registry-shared</module>
-        <module>../shared/mdde-registry-tcp-shared</module>
+        <module>shared/mdde-registry-shared</module>
+        <module>shared/mdde-registry-tcp-shared</module>
         <!-- Primary -->
         <module>mdde-registry-core</module>
         <module>mdde-registry-tcp</module>

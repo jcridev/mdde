@@ -1,0 +1,39 @@
+---
+store:
+  redis_host: "localhost"
+  redis_port: 16379
+  redis_password: null
+nodes:
+- id: "redis_node_0"
+  host: "localhost"
+  port: 16480
+  username: null
+  password: null
+  dir: null
+  default: true
+- id: "redis_node_1"
+  host: "localhost"
+  port: 16481
+  username: null
+  password: null
+  dir: null
+  default: true
+- id: "redis_node_2"
+  host: "localhost"
+  port: 16482
+  username: null
+  password: null
+  dir: null
+  default: true
+- id: "redis_node_3"
+  host: "localhost"
+  port: 16483
+  username: null
+  password: null
+  dir: null
+  default: true
+bench_ycsb:
+  bin: "./ycsb/bin"
+  client: "mdde.redis"
+  temp: "./temp"
+snapshot_dir: "./snapshots"

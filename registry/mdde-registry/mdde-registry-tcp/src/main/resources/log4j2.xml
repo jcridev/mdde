@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <Property name="logPath">target/mdde-logs</Property>
-        <Property name="rollingDebugFileName">mdde-debug</Property>
+        <Property name="logPath">${sys:mddeRegLogDir:-target/mdde-logs}</Property>
+        <Property name="rollingDebugFileName">mdde-registry-%i</Property>
     </Properties>
     <Appenders>
         <Console name="LogToConsole" target="SYSTEM_OUT">
@@ -12,7 +12,9 @@
                      fileName="${logPath}/${rollingDebugFileName}.log"
                      filePattern="${logPath}/${rollingDebugFileName}_%d{yyyy-MM-dd}.log">
             <PatternLayout pattern="[%highlight{%-5level}] %d{DEFAULT} %c{1}.%M() - %msg%n%throwable{short.lineNumber}" />
+            <SizeBasedTriggeringPolicy size="15mb" />
             <Policies>
+                <SizeBasedTriggeringPolicy />
                 <OnStartupTriggeringPolicy />
                 <TimeBasedTriggeringPolicy interval="1" modulate="true" />
             </Policies>

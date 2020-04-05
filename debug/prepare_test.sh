@@ -19,16 +19,16 @@ TEST_DIR="$(pwd)"
 echo $TEST_DIR
 
 # Build the Registry
-cd ../registry
+cd ../registry/mdde-registry
+REGISTRY_ROOT=$PWD
 
-cd ./mdde-registry
 mvn -Dmaven.test.skip=true clean package
 mvn clean install --non-recursive
-
-cd ../shared/mdde-registry-shared
+# Install common shared lib
+cd $REGISTRY_ROOT/shared/mdde-registry-shared
 mvn clean install -DskipTests
-
-cd ../mdde-registry-tcp-shared
+# Install TCP specific shared lib
+cd $REGISTRY_ROOT/shared/mdde-registry-tcp-shared
 mvn clean install -DskipTests
 
 # Get YCSB for MDDE

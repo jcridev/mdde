@@ -4,9 +4,9 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/mdde-registry/mdde-registry.iml" filepath="$PROJECT_DIR$/mdde-registry/mdde-registry.iml" />
       <module fileurl="file://$PROJECT_DIR$/mdde-registry/mdde-registry-core/mdde-registry-core.iml" filepath="$PROJECT_DIR$/mdde-registry/mdde-registry-core/mdde-registry-core.iml" />
-      <module fileurl="file://$PROJECT_DIR$/shared/mdde-registry-shared/mdde-registry-shared.iml" filepath="$PROJECT_DIR$/shared/mdde-registry-shared/mdde-registry-shared.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mdde-registry/shared/mdde-registry-shared/mdde-registry-shared.iml" filepath="$PROJECT_DIR$/mdde-registry/shared/mdde-registry-shared/mdde-registry-shared.iml" />
       <module fileurl="file://$PROJECT_DIR$/mdde-registry/mdde-registry-tcp/mdde-registry-tcp.iml" filepath="$PROJECT_DIR$/mdde-registry/mdde-registry-tcp/mdde-registry-tcp.iml" />
-      <module fileurl="file://$PROJECT_DIR$/shared/mdde-registry-tcp-shared/mdde-registry-tcp-shared.iml" filepath="$PROJECT_DIR$/shared/mdde-registry-tcp-shared/mdde-registry-tcp-shared.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mdde-registry/shared/mdde-registry-tcp-shared/mdde-registry-tcp-shared.iml" filepath="$PROJECT_DIR$/mdde-registry/shared/mdde-registry-tcp-shared/mdde-registry-tcp-shared.iml" />
     </modules>
   </component>
 </project>

@@ -50,9 +50,9 @@ Current implemenation of the registry supports [Redis](https://redis.io/) as a d
 * `./mdde-registry` parent POM
     * `/mdde-registry-core` Core functionality of the registry
     * `/mdde-registry-tcp` TCP server
-* `./shared` folder containing packages that can be shared with JAVA based projects, that are being integrated with MDDE registry
-    * `/mdde-registry-shared` enums for registry commands, error codes; serialization containers
-    * `/mdde-registry-tcp-shared` tcp client and serialization containers
+    * `/shared` folder containing packages that can be shared with JAVA based projects, that are being integrated with MDDE registry
+        * `/mdde-registry-shared` enums for registry commands, error codes; serialization containers
+        * `/mdde-registry-tcp-shared` tcp client and serialization containers
 
 **Note**: the shared projects are bult with the Java language level 8, while the main mdde-registry modules require the minimum language level 11.  
 
@@ -71,7 +71,7 @@ If you want to install the shared dependencies into the local maven repository, 
 cd ./mdde-registry
 mvn clean install --non-recursive
 
-cd ../shared/mdde-registry-shared
+cd shared/mdde-registry-shared
 mvn clean install
 
 cd ../mdde-registry-tcp-shared

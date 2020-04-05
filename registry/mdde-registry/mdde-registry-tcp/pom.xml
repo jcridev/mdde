@@ -30,6 +30,7 @@
                         </manifest>
                     </archive>
                     <finalName>${project.artifactId}</finalName>
+                    <outputDirectory>${project.parent.basedir}/packaged</outputDirectory>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>

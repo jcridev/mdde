@@ -8,20 +8,31 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jackson.version>2.10.1</jackson.version>
     </properties>
 
     <parent>
         <artifactId>mdde-registry</artifactId>
         <groupId>dev.jcri.mdde.registry</groupId>
         <version>${revision}</version>
-        <relativePath>../../mdde-registry/pom.xml</relativePath>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>mdde-registry-tcp-shared</artifactId>
+    <artifactId>mdde-registry-shared</artifactId>
     <version>${revision}</version>
 
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <appendAssemblyId>false</appendAssemblyId>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>animal-sniffer-maven-plugin</artifactId>
@@ -35,7 +46,7 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>tcp_shared_test_api_check</id>
+                        <id>shared_test_api_check</id>
                         <phase>compile</phase>
                         <goals>
                             <goal>check</goal>
@@ -47,18 +58,27 @@
     </build>
 
     <dependencies>
-        <!-- MDDE -->
         <dependency>
-            <groupId>dev.jcri.mdde.registry</groupId>
-            <artifactId>mdde-registry-shared</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.8</version>
         </dependency>
-        <!-- Netty (TCP server\client)-->
+
+        <!-- OpenCSV -->
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>4.1.43.Final</version>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.1</version>
         </dependency>
+
+
+        <!-- Kafka -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+
     </dependencies>
 
 </project>
