@@ -35,5 +35,6 @@ nodes:
 bench_ycsb:
   bin: "./ycsb/bin"
   client: "mdde.redis"
+  workers: 1
   temp: "./temp"
 snapshot_dir: "./snapshots"

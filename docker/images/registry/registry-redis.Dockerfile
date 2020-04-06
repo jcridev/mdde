@@ -28,3 +28,5 @@ COPY ./scripts/ycsb_unpack.sh .
 RUN sh ycsb_unpack.sh $YCSB_GIT_DIR $YCSB_BIN
 # Cleanup
 RUN rm -rf $YCSB_GIT_DIR
+
+WORKDIR $REGISTRY_BIN

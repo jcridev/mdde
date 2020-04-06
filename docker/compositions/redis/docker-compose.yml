@@ -1,21 +1,29 @@
 version: '3.7'
 services:
-  # TODO: Add Python environement
+  # Use an override docker-compose that adds the environment configuration
   registry:
   # Registry
     build: 
-      context: ./
-      dockerfile: client.Dockerfile
+      context: ../../images/registry
+      dockerfile: registry-redis.Dockerfile
     image: mdde/registry:redis-latest
+    container_name: mdde_registry
     ports:
       - "8942:8942"
       - "8954:8954"
-    depends_on: [registry_store]
+    depends_on:
+      - registry_store
     networks:
       back:
         ipv4_address: 172.42.0.10
         aliases:
           - registry
+    links: 
+      - "registry_store:regstore"
+      - "redis_node_0:dtnode0"
+      - "redis_node_1:dtnode1"
+      - "redis_node_2:dtnode2"
+      - "redis_node_3:dtnode3"
     volumes:
       - mdde_reg_logs:/mdde/registry-logs
       - mdde_shared:/mdde/shared
@@ -75,11 +83,6 @@ services:
         aliases:
           - mddedt3
 networks:
-  front:
-  # Front facing network 
-    name: mdde
-    driver: bridge
-    internal: false
   back:
   # Network wiring up the MDDE containers
     name: mddeback

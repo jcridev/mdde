@@ -1,24 +1,26 @@
-from typing import Dict, Union
+from typing import Dict
 
 from gym.spaces import Discrete, Box
 from ray import rllib
 import numpy as np
 
 from mdde.core import Environment
-from mdde.agent.default import DefaultAgent
-from mdde.config import ConfigRegistry, ConfigEnvironment
-from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
-from mdde.registry.tcp import RegistryClientTCP
-from mdde.scenario.default import DefaultScenario
 
 
 class MddeMultiAgentEnv(rllib.MultiAgentEnv):
     """
+    MDDE wrapper for Ray RLlib's rllib.MultiAgentEnv.
     https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py
     """
 
-    def __init__(self, **kvargs):
-        self._env = self._make_env(**kvargs)
+    def __init__(self, env: Environment):
+        """
+        Initialize Ray environment
+        :param env: MDDE Environment.
+        """
+        if not env:
+            raise TypeError('env must be MDDE\'s Environment and can\'t be None')
+        self._env = env
 
     def reset(self):
         """
@@ -119,37 +121,3 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         for k, v in self._env.action_space.items():
             act_n[k] = Discrete(v)
         return act_n
-
-    def _make_env(self,
-                  host: str,
-                  port: int,
-                  reg_config: str,
-                  env_config: ConfigEnvironment) -> Environment:
-        # TODO: Configurable scenario initialization
-
-        # Create Registry client
-        tcp_client = RegistryClientTCP(host, port)
-        read_client: PRegistryReadClient = tcp_client
-        write_client: PRegistryWriteClient = tcp_client
-        ctrl_client: PRegistryControlClient = tcp_client
-
-        # Registry configuration
-        config_container = ConfigRegistry()
-        config_container.read(reg_config)
-
-        # Create agents
-        agents = list()
-        idx = 0
-        for node in config_container.get_nodes():
-            agents.append(DefaultAgent(node.id, idx, node.id))
-            idx += 1
-
-        # Create scenario
-        scenario = DefaultScenario(100, 5, agents)  # TODO: Configure number of fragments and steps per bench
-
-        # Create environment
-        environment = Environment(env_config, scenario, ctrl_client, write_client, read_client)
-        # Re-generate data
-        environment.initialize_registry()
-
-        return environment

@@ -8,23 +8,30 @@ from ray.tune.registry import register_trainable, register_env
 from ray.rllib.contrib.maddpg.maddpg import MADDPGTrainer
 
 from mdde.core import Environment
+from mdde.agent.default import DefaultAgent
+from mdde.config import ConfigRegistry, ConfigEnvironment
+from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
+from mdde.registry.tcp import RegistryClientTCP
+from mdde.scenario.default import DefaultScenario
 from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
-from mdde.config import ConfigEnvironment
+
 
 # https://ray.readthedocs.io/en/latest/installation.html
 
 
-class MaddpgSample:  #
-    REGISTRY_HOST = 'localhost'
-    REGISTRY_PORT = 8942
-    TEST_CONFIG_FILE = '../../debug/registry_config.yml'
-    TEST_ENV_TEMP_FOLDER = '../../debug/agents'
-
-    TEST_RESULT_DIR: str = None
-    TEST_TEMP_DIR: str = None
-    """
-    For tests, make sure "TEST_TEMP_DIR" not too long for the plasma store, otherwise ray will fail
-    """
+class MaddpgSample:
+    ray_result_dir = None
+    """Ray results output folder"""
+    ray_temp_dir = None
+    """Make sure "TEST_TEMP_DIR" not too long for the plasma store, otherwise ray will fail"""
+    mdde_registry_host = 'localhost'
+    """MDDE registry host"""
+    mdde_registry_port = 8942
+    """MDDE registry control TCP port"""
+    mdde_registry_config = None
+    """Path to the MDDE registry configuration YAML"""
+    env_temp_dir = None
+    """Path to directory for temporary files created by the scenario or agents"""
 
     NUM_EPISODES = 1000
     EPISODE_LEN = 25
@@ -36,7 +43,7 @@ class MaddpgSample:  #
     GOOD_POLICY = 'maddpg'
 
     def setUp(self) -> None:
-        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'  # {'0': 'DEBUG', '1': 'INFO', '2': 'WARNING', '3': 'ERROR'}
+        os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # {'0': 'DEBUG', '1': 'INFO', '2': 'WARNING', '3': 'ERROR'}
 
     class CustomStdOut(object):
         def _log_result(self, result):
@@ -55,10 +62,10 @@ class MaddpgSample:  #
                 self.cur_time = result["time_total_s"]
 
     def test_maddpg(self):
-        temp_dir_full_path = os.path.realpath(self.TEST_TEMP_DIR)
-        result_dur_full_path = os.path.realpath(self.TEST_RESULT_DIR)
-        config_file_full_path = os.path.realpath(self.TEST_CONFIG_FILE)
-        temp_env_dir = os.path.realpath(self.TEST_ENV_TEMP_FOLDER)
+        temp_dir_full_path = os.path.realpath(self.ray_temp_dir)
+        result_dur_full_path = os.path.realpath(self.ray_result_dir)
+        config_file_full_path = os.path.realpath(self.mdde_registry_config)
+        temp_env_dir = os.path.realpath(self.env_temp_dir)
 
         os.makedirs(os.path.abspath(temp_env_dir), exist_ok=True)
 
@@ -76,17 +83,61 @@ class MaddpgSample:  #
 
         mdde_config = ConfigEnvironment(temp_env_dir)
 
+        def make_env(host: str,
+                     port: int,
+                     reg_config: str,
+                     env_config: ConfigEnvironment) -> Environment:
+            """
+            Configure MDDE environment to run default
+            :param host: MDDE registry host or IP
+            :param port: MDDE registry control port
+            :param reg_config: Path to MDDE registry config
+            :param env_config: Environment configuration object
+            :return: MDDE Environment
+            """
+
+            # Ray is peculiar in the way it handles environments, passing a pre-configured environment might cause
+            # unexpected behavior. Customize the code of this extension if more complex environment are needed
+
+            # Create Registry client
+            tcp_client = RegistryClientTCP(host, port)
+            read_client: PRegistryReadClient = tcp_client
+            write_client: PRegistryWriteClient = tcp_client
+            ctrl_client: PRegistryControlClient = tcp_client
+
+            # Registry configuration
+            config_container = ConfigRegistry()
+            config_container.read(reg_config)
+
+            # Create agents
+            agents = list()
+            idx = 0
+            for node in config_container.get_nodes():
+                agents.append(DefaultAgent(node.id, idx, node.id))
+                idx += 1
+
+            # Create scenario
+            scenario = DefaultScenario(100, 5, agents)  # TODO: Configure number of fragments and steps per bench
+
+            # Create environment
+            environment = Environment(env_config, scenario, ctrl_client, write_client, read_client)
+            # Re-generate data
+            environment.initialize_registry()
+
+            return environment
+
         # Create and initialize environment before passing it to Ray
         # This makes it impossible to run multiple instances of the environment, however it's intentional due to the
         # the nature of the environment that's represented as a distributed infrastructure of services, it can't be
         # easily created and destroyed as a simple local game-like environment
-        env_instance = MddeMultiAgentEnv(host=self.REGISTRY_HOST,
-                                         port=self.REGISTRY_PORT,
-                                         reg_config=config_file_full_path,
-                                         env_config=mdde_config)
+        env_instance = MddeMultiAgentEnv(make_env(host=self.mdde_registry_host,
+                                                  port=self.mdde_registry_port,
+                                                  reg_config=config_file_full_path,
+                                                  env_config=mdde_config))
 
         def env_creator(kvargs):
-            return MddeMultiAgentEnv(**kvargs)
+            env = make_env(**kvargs)
+            return MddeMultiAgentEnv(env)
 
         register_env("mdde", env_creator)
 
@@ -132,8 +183,8 @@ class MaddpgSample:  #
 
                     # === Environment ===
                     "env_config": {
-                        "host": self.REGISTRY_HOST,
-                        "port": self.REGISTRY_PORT,
+                        "host": self.mdde_registry_host,
+                        "port": self.mdde_registry_port,
                         "reg_config": config_file_full_path,
                         "env_config": mdde_config
                     },
@@ -182,17 +233,41 @@ class MaddpgSample:  #
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--result-dir',
+    parser.add_argument('-r', '--result-dir',
                         help='Results dir (tensorboard)',
+                        type=str,
                         default='../../debug/debug/result')
-    parser.add_argument('--temp-dir',
+    parser.add_argument('-t', '--temp-dir',
                         help='Temp folder (ray temporary files)',
+                        type=str,
                         default='../../debug/debug/temp')
+    parser.add_argument('--reg-host',
+                        help='MDDE registry host or IP',
+                        type=str,
+                        default='localhost')
+    parser.add_argument('--reg-port',
+                        help='MDDE registry control TCP port',
+                        type=int,
+                        default=8942)
+    parser.add_argument('--env-temp-dir',
+                        help='Directory for temporary files created by the scenario or agents',
+                        type=str,
+                        default='../../debug/agents')
+    parser.add_argument('-c', '--config',
+                        help='Path to the MDDE registry configuration YAML',
+                        type=str,
+                        default='../../debug/registry_config.yml')
 
     config = parser.parse_args()
 
-    MaddpgSample.TEST_RESULT_DIR = config.result_dir
-    MaddpgSample.TEST_TEMP_DIR = config.temp_dir
+    MaddpgSample.ray_result_dir = config.result_dir
+    MaddpgSample.ray_temp_dir = config.temp_dir
+
+    MaddpgSample.mdde_registry_host = config.reg_host
+    MaddpgSample.mdde_registry_port = config.reg_port
+    MaddpgSample.mdde_registry_config = config.config
+
+    MaddpgSample.env_temp_dir = config.env_temp_dir
 
     runner = MaddpgSample()
     runner.setUp()

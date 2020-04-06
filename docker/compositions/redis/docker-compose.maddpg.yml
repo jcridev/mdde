@@ -1,0 +1,16 @@
+version: '3.7'
+services:
+  maddpg:
+  # MADDPG Environment (build an appropriate image in ../../images/environment/)
+    image: mdde/env:maddpg-ray-latest
+    depends_on:
+      - registry
+    networks:
+      back:
+        ipv4_address: 172.42.0.200
+        aliases:
+          - maddpg
+    volumes:
+      - mdde_shared:/mdde/shared
+    environment:
+      - REG_PORT=8942
