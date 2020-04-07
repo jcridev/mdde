@@ -21,7 +21,7 @@ setup(
     license='MIT Licence',
     packages=find_namespace_packages(include=['mdde.integration.ray.*'], exclude=['mdde.test.*']),
 
-    installs_requires=['gym==0.16.0',
+    install_requires=['gym==0.16.0',
                        'tensorflow==1.13.2',
                        'tabulate==0.8.6',
                        'requests==2.22.0',

@@ -1,0 +1,5 @@
+'typing-extensions; python_version<"3.8"'
+# conda install -c conda-forge tiledb-py
+'tiledb>=0.5.6'
+'natsort'
+'PyYAML'
