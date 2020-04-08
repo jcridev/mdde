@@ -21,8 +21,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static java.util.Optional.ofNullable;
-
 /**
  * Class that runs YCSB and gets the output in the parsed form
  */
@@ -132,7 +130,7 @@ public class YCSBRunner implements Closeable {
      * Load workload data to the YCSB store
      * @param workload Selected YCSB workload
      * @return Parsed YCSB output
-     * @throws IOException
+     * @throws IOException Failed to find the workload config file, or YCSB bin
      */
     public YCSBOutput loadWorkload(EYCSBWorkloadCatalog workload) throws IOException {
         Objects.requireNonNull(workload, "Workload id is not supplied");
@@ -234,7 +232,7 @@ public class YCSBRunner implements Closeable {
         if(_statsCollectorFactory != null) {
             _statsCollector = _statsCollectorFactory.getStatsCollector();
         }
-        logger.trace("runWorkload finished:\n\tYCSB OUT START:\n{}\n\tYCSB OUT END", strOutput);
+        logger.info("runWorkload finished:\n\tYCSB OUT START:\n{}\n\tYCSB OUT END", strOutput);
         return _ycsbParser.parse(strOutput);
     }
 
@@ -251,9 +249,9 @@ public class YCSBRunner implements Closeable {
 
     /**
      * Retrieve collected stats for the run
-     * @return
-     * @throws IOException
-     * @throws MddeRegistryException
+     * @return Statistics collected from YCSB directly per node
+     * @throws IOException Failed to get access to the collected stats
+     * @throws MddeRegistryException Registry failed to process stats internally
      */
     public Collection<BenchmarkNodeStats> getStats() throws IOException, MddeRegistryException {
         if(!statsResultsReady()){
@@ -264,7 +262,7 @@ public class YCSBRunner implements Closeable {
 
     /**
      * Cleanup
-     * @throws IOException
+     * @throws IOException Failure to remove temporary files or folders
      */
     @Override
     public void close() throws IOException {
@@ -276,6 +274,7 @@ public class YCSBRunner implements Closeable {
         }
         catch (Exception e){
             logger.error("Unable to delete temporary folder {}", _tempSubfolder, e);
+            throw e;
         }
         try{
             if(_statsCollector != null){
@@ -283,6 +282,7 @@ public class YCSBRunner implements Closeable {
             }
         } catch (Exception e){
             logger.error("Unable to clean out stats after the run", e);
+            throw e;
         }
     }
 

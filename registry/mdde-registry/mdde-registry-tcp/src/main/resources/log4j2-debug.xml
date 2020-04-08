@@ -23,7 +23,7 @@
             <AppenderRef ref="LogToConsole"/>
             <AppenderRef ref="RollingTrace"/>
         </Logger>
-        <Root level="error">
+        <Root level="info">
             <AppenderRef ref="LogToConsole"/>
         </Root>
     </Loggers>

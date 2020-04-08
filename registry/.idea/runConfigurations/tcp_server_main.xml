@@ -3,7 +3,7 @@
     <option name="MAIN_CLASS_NAME" value="dev.jcri.mdde.registry.server.tcp.Main" />
     <module name="mdde-registry-tcp" />
     <option name="PROGRAM_PARAMETERS" value="-p 8942 -b 8954 -c registry_config.yml" />
-    <option name="VM_PARAMETERS" value="-Dlog4j.test" />
+    <option name="VM_PARAMETERS" value="-Dlog4j.configurationFile=log4j2-debug.xml" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../debug" />
     <extension name="coverage">
       <pattern>
