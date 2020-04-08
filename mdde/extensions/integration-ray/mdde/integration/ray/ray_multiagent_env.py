@@ -36,7 +36,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         obs = self._env.reset()
         obs_n = {}
         for k, v in obs.items():
-            obs_n[k] = v.astype(np.float32).flatten()
+            obs_n[k] = v.astype(np.float64).flatten()
         return obs_n
 
     def step(self, action_dict):
@@ -91,7 +91,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         done_dict = {}
         info_dict = {}
         for k, v in obs.items():
-            obs_n[k] = v.astype(np.float32).flatten()
+            obs_n[k] = v.astype(np.float64).flatten()
             done_dict[k] = done[k]
             info_dict[k] = {}  # TODO: return something meaningful here
         done_dict["__all__"] = all(d for d in done.values())
@@ -107,8 +107,8 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         obs_n = {}
         # MultiBinary(v) Currently not supported by Ray MADDPG, making a Box instead
         for k, v in self._env.observation_space.items():
-            v_float = v.astype(np.float32).flatten()
-            obs_n[k] = Box(low=0.0, high=1.0, shape=v_float.shape)
+            v_float = v.astype(np.float64).flatten()
+            obs_n[k] = Box(low=0.0, high=1.0, shape=v_float.shape, dtype=np.float64)
         return obs_n
 
     @property
@@ -121,3 +121,15 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         for k, v in self._env.action_space.items():
             act_n[k] = Discrete(v)
         return act_n
+
+    @staticmethod
+    def configure_ray(ray) -> None:
+        """
+        Any additional configuration of Ray. Call before creating the environment
+        :param ray: Ray instance
+        """
+        from mdde.config import ConfigEnvironment, ConfigEnvironmentYaml
+        ray.register_custom_serializer(
+            ConfigEnvironment,
+            serializer=ConfigEnvironmentYaml.ConfigEnvironmentYamlSerializer.serialize,
+            deserializer=ConfigEnvironmentYaml.ConfigEnvironmentYamlSerializer.deserialize)

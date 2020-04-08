@@ -235,7 +235,7 @@ class DefaultScenario(ABCScenario):
         normalizer = np.vectorize(lambda x: np.where(x > 0, x / self._TOTAL_READS, x))
         stats = normalizer(stats)
         # Create the final observation space shape
-        obs = obs.astype(np.float32)
+        obs = obs.astype(np.float64)
         obs = obs[..., np.newaxis]
         obs = np.insert(obs, 1, stats, axis=2)
         # Feed to agents for "filtering"

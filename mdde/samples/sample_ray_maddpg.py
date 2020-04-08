@@ -89,6 +89,8 @@ class MaddpgSample:
                  num_cpus=4,
                  temp_dir=temp_dir_full_path)
 
+        MddeMultiAgentEnv.configure_ray(ray)
+
         maddpg_agent = MADDPGTrainer.with_updates(
             mixins=[MaddpgSample.CustomStdOut]
         )

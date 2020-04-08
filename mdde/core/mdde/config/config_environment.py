@@ -4,6 +4,7 @@ from typing import Union, Dict, AnyStr, Any
 import re
 import yaml
 
+
 class ConfigEnvironment:
     """MDDE environment configuration, by default passed to agents and scenarios."""
 
@@ -27,7 +28,7 @@ class ConfigEnvironment:
         If your scenario or agent is required to store any kind of files locally to function, these should be places in 
         the directory defined in this attribute."""
 
-        self._result_dir: Union[None, str] = Path(result_dir).resolve() if result_dir else None
+        self._result_dir: Union[None, Path] = Path(result_dir).resolve() if result_dir else None
         """Path to the root folder where agents or scenarios."""
 
         self._adds: Union[None, Dict[str, Union[AnyStr, int, float]]] = None
@@ -64,9 +65,9 @@ class ConfigEnvironment:
         e_group = ''
         e_id = ''
         if hasattr(for_entity, 'id'):
-            e_id = '_'+str(for_entity.id)
+            e_id = '_' + str(for_entity.id)
         if hasattr(for_entity, 'group'):
-            e_group = '_'+for_entity.group
+            e_group = '_' + for_entity.group
 
         path_res = self._result_dir.joinpath("{}_{}{}{}".format(pfx, e_name, e_id, e_group))
         path_res.mkdir(parents=True, exist_ok=True)
@@ -76,8 +77,9 @@ class ConfigEnvironment:
 class ConfigEnvironmentYaml(ConfigEnvironment):
     """Reading MDDE config from a YAML"""
 
-    __field_temp_dir = 'temp-dir'
-    __field_adds = 'args'
+    FIELD_TEMP_DIR = 'temp-dir'
+    FIELD_RESULT_DIR = 'result-dir'
+    FIELD_ADDS = 'args'
 
     def __init__(self):
         super().__init__()
@@ -87,20 +89,61 @@ class ConfigEnvironmentYaml(ConfigEnvironment):
         :param file_path: Path to the MDDE config YAML
         """
         with open(file_path, 'r') as stream:
-            yml_file = yaml.safe_load(stream)
+            self.loadYaml(stream)
 
-            if self.__field_temp_dir in yml_file:
-                self._temp_dir = yml_file[self.__field_temp_dir]
-            if self.__field_adds in yml_file:
-                self._adds = yml_file[self.__field_adds]
+    def loadYaml(self, yaml_obj) -> None:
+        """
+        Load YAML contents from a suitable source
+        :param yaml_obj: String, file stream
+        """
+        yml_file = yaml.safe_load(yaml_obj)
+
+        if self.FIELD_TEMP_DIR in yml_file:
+            self._temp_dir = yml_file[self.FIELD_TEMP_DIR]
+
+        if self.FIELD_RESULT_DIR in yml_file:
+            self._result_dir = Path(yml_file[self.FIELD_RESULT_DIR])
+
+        if self.FIELD_ADDS in yml_file:
+            self._adds = yml_file[self.FIELD_ADDS]
 
     def write(self, file_path: str) -> None:
         """Write the current configuration to a file
         :param file_path: Path to the MDDE config YAML
         """
-        c_dict = {self.__field_temp_dir: self._temp_dir}
-        if self._adds is not None:
-            c_dict[self.__field_adds] = self._adds
+        c_dict = self.ConfigEnvironmentYamlSerializer.to_dict(self)
 
         with open(file_path, 'w') as yaml_file:
             yaml.dump(c_dict, yaml_file, default_flow_style=False)
+
+    def yaml(self) -> str:
+        """
+        Get the config YAML as string.
+        :return: YAML string with the current contents of the config.
+        """
+        c_dict = self.ConfigEnvironmentYamlSerializer.to_dict(self)
+        return yaml.dump(c_dict)
+
+    class ConfigEnvironmentYamlSerializer:
+        @classmethod
+        def to_dict(cls, config: ConfigEnvironment):
+            c_dict = {ConfigEnvironmentYaml.FIELD_TEMP_DIR: config._temp_dir}
+
+            if config._result_dir is not None:
+                c_dict[ConfigEnvironmentYaml.FIELD_RESULT_DIR] = str(config._result_dir)
+
+            if config._adds is not None:
+                c_dict[ConfigEnvironmentYaml.FIELD_ADDS] = config._adds
+
+            return c_dict
+
+        @classmethod
+        def serialize(cls, config: ConfigEnvironment) -> str:
+            c_dict = cls.to_dict(config)
+            return yaml.dump(c_dict)
+
+        @classmethod
+        def deserialize(cls, yaml_config: str) -> ConfigEnvironment:
+            config = ConfigEnvironmentYaml()
+            config.loadYaml(yaml_config)
+            return config
