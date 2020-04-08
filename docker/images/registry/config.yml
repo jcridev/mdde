@@ -12,21 +12,21 @@ nodes:
   dir: null
   default: true
 - id: "redis_node_1"
-  host: "dtnode0"
+  host: "dtnode1"
   port: 6379
   username: null
   password: null
   dir: null
   default: true
 - id: "redis_node_2"
-  host: "dtnode0"
+  host: "dtnode2"
   port: 6379
   username: null
   password: null
   dir: null
   default: true
 - id: "redis_node_3"
-  host: "dtnode0"
+  host: "dtnode3"
   port: 6379
   username: null
   password: null

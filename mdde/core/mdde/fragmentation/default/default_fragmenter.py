@@ -127,6 +127,11 @@ class DefaultFragmenter(PFragmenter):
             node_splits[node_key] = number_of_splits
             cnt_uprocessed_non_empty_nodes -= 1
 
+        empty_nodes = set.difference(set(non_empty_node_contents.keys()), node_contents.keys())
+
+        for empty_node in empty_nodes:
+            node_splits[empty_node] = 0
+
         # Process remaining unassigned tuples
         for node_key, node_tuples in node_contents.items():
             splits = self._split_list(list(node_tuples), node_splits[node_key])
@@ -169,6 +174,8 @@ class DefaultFragmenter(PFragmenter):
     @staticmethod
     def _split_list(items: [], target_splits: int) -> Sequence[Sequence[str]]:
         result = []
+        if not target_splits:
+            return result
         for i in reversed(range(1, target_splits + 1)):
             split_point = len(items) // i
             result.append(items[:split_point])

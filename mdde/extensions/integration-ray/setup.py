@@ -12,7 +12,7 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
 
 setup(
     name='mdde.integration.ray',
-    version='0.1',
+    version='0.5',
     description='Multi-agent Data Distribution Environment: RAY RLlib integration',
 
     author='Andrey Kharitonov',

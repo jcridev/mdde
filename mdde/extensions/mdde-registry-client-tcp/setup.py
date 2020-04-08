@@ -13,14 +13,14 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
 
 setup(
     name='mdde.registry.tcp',
-    version='0.1',
+    version='0.5',
     description='Multi-agent Data Distribution Environment: TCP registry client',
 
     author='Andrey Kharitonov',
     author_email='andrey.kharitonov@ovgu.de',
 
     license='MIT Licence',
-    packages=find_namespace_packages(include=['mdde.registry.tcp.*'], exclude=['mdde.test.*']),
+    packages=find_namespace_packages(include=['mdde.registry.*'], exclude=['mdde.test.*']),
 
     install_requires=['typing-extensions; python_version<"3.8"'],
     zip_safe=False,

@@ -13,6 +13,11 @@ services:
       - "8954:8954"
     depends_on:
       - registry_store
+#    healthcheck:
+#      test: ["CMD", "netstat", "-an", "|", "grep 8942 > /dev/null;", "if [ 0 != $$? ];", "then exit 1;", "fi;"]
+#      start_period: 15s
+#      interval: 30s
+#      retries: 5
     networks:
       back:
         ipv4_address: 172.42.0.10
