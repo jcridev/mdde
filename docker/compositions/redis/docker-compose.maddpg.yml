@@ -13,4 +13,5 @@ services:
     volumes:
       - mdde_shared:/mdde/shared
     environment:
+      - REG_HOST=registry
       - REG_PORT=8942

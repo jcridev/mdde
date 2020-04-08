@@ -22,12 +22,6 @@ services:
       back:
         aliases:
           - registry
-    links: 
-      - "registry_store:regstore"
-      - "redis_node_0:dtnode0"
-      - "redis_node_1:dtnode1"
-      - "redis_node_2:dtnode2"
-      - "redis_node_3:dtnode3"
     volumes:
       - mdde_reg_logs:/mdde/registry-logs
       - mdde_shared:/mdde/shared
@@ -40,7 +34,7 @@ services:
     networks:
       back:
         aliases:
-          - mdderegs
+          - regstore
   redis_node_0:
   # Data storage node 0
     image: "redis:5"
@@ -50,7 +44,7 @@ services:
     networks:
       back:
         aliases:
-          - mddedt0
+          - dtnode0
   redis_node_1:
   # Data storage node 1
     image: "redis:5"
@@ -60,7 +54,7 @@ services:
     networks:
       back:
         aliases:
-          - mddedt1
+          - dtnode1
   redis_node_2:
   # Data storage node 2
     image: "redis:5"
@@ -70,7 +64,7 @@ services:
     networks:
       back:
         aliases:
-          - mddedt2
+          - dtnode2
   redis_node_3:
   # Data storage node 3
     image: "redis:5"
@@ -80,7 +74,7 @@ services:
     networks:
       back:
         aliases:
-          - mddedt3
+          - dtnode3
 networks:
   back:
   # Network wiring up the MDDE containers

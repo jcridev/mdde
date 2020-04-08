@@ -83,4 +83,4 @@ RUN mkdir -p $MDDE_SHARED
 VOLUME $MDDE_SHARED
 
 # Run experiments
-ENTRYPOINT $MDDE_SRC/maddpg_execute_in_conda.sh $MDDE_SRC/run.py $MDDE_RESULTS registry $REG_PORT $MDDE_SHARED/config.yml
+ENTRYPOINT $MDDE_SRC/maddpg_execute_in_conda.sh $MDDE_SRC/run.py $MDDE_RESULTS $REG_HOST $REG_PORT $MDDE_SHARED/config.yml
