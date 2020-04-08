@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Sequence, Union, Tuple, AnyStr
+from typing import Sequence, Union, Tuple
 import re
 
 import numpy as np
@@ -21,7 +21,7 @@ class ABCAgent(ABC):
 
     @abstractmethod
     def __init__(self,
-                 agent_name: AnyStr,
+                 agent_name: str,
                  agent_id: int,
                  data_node_ids: Union[Sequence[str], str],
                  group: str = DEFAULT_GROUP
@@ -38,7 +38,7 @@ class ABCAgent(ABC):
             raise TypeError("Agent ID must of type int")
         if data_node_ids is None:
             raise TypeError("Data node ID must of type String")
-        self._agent_name: agent_name
+        self._agent_name: str = agent_name if agent_name else ""
         """Name of the agent. Used for information and logging only"""
         self._agent_id: int = agent_id
         """ID of the agent, must be unique within the current scenario run"""
@@ -80,6 +80,14 @@ class ABCAgent(ABC):
         :return: Numerical agent ID
         """
         return self._agent_id
+
+    @property
+    def name(self) -> str:
+        """
+        Get the name of the agent, might be used in logging for simplifying identification
+        :return: String agent name
+        """
+        return self._agent_name
 
     @property
     def group(self) -> str:

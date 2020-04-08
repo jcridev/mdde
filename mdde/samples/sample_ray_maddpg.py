@@ -1,5 +1,7 @@
-import os
 import argparse
+import os
+
+from pathlib import Path
 
 import ray
 from ray import utils
@@ -9,10 +11,10 @@ from ray.rllib.contrib.maddpg.maddpg import MADDPGTrainer
 
 from mdde.core import Environment
 from mdde.agent.default import DefaultAgent
+from mdde.scenario.default import DefaultScenario
 from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.registry.tcp import RegistryClientTCP
-from mdde.scenario.default import DefaultScenario
 from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
 
 
@@ -20,7 +22,7 @@ from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
 
 
 class MaddpgSample:
-    ray_result_dir = None
+    run_result_dir = None
     """Ray results output folder"""
     ray_temp_dir = None
     """Make sure "TEST_TEMP_DIR" not too long for the plasma store, otherwise ray will fail"""
@@ -62,12 +64,23 @@ class MaddpgSample:
                 self.cur_time = result["time_total_s"]
 
     def test_maddpg(self):
-        temp_dir_full_path = os.path.realpath(self.ray_temp_dir)
-        result_dur_full_path = os.path.realpath(self.ray_result_dir)
-        config_file_full_path = os.path.realpath(self.mdde_registry_config)
-        temp_env_dir = os.path.realpath(self.env_temp_dir)
-
-        os.makedirs(os.path.abspath(temp_env_dir), exist_ok=True)
+        # RAY tmp
+        temp_dir_full_path_obj = Path(self.ray_temp_dir).resolve()
+        temp_dir_full_path_obj.mkdir(parents=True, exist_ok=True)
+        temp_dir_full_path = str(temp_dir_full_path_obj)
+        # Result paths
+        result_dir_path_root = Path(self.run_result_dir).resolve()
+        # Separate MDDE output and Ray output
+        result_dir_path_ray_obj = result_dir_path_root.joinpath("ray")
+        result_dir_path_ray_obj.mkdir(parents=True, exist_ok=True)
+        result_dir_path_ray = str(result_dir_path_ray_obj)
+        result_dir_path_mdde_obj = result_dir_path_root.joinpath("mdde")
+        result_dir_path_mdde_obj.mkdir(parents=True, exist_ok=True)
+        result_dir_path_mdde = str(result_dir_path_mdde_obj)
+        # Config
+        config_file_full_path = str(Path(self.mdde_registry_config).resolve())
+        # MDDE tmp
+        temp_env_dir = self.env_temp_dir
 
         ray.init(redis_max_memory=int(ray.utils.get_system_memory() * 0.4),
                  memory=int(ray.utils.get_system_memory() * 0.2),
@@ -81,7 +94,8 @@ class MaddpgSample:
         )
         register_trainable("MADDPG", maddpg_agent)
 
-        mdde_config = ConfigEnvironment(temp_env_dir)
+        mdde_config = ConfigEnvironment(tmp_dir=temp_env_dir,
+                                        result_dir=result_dir_path_mdde)
 
         def make_env(host: str,
                      port: int,
@@ -178,7 +192,7 @@ class MaddpgSample:
                     "episodes_total": self.NUM_EPISODES,
                 },
                 "checkpoint_freq": 0,
-                "local_dir": result_dur_full_path,
+                "local_dir": result_dir_path_ray,
                 "restore": False,
                 "config": {
                     # === Log ===
@@ -237,7 +251,7 @@ class MaddpgSample:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--result-dir',
-                        help='Results dir (tensorboard)',
+                        help='Results dir',
                         type=str,
                         default='../../debug/debug/result')
     parser.add_argument('-t', '--temp-dir',
@@ -263,7 +277,7 @@ if __name__ == '__main__':
 
     config = parser.parse_args()
 
-    MaddpgSample.ray_result_dir = config.result_dir
+    MaddpgSample.run_result_dir = config.result_dir
     MaddpgSample.ray_temp_dir = config.temp_dir
 
     MaddpgSample.mdde_registry_host = config.reg_host
