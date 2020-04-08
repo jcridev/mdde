@@ -117,7 +117,10 @@ class MaddpgSample:
                 idx += 1
 
             # Create scenario
-            scenario = DefaultScenario(100, 5, agents)  # TODO: Configure number of fragments and steps per bench
+            scenario = DefaultScenario(num_fragments=100,
+                                       num_steps_before_bench=25,
+                                       agents=agents,
+                                       benchmark_clients=5)  # Number of YCSB threads
 
             # Create environment
             environment = Environment(env_config, scenario, ctrl_client, write_client, read_client)

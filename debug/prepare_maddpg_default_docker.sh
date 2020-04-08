@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# The script is an example of build and run procedure.
+
 DEBUG_DIR=$PWD
 
 # Build registry images
@@ -13,12 +15,13 @@ sh ./build_maddpg-ray.sh
 
 cd $DEBUG_DIR
 # Build the composition
-cd ../docker/composition/redis/
+cd ../docker/compositions/redis/
 sh ./build_maddpg.sh
 
 cd $DEBUG_DIR
 
 # After it's done, run:
-# sh ../docker/compositions/redis/start_maddpg.sh
+# cd ../docker/compositions/redis/
+# sh ./start_maddpg.sh
 # OR for background run:
-# sh ../docker/compositions/redis/start_maddpg.sh -d
+# sh ./start_maddpg.sh -d
