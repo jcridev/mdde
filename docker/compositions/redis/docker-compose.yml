@@ -20,7 +20,6 @@ services:
 #      retries: 5
     networks:
       back:
-        ipv4_address: 172.42.0.10
         aliases:
           - registry
     links: 
@@ -40,7 +39,6 @@ services:
       - "16379:6379"
     networks:
       back:
-        ipv4_address: 172.42.0.5
         aliases:
           - mdderegs
   redis_node_0:
@@ -51,7 +49,6 @@ services:
       - "16480:6379"
     networks:
       back:
-        ipv4_address: 172.42.0.100
         aliases:
           - mddedt0
   redis_node_1:
@@ -62,7 +59,6 @@ services:
       - "16481:6379"
     networks:
       back:
-        ipv4_address: 172.42.0.101
         aliases:
           - mddedt1
   redis_node_2:
@@ -73,7 +69,6 @@ services:
       - "16482:6379"
     networks:
       back:
-        ipv4_address: 172.42.0.102
         aliases:
           - mddedt2
   redis_node_3:
@@ -84,7 +79,6 @@ services:
       - "16483:6379"
     networks:
       back:
-        ipv4_address: 172.42.0.103
         aliases:
           - mddedt3
 networks:
@@ -93,9 +87,6 @@ networks:
     name: mddeback
     internal: false
     driver: bridge  
-    ipam:    
-      config:
-        - subnet: "172.42.0.0/16" 
 volumes:
   mdde_reg_logs: # MDDE registry logs
     name: mdde_reg_logs_v

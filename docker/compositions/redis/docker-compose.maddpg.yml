@@ -8,7 +8,6 @@ services:
       - registry
     networks:
       back:
-        ipv4_address: 172.42.0.200
         aliases:
           - maddpg
     volumes:
