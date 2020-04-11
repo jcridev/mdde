@@ -1,7 +1,7 @@
 import itertools
 import logging
 import math
-from typing import Dict, Set, Sequence, Tuple
+from typing import Dict, Set, Sequence, Tuple, List
 from functools import reduce
 
 from mdde.fragmentation.exceptions import FragmentationError
@@ -146,7 +146,7 @@ class DefaultFragmenter(PFragmenter):
         return False, tuple(fragment_ids_ordered)  # We don't modify the registry outside of formation of fragments
 
     @staticmethod
-    def _find_nodes_containing(nodes: Dict[str, Set[str]], items: [str]) -> []:
+    def _find_nodes_containing(nodes: Dict[str, Set[str]], items: Set[str]) -> List[str]:
         items_found_at = []
         for node_key, node_tuples in nodes.items():
             intersection = node_tuples.intersection(items)
@@ -158,14 +158,14 @@ class DefaultFragmenter(PFragmenter):
         return items_found_at
 
     @staticmethod
-    def _clear_out_processed(nodes: Dict[str, Set[str]], items: [str]):
+    def _clear_out_processed(nodes: Dict[str, Set[str]], items: [str]) -> None:
         for node_key, node_values in nodes.items():
             node_values.discard(items)
 
     def _form_fragment(self, registry_writer: PRegistryWriteClient,
                        new_frag_id: str,
                        tuples: Set[str],
-                       optimal_fragment_size: int):
+                       optimal_fragment_size: int) -> None:
         if len(tuples) < optimal_fragment_size:
             self._logger.warning("Forming a fragment based on intersecting tuples with a suboptimal length "
                                  "of {} instead of the optimal {}".format(len(tuples), optimal_fragment_size))

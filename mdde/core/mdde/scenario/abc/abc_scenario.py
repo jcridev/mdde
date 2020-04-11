@@ -35,9 +35,11 @@ class ABCScenario(ABC):
         """
         Method called by the core.environment during the initialization. It's guaranteed that this method will be
         called to set the configuration object before any agent specific action is taken.
-        :param env_config: MDDE Environment configuration object
+        :param env_config: MDDE Environment configuration object.
         """
         self._env_config = env_config
+        for agent in self.get_agents():
+            agent.inject_env_config(env_config)
 
     def inject_fragments(self, fragments: Tuple[str, ...]) -> None:
         """

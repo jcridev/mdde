@@ -49,7 +49,8 @@ class ConfigEnvironment:
             raise KeyError("No custom attributes is defined for the current configuration")
         return self._adds[key]
 
-    def result_dir(self, for_entity: Any,
+    def result_dir(self,
+                   for_entity: Any,
                    pfx: str = '') -> str:
         """
         Generate a folder and return full path to it where a scenario or an agent can store any additional
@@ -70,7 +71,7 @@ class ConfigEnvironment:
         if hasattr(for_entity, 'group'):
             e_group = '_' + for_entity.group
 
-        path_res = self._result_dir.joinpath("{}_{}_{}{}{}".format(experiment_id, pfx, e_name, e_id, e_group))
+        path_res = self._result_dir.joinpath("{}_{}{}{}{}".format(experiment_id, pfx, e_name, e_id, e_group))
         path_res.mkdir(parents=True, exist_ok=True)
         return str(path_res)
 

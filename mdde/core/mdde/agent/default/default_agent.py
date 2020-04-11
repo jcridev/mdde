@@ -3,11 +3,15 @@ from typing import List, Tuple, Sequence, NamedTuple, Union
 import numpy as np
 
 from mdde.agent.abc import ABCAgent, NodeAgentMapping
+from mdde.config import ConfigEnvironment
 from mdde.agent.enums import EActionResult
 
 
 class DefaultAgent(ABCAgent):
-
+    """
+    Default agent where observation space is full; action space allows copying fragments from data nodes that are
+    managed by other agents to this agents, and removing fragments managed by self.
+    """
     def __init__(self,
                  agent_name: str,
                  agent_id: int,
@@ -122,6 +126,13 @@ class DefaultAgent(ABCAgent):
         return obs
 
     def _invoke_copy_to_self(self, source_node: str, destination_node: str, fragment: str) -> bool:
+        """
+        Copy from one node to own node.
+        :param source_node: Source data node belonging to any agent.
+        :param destination_node: Destination data node that belongs to the agent itself.
+        :param fragment: ID of the fragment to copy
+        :return: True - success; False - constraint is not satisfied.
+        """
         copy_result = self._registry_write.write_fragment_replicate(fragment, source_node, destination_node)
         if not copy_result.failed:
             return True
@@ -130,6 +141,12 @@ class DefaultAgent(ABCAgent):
         raise RuntimeError(copy_result.error)
 
     def _invoke_delete_from_self(self, node: str, fragment: str) -> bool:
+        """
+        Delete fragment from node managed by the agent.
+        :param node: Node where the fragment that should be removed is located.
+        :param fragment: ID of the fragment to delete.
+        :return: True - success; False - constraint is not satisfied.
+        """
         delete_result = self._registry_write.write_fragment_delete_exemplar(fragment, node)
         if not delete_result.failed:
             return True

@@ -6,6 +6,7 @@ import numpy as np
 
 from mdde.agent.abc import NodeAgentMapping
 from mdde.agent.enums import EActionResult
+from mdde.config import ConfigEnvironment
 from mdde.registry.protocol import PRegistryReadClient, PRegistryWriteClient
 
 
@@ -27,12 +28,12 @@ class ABCAgent(ABC):
                  group: str = DEFAULT_GROUP
                  ):
         """
-        Constructor
-        :param agent_name: Agent name (for logging and debugging)
-        :param data_node_ids: A set of the data node IDs associated with the agent
-        :param agent_id: Unique integer id assigned to the agent (passed as an id to the learner)
+        Constructor.
+        :param agent_name: Agent name (for logging and debugging).
+        :param data_node_ids: A set of the data node IDs associated with the agent.
+        :param agent_id: Unique integer id assigned to the agent (passed as an id to the learner).
         :param group: Name of the group to which the agent belongs. Only letters and digits are allowed, special
-        characters, punctuation and spaces will be stripped
+        characters, punctuation and spaces will be stripped.
         """
         if agent_id is None:
             raise TypeError("Agent ID must of type int")
@@ -49,6 +50,8 @@ class ABCAgent(ABC):
         if not self._group:
             raise ValueError("Agent group can't be empty")
 
+        self._config: ConfigEnvironment = None
+        """Environment configuration"""
         # At least one data node must be specified
         if len(data_node_ids) < 1:
             raise ValueError("The agent must be associated with at lest one data node")
@@ -125,6 +128,13 @@ class ABCAgent(ABC):
         :param experiment_id: Short alphanumeric experiment ID.
         """
         self._experiment_id = experiment_id
+
+    def inject_env_config(self, config: ConfigEnvironment) -> None:
+        """
+        Environment configuration injected to the agent.
+        :param config: ConfigEnvironment
+        """
+        self._config = config
 
     def reset(self) -> None:
         """
