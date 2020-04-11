@@ -22,7 +22,8 @@ class Environment:
                  scenario: ABCScenario,
                  registry_ctrl: PRegistryControlClient,
                  registry_write: PRegistryWriteClient,
-                 registry_read: PRegistryReadClient):
+                 registry_read: PRegistryReadClient,
+                 experiment_id: Union[None, str] = None):
         """
         Environment constructor
         :param config: (optional) MDDE configuration object
@@ -30,6 +31,9 @@ class Environment:
         :param registry_ctrl: Control commands for the MDDE registry implementation
         :param registry_write: Write commands for the MDDE registry implementation
         :param registry_read: Read commands for the MDDE registry implementation
+        :param experiment_id: (optional) Id of the current experiment. Used for identification of the environment
+        instance. If not explicitly specified a random id is generated. Id is an alphanumeric string with the max length
+        of 8. Symbols beyond 8 will be ignored, special characters and spaces will be removed.
         """
         if not isinstance(scenario, ABCScenario):
             raise TypeError("scenario must extend ABCScenario")
@@ -44,7 +48,11 @@ class Environment:
         if scenario is None:
             raise TypeError("scenario can't be None")
 
-        self._logger = logging.getLogger('Environment')
+        self._experiment_id = self.__generate_exp_id(experiment_id)
+        # Attach scenario and agents to this experiment
+        scenario.attach_to_experiment(self.experiment_id)
+
+        self._logger = logging.getLogger('Env_{}'.format(self.experiment_id))
         """Environment instance specific logger"""
 
         self._scenario: ABCScenario = scenario
@@ -61,7 +69,33 @@ class Environment:
 
         self.activate_scenario()
 
-    def activate_scenario(self):
+    @staticmethod
+    def __generate_exp_id(id_prototype: Union[None, str]) -> str:
+        """
+        Generates a new random Experiment ID or processes a passed value.
+        :param id_prototype: (optional) Prototype string. Will be cleansed out of all non-alphanumeric characters and
+        shortened to the maximum of 8 characters.
+        :return: An alphanumeric string of max 8 characters.
+        """
+        if id_prototype is None:
+            import uuid
+            gen_id = uuid.uuid4()
+        else:
+            import re
+            gen_id = re.sub('[^A-Za-z0-9]+', '', id_prototype)
+            if len(gen_id) == 0:
+                raise ValueError("Environment ID must consist out of alphanumeric values")
+        return str(gen_id)[:8]
+
+    @property
+    def experiment_id(self) -> str:
+        """
+        Experiment id.
+        :return: An alphanumeric string of max 8 characters.
+        """
+        return self._experiment_id
+
+    def activate_scenario(self) -> None:
         """
         Verify the current scenario and ensure it's basic correctness before the start of experiments
         """
@@ -76,7 +110,7 @@ class Environment:
         for agent in self._scenario.get_agents():
             agent.attach_registry(self._registry_read, self._registry_write)
 
-    def initialize_registry(self):
+    def initialize_registry(self) -> None:
         """
         Initialize or re-initialize the registry. All existing data will be removed, all data generated anew.
         """
@@ -256,7 +290,7 @@ class Environment:
             raise RuntimeError(bench_status.error)
         return bench_status.result
 
-    def _initialize_action_space(self):
+    def _initialize_action_space(self) -> None:
         """
         Initialize actions for agents
         """
@@ -266,7 +300,7 @@ class Environment:
             self._logger.info("Agent '{}' initialized with the action space size: {}."
                               .format(agent.id, agent.get_actions()))
 
-    def _set_registry_mode(self, target_mode: ERegistryMode):
+    def _set_registry_mode(self, target_mode: ERegistryMode) -> None:
         """
         Switch current registry mode to a target mode if needed (if it's not already in that specific mode of execution)
         :param target_mode: ERegistryMode value

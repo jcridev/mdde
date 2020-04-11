@@ -27,6 +27,10 @@ class ABCScenario(ABC):
         self._nodes_order: Union[None, Tuple[NodeAgentMapping, ...]] = None
         self._actual_fragments: Union[None, Tuple[str, ...]] = None
 
+        self._experiment_id: str = None
+        """Experiment ID to which an instance of the scenario is attached to. Provided by the Environment. Guaranteed
+        to be filled before any calls to the scenario."""
+
     def inject_config(self, env_config: ConfigEnvironment) -> None:
         """
         Method called by the core.environment during the initialization. It's guaranteed that this method will be
@@ -42,6 +46,16 @@ class ABCScenario(ABC):
         """
         self._actual_fragments = fragments
 
+    def attach_to_experiment(self, experiment_id: str) -> None:
+        """
+        Method is used by the environment to provide the scenario instance with the relevant experiment ID.
+        Should not be called by any user defined code.
+        :param experiment_id: Short alphanumeric experiment ID.
+        """
+        self._experiment_id = experiment_id
+        for agent in self.get_agents():
+            agent.attach_to_experiment(experiment_id)
+
     @property
     def name(self) -> str:
         """
@@ -49,6 +63,14 @@ class ABCScenario(ABC):
         :return: Name as string that's defined in a constructor or default name
         """
         return self._scenario_name if self._scenario_name else self._DEFAULT_NAME
+
+    @property
+    def experiment_id(self) -> str:
+        """
+        Experiment ID to which this scenario is attached to.
+        :return: Short alphanumeric string.
+        """
+        return self._experiment_id
 
     @abstractmethod
     def get_benchmark_workload(self) -> str:

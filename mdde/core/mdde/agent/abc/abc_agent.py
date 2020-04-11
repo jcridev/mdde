@@ -65,47 +65,66 @@ class ABCAgent(ABC):
         # Read and write access to the registry.
         # These properties will have the implementation of the protocols assigned to them at the time of execution,
         # Use these to create actions affecting the registry (write) and the agent observation space (read).
-        self._registry_read: Union[PRegistryReadClient, None] = None
-        """Read access to the registry."""
-        self._registry_write: Union[PRegistryWriteClient, None] = None
-        """Write access to the registry."""
+        self._registry_read: PRegistryReadClient = None
+        """Read access to the registry. Guaranteed to be filled by the environment before any calls."""
+        self._registry_write: PRegistryWriteClient = None
+        """Write access to the registry. Guaranteed to be filled by the environment before any calls."""
+        self._experiment_id: str = None
+        """Experiment ID. Guaranteed to be filled by the environment before any calls."""
 
         self.done: bool = False
-        """'Done' flag. Set to True if the agent should no longer do anything within the current episode"""
+        """'Done flag. Set to True if the agent should no longer do anything within the current episode."""
 
     @property
     def id(self) -> int:
         """
-        Get the ID of the agent, unique within the running scenario
-        :return: Numerical agent ID
+        Get the ID of the agent, unique within the running scenario.
+        :return: Numerical agent ID.
         """
         return self._agent_id
 
     @property
     def name(self) -> str:
         """
-        Get the name of the agent, might be used in logging for simplifying identification
-        :return: String agent name
+        Get the name of the agent, might be used in logging for simplifying identification.
+        :return: String agent name.
         """
         return self._agent_name
 
     @property
+    def experiment_id(self) -> str:
+        """
+        Experiment ID to which this agent is attached to.
+        :return: Short alphanumeric string.
+        """
+        return self._experiment_id
+
+    @property
     def group(self) -> str:
         """
-        Group tittle to which agent belongs
+        Group tittle to which agent belongs.
         :return: String group name. All spaces and special characters are stripped to ensure better compatibility with
-        RL frameworks that would use this property
+        RL frameworks that would use this property.
         """
         return self._group
 
-    def attach_registry(self, registry_read: PRegistryReadClient, registry_write: PRegistryWriteClient):
+    def attach_registry(self, registry_read: PRegistryReadClient, registry_write: PRegistryWriteClient) -> None:
         """
         Method is used by the environment to provide agent access to the registry.
+        Should not be called by any user defined code.
         :param registry_write: Write access to the registry
         :param registry_read: Read-only access to the registry.
         """
         self._registry_read = registry_read
         self._registry_write = registry_write
+
+    def attach_to_experiment(self, experiment_id: str) -> None:
+        """
+        Method is used by the environment to provide agent with the relevant experiment ID.
+        Should not be called by any user defined code.
+        :param experiment_id: Short alphanumeric experiment ID.
+        """
+        self._experiment_id = experiment_id
 
     def reset(self) -> None:
         """
