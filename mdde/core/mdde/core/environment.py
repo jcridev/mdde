@@ -1,5 +1,7 @@
 import logging
 import time
+import csv
+from pathlib import Path
 from typing import Set, Tuple, Dict, Union
 
 import numpy as np
@@ -23,7 +25,8 @@ class Environment:
                  registry_ctrl: PRegistryControlClient,
                  registry_write: PRegistryWriteClient,
                  registry_read: PRegistryReadClient,
-                 experiment_id: Union[None, str] = None):
+                 experiment_id: Union[None, str] = None,
+                 write_stats: bool = False):
         """
         Environment constructor
         :param config: (optional) MDDE configuration object
@@ -53,21 +56,47 @@ class Environment:
         scenario.attach_to_experiment(self.experiment_id)
 
         self._logger = logging.getLogger('Env_{}'.format(self.experiment_id))
-        """Environment instance specific logger"""
+        """Environment instance specific logger."""
 
         self._scenario: ABCScenario = scenario
-        """Scenario executed within the current environment"""
+        """Scenario executed within the current environment."""
         self._registry_ctrl: PRegistryControlClient = registry_ctrl
-        """Control commands for the MDDE registry implementation"""
+        """Control commands for the MDDE registry implementation."""
         self._registry_write: PRegistryWriteClient = registry_write
-        """Write commands for the MDDE registry implementation"""
+        """Write commands for the MDDE registry implementation."""
         self._registry_read: PRegistryReadClient = registry_read
-        """Read commands for the MDDE registry implementation"""
+        """Read commands for the MDDE registry implementation."""
 
         self._config: Union[None, ConfigEnvironment] = config
-        """Environment config file, if required. Injected into the scenario"""
+        """Environment config file, if required. Injected into the scenario."""
+
+        # Internal properties used for statistics
+        self.__step_count: int = 0
+        """Total number steps taken within this experiment."""
+        self.__did_reset_flag: bool = False
+        """Flag set to True after a reset is performed, then set to False after a step taken."""
+
+        self._write_stats = write_stats
+        """True - write additional statistics to the results folder."""
+        self.__mdde_result_folder_root: Union[None, str] = None
+        if self._config:
+            self.__mdde_result_folder_root = self._config.result_dir(self, get_root=True)
+            """Folder where all of the statistical data should be dumped."""
+
+        if self._write_stats and not self.__mdde_result_folder_root:
+            raise AssertionError("Stats can't be writen, results folder is not configured.")
+
+        self.__file_csv_writer = None
 
         self.activate_scenario()
+
+    def __del__(self):
+        self._logger.info('Shutting down')
+        if self.__file_csv_writer:
+            # Close a CSV writer if there's one
+            self._logger.info('Closing CSV writer')
+            file = self.__file_csv_writer[0]
+            file.close()
 
     @staticmethod
     def __generate_exp_id(id_prototype: Union[None, str]) -> str:
@@ -185,6 +214,7 @@ class Environment:
             raise RuntimeError(reset_call_response.error)
         # Reset agents state
         self._scenario.reset()
+        self.__did_reset_flag = True
         # Retrieve the observations
         return self.observation_space
 
@@ -195,6 +225,7 @@ class Environment:
         :param action_n: Dict['agent_id':action_id]
         :return: Dict['agent_id':'np.ndarray of observations'], Dict['agent_id':'reward'], Dict['agent_id':'done flag']
         """
+        self.__step_count += 1
         # Act
         self._scenario.make_collective_step(action_n)
         # Measure
@@ -210,8 +241,49 @@ class Environment:
 
         assert_with_log(obs_n is not None, "Unable to retrieve observations", self._logger)
         assert_with_log(reward_n is not None, "Unable to retrieve rewards", self._logger)
-
+        # Writes stats if needed
+        if self._write_stats:
+            self._dump_action_reward_to_csv(self.__step_count, action_n, reward_n, done_n, self.__did_reset_flag)
+        self.__did_reset_flag = False
         return obs_n, reward_n, done_n
+
+    def _dump_action_reward_to_csv(self,
+                                   step_idx: int,
+                                   action_n: Dict[int, int],
+                                   reward_n: Dict[int, float],
+                                   done_n: Dict[int, bool],
+                                   after_reset: bool) -> None:
+        """
+        Write statistics data to a CSV file.
+        Opens a CSV writer that remains open for the duration of the run.
+        :param step_idx: Current step.
+        :param action_n: {agent_id: action_id}.
+        :param reward_n: {agent_id: reward}.
+        :param done_n: {agent_id: done_flag}.
+        :param after_reset: True - first step after reset.
+        """
+        active_agents = self._scenario.get_agents()
+        if not self.__file_csv_writer:
+            file_path = Path(self.__mdde_result_folder_root).joinpath('action_rewards.csv')
+            csv_file = open(file_path, 'w', newline='')
+            csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            self.__file_csv_writer = (csv_file, csv_writer)
+            # Generate a header
+            header = ['step']
+            for agent in active_agents:
+                header.append("action_{}".format(agent.id))
+                header.append("reward_{}".format(agent.id))
+                header.append("done_{}".format(agent.id))
+            header.append('reset')
+            csv_writer.writerow(header)
+        csv_writer = self.__file_csv_writer[1]
+        row = [step_idx]
+        for agent in active_agents:
+            row.extend([action_n.get(agent.id),
+                        reward_n.get(agent.id),
+                        1 if done_n.get(agent.id) else 0])
+        row.append(after_reset)
+        csv_writer.writerow(row)
 
     @property
     def agents(self) -> Union[None, Tuple[ABCAgent]]:

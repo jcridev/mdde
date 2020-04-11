@@ -102,14 +102,16 @@ class MaddpgSample:
         def make_env(host: str,
                      port: int,
                      reg_config: str,
-                     env_config: ConfigEnvironment) -> Environment:
+                     env_config: ConfigEnvironment,
+                     write_stats: bool) -> Environment:
             """
-            Configure MDDE environment to run default
-            :param host: MDDE registry host or IP
-            :param port: MDDE registry control port
-            :param reg_config: Path to MDDE registry config
-            :param env_config: Environment configuration object
-            :return: MDDE Environment
+            Configure MDDE environment to run default.
+            :param host: MDDE registry host or IP.
+            :param port: MDDE registry control port.
+            :param reg_config: Path to MDDE registry config.
+            :param env_config: Environment configuration object.
+            :param write_stats: True to write additional analytics info.
+            :return: MDDE Environment.
             """
 
             # Ray is peculiar in the way it handles environments, passing a pre-configured environment might cause
@@ -129,7 +131,10 @@ class MaddpgSample:
             agents = list()
             idx = 0
             for node in config_container.get_nodes():
-                agents.append(DefaultAgent(node.id, idx, node.id))
+                agents.append(DefaultAgent(agent_name=node.id,
+                                           agent_id=idx,
+                                           data_node_ids=node.id,
+                                           write_stats=write_stats))
                 idx += 1
 
             # Create scenario
@@ -139,7 +144,12 @@ class MaddpgSample:
                                        benchmark_clients=5)  # Number of YCSB threads
 
             # Create environment
-            environment = Environment(env_config, scenario, ctrl_client, write_client, read_client)
+            environment = Environment(config=env_config,
+                                      scenario=scenario,
+                                      registry_ctrl=ctrl_client,
+                                      registry_write=write_client,
+                                      registry_read=read_client,
+                                      write_stats=write_stats)
             # Re-generate data
             environment.initialize_registry()
 
@@ -152,7 +162,8 @@ class MaddpgSample:
         env_instance = MddeMultiAgentEnv(make_env(host=self.mdde_registry_host,
                                                   port=self.mdde_registry_port,
                                                   reg_config=config_file_full_path,
-                                                  env_config=mdde_config))
+                                                  env_config=mdde_config,
+                                                  write_stats=False))
 
         def env_creator(kvargs):
             env = make_env(**kvargs)
@@ -205,7 +216,8 @@ class MaddpgSample:
                         "host": self.mdde_registry_host,
                         "port": self.mdde_registry_port,
                         "reg_config": config_file_full_path,
-                        "env_config": mdde_config
+                        "env_config": mdde_config,
+                        "write_stats": True
                     },
                     "num_envs_per_worker": 1,
                     "horizon": self.EPISODE_LEN,

@@ -51,29 +51,36 @@ class ConfigEnvironment:
 
     def result_dir(self,
                    for_entity: Any,
+                   get_root: bool = False,
                    pfx: str = '') -> str:
         """
         Generate a folder and return full path to it where a scenario or an agent can store any additional
         custom statistical data.
+        :param get_root: (optional) If True, returns a root folder for the current running experiment:
+        {result-dir}/{exp_id}. Prefix is ignored if True.
         :param pfx: Prefix of the folder name. For example 's_' for scenario or 'a_' for an agent.
-        :param for_entity: Subclass of an ABCScenario or an ABCAgent
+        :param for_entity: Subclass of an ABCScenario or an ABCAgent.
         :return: Full path to the folder generated for this agent or a scenario instance.
         """
         if for_entity is None:
             raise TypeError("Result dir can only be generated for an instance of a scenario or an agent")
 
-        e_name = re.sub('[^A-Za-z0-9_]+', '-', for_entity.name)
-        experiment_id = for_entity.experiment_id
-        e_group = ''
-        e_id = ''
-        if hasattr(for_entity, 'id'):
-            e_id = '_' + str(for_entity.id)
-        if hasattr(for_entity, 'group'):
-            e_group = '_' + for_entity.group
+        path_res = self.__result_dir_experiment(for_entity.experiment_id)
+        if not get_root:
+            e_name = re.sub('[^A-Za-z0-9_]+', '-', for_entity.name)
+            e_group = ''
+            e_id = ''
+            if hasattr(for_entity, 'id'):
+                e_id = '_' + str(for_entity.id)
+            if hasattr(for_entity, 'group'):
+                e_group = '_' + for_entity.group
 
-        path_res = self._result_dir.joinpath("{}_{}{}{}{}".format(experiment_id, pfx, e_name, e_id, e_group))
+            path_res = path_res.joinpath("{}{}{}{}".format(pfx, e_name, e_id, e_group))
         path_res.mkdir(parents=True, exist_ok=True)
         return str(path_res)
+
+    def __result_dir_experiment(self, experiment_id: str) -> Path:
+        return self._result_dir.joinpath(experiment_id)
 
 
 class ConfigEnvironmentYaml(ConfigEnvironment):

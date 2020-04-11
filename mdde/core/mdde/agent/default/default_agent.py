@@ -1,9 +1,10 @@
 from typing import List, Tuple, Sequence, NamedTuple, Union
+from pathlib import Path
+import csv
 
 import numpy as np
 
 from mdde.agent.abc import ABCAgent, NodeAgentMapping
-from mdde.config import ConfigEnvironment
 from mdde.agent.enums import EActionResult
 
 
@@ -16,10 +17,22 @@ class DefaultAgent(ABCAgent):
                  agent_name: str,
                  agent_id: int,
                  data_node_ids: List[str],
-                 group: str = ABCAgent.DEFAULT_GROUP):
+                 group: str = ABCAgent.DEFAULT_GROUP,
+                 write_stats: bool = False):
+        """
+        Default agent constructor
+        :param agent_name: Name of the agent instance.
+        :param agent_id: Unique ID of the agent within the experimental run.
+        :param data_node_ids: Data nodes managed by the agent.
+        :param group: (optional) Group of the agent.
+        :param write_stats: (optional) If True - agent will write some data (description of it's action space), to the
+        results folder provided in `self._config` for later analysis.
+        """
         super().__init__(agent_name, agent_id, data_node_ids, group)
         self._actions: Union[np.ndarray, None] = None
         """Agent's action space"""
+        self._write_stats = write_stats
+        """If set to true, will write additional info for later analysis on disk."""
 
     class Action(NamedTuple):
         """
@@ -90,7 +103,32 @@ class DefaultAgent(ABCAgent):
                     act_cnt += 1
 
         self._actions = a_actions
+        if self._write_stats:  # Save descriptions for later analysis
+            self._dumpActions()
         return len(self._actions)
+
+    def _dumpActions(self) -> None:
+        """
+        Dump the IDs and the descriptions of the actions to a file for later analysis.
+        """
+        a_actions = self._actions
+        agent_folder = self._config.result_dir(for_entity=self, pfx='da_')
+        act_space_csv = Path(agent_folder).joinpath('act_space.csv')
+        with open(act_space_csv, 'w', newline='') as csv_file:
+            csv_writer = csv.writer(csv_file,
+                                    delimiter=',',
+                                    quotechar='"',
+                                    quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow(['idx', 'src', 'dest', 'src_own', 'dest_own', 'frag', 'copy', 'del'])
+            for idx, action in enumerate(a_actions, start=0):
+                csv_writer.writerow([idx,
+                                     action.node_source_id,
+                                     action.node_destination_id if not None else '',
+                                     1 if action.node_source_id in self.data_node_ids else 0,
+                                     1 if action.node_destination_id in self.data_node_ids else 0,
+                                     action.fragment_id,
+                                     1 if not action.is_del and action.node_source_id is not None else 0,
+                                     1 if action.is_del else 0])
 
     def do_action(self, action_id: int) -> EActionResult:
         """
