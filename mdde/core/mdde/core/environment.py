@@ -1,6 +1,9 @@
 import logging
 import time
 import csv
+import sqlite3
+import pickle
+import zlib
 from pathlib import Path
 from typing import Set, Tuple, Dict, Union
 
@@ -73,6 +76,8 @@ class Environment:
         # Internal properties used for statistics
         self.__step_count: int = 0
         """Total number steps taken within this experiment."""
+        self.__episode_count: int = 0
+        """Total number of episodes (Resets)."""
         self.__did_reset_flag: bool = False
         """Flag set to True after a reset is performed, then set to False after a step taken."""
 
@@ -206,7 +211,15 @@ class Environment:
         self._logger.info("Environment initialization is complete")
 
     def reset(self) -> Dict[int, np.ndarray]:
+        """
+        Reset the environment, reverting to the original data snapshot.
+        :return: Observation space state after the reset per agent.
+        """
         self._logger.info("Resetting the environment")
+        # Writes stats if needed
+        if self._write_stats:
+            obs_n = self.observation_space
+            self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n)
         # Call registry reset
         self._set_registry_mode(ERegistryMode.benchmark)
         reset_call_response = self._registry_ctrl.ctrl_reset()
@@ -214,9 +227,13 @@ class Environment:
             raise RuntimeError(reset_call_response.error)
         # Reset agents state
         self._scenario.reset()
-        self.__did_reset_flag = True
+        self.__next_episode()
         # Retrieve the observations
         return self.observation_space
+
+    def __next_episode(self):
+        self.__did_reset_flag = True
+        self.__episode_count += 1
 
     def step(self, action_n: Dict[int, int]) \
             -> Tuple[Dict[int, np.ndarray], Dict[int, float], Dict[int, bool]]:
@@ -243,12 +260,15 @@ class Environment:
         assert_with_log(reward_n is not None, "Unable to retrieve rewards", self._logger)
         # Writes stats if needed
         if self._write_stats:
-            self._dump_action_reward_to_csv(self.__step_count, action_n, reward_n, done_n, self.__did_reset_flag)
+            self._dump_action_reward_to_csv(self.__step_count, self.__episode_count, action_n, reward_n, done_n,
+                                            self.__did_reset_flag)
+            #self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n)
         self.__did_reset_flag = False
         return obs_n, reward_n, done_n
 
     def _dump_action_reward_to_csv(self,
                                    step_idx: int,
+                                   episode_idx: int,
                                    action_n: Dict[int, int],
                                    reward_n: Dict[int, float],
                                    done_n: Dict[int, bool],
@@ -257,6 +277,7 @@ class Environment:
         Write statistics data to a CSV file.
         Opens a CSV writer that remains open for the duration of the run.
         :param step_idx: Current step.
+        :param episode_idx: Current episode.
         :param action_n: {agent_id: action_id}.
         :param reward_n: {agent_id: reward}.
         :param done_n: {agent_id: done_flag}.
@@ -269,7 +290,7 @@ class Environment:
             csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             self.__file_csv_writer = (csv_file, csv_writer)
             # Generate a header
-            header = ['step']
+            header = ['episode', 'step']
             for agent in active_agents:
                 header.append("action_{}".format(agent.id))
                 header.append("reward_{}".format(agent.id))
@@ -277,13 +298,42 @@ class Environment:
             header.append('reset')
             csv_writer.writerow(header)
         csv_writer = self.__file_csv_writer[1]
-        row = [step_idx]
+        row = [episode_idx, step_idx]
         for agent in active_agents:
             row.extend([action_n.get(agent.id),
                         reward_n.get(agent.id),
                         1 if done_n.get(agent.id) else 0])
         row.append(after_reset)
         csv_writer.writerow(row)
+
+    def _dump_observation_to_sqlite(self,
+                                    step_idx: int,
+                                    episode_idx: int,
+                                    obs_n: Dict[int, np.ndarray]) -> None:
+        """
+        Save observations for agents to an SQLite file.
+        :param step_idx: Current step.
+        :param episode_idx: Current episode.
+        :param obs_n: Dictionary of observations per agents for current step.
+        """
+        # TODO: A more efficient way to store a large number of matrices for later analysis
+        db_path = Path(self.__mdde_result_folder_root).joinpath("obs.db")
+        db_exists = db_path.is_file()
+        with sqlite3.connect(db_path) as conn:
+            cur = conn.cursor()
+            if not db_exists:  # Create schema if a newly created file
+                schema_q = 'CREATE TABLE IF NOT EXISTS observations (episode INTEGER NOT NULL, ' \
+                           'step INTEGER NOT NULL, agent INTEGER NOT NULL, shape BLOB NOT NULL, obs BLOB NOT NULL);'
+                cur.execute(schema_q)
+            insert_q = "INSERT INTO observations (episode, step, agent, shape, obs) VALUES (?, ?, ?, ?, ?)"
+            for agent_id, obs in obs_n.items():
+                cur.execute(insert_q, [episode_idx, step_idx, agent_id,
+                                       pickle.dumps(obs.shape, 0),  # pickle the shape of the observation
+                                       zlib.compress(obs.tobytes(order='C'))])  # dump np.ndarray to bytes
+                # To restore the observation:
+                #   1. Unpickle the shape
+                #   2. a = numpy.frombuffer(zlib.decompress(obs))
+                #   3. reshape a to the original shape
 
     @property
     def agents(self) -> Union[None, Tuple[ABCAgent]]:
