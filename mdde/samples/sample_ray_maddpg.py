@@ -36,7 +36,7 @@ class MaddpgSample:
     """Path to directory for temporary files created by the scenario or agents"""
 
     NUM_EPISODES = 1000
-    EPISODE_LEN = 25
+    EPISODE_LEN = 201
     LEARNING_RATE = 1e-2
     NUM_ADVERSARIES = 0
     SAMPLE_BATCH_SIZE = 25

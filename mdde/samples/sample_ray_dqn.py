@@ -34,7 +34,7 @@ class DQNTestSample:
     """Path to directory for temporary files created by the scenario or agents"""
 
     NUM_EPISODES = 1000
-    EPISODE_LEN = 25
+    EPISODE_LEN = 201
     LEARNING_RATE = 1e-2
     NUM_ADVERSARIES = 0
     SAMPLE_BATCH_SIZE = 25
@@ -60,18 +60,19 @@ class DQNTestSample:
 
         mdde_config = ConfigEnvironment(temp_env_dir)
 
-
         def make_env(host: str,
                      port: int,
                      reg_config: str,
-                     env_config: ConfigEnvironment) -> Environment:
+                     env_config: ConfigEnvironment,
+                     write_stats: bool) -> Environment:
             """
-            Configure MDDE environment to run default
-            :param host: MDDE registry host or IP
-            :param port: MDDE registry control port
-            :param reg_config: Path to MDDE registry config
-            :param env_config: Environment configuration object
-            :return: MDDE Environment
+            Configure MDDE environment to run default.
+            :param host: MDDE registry host or IP.
+            :param port: MDDE registry control port.
+            :param reg_config: Path to MDDE registry config.
+            :param env_config: Environment configuration object.
+            :param write_stats: True to write additional analytics info.
+            :return: MDDE Environment.
             """
 
             # Ray is peculiar in the way it handles environments, passing a pre-configured environment might cause
@@ -101,7 +102,12 @@ class DQNTestSample:
                                        benchmark_clients=5)  # Number of YCSB threads
 
             # Create environment
-            environment = Environment(env_config, scenario, ctrl_client, write_client, read_client)
+            environment = Environment(config=env_config,
+                                      scenario=scenario,
+                                      registry_ctrl=ctrl_client,
+                                      registry_write=write_client,
+                                      registry_read=read_client,
+                                      write_stats=write_stats)
             # Re-generate data
             environment.initialize_registry()
 
@@ -114,17 +120,8 @@ class DQNTestSample:
         env_instance = MddeMultiAgentEnv(make_env(host=self.mdde_registry_host,
                                                   port=self.mdde_registry_port,
                                                   reg_config=config_file_full_path,
-                                                  env_config=mdde_config))
-
-
-        # Create and initialize environment before passing it to Ray
-        # This makes it impossible to run multiple instances of the environment, however it's intentional due to the
-        # the nature of the environment that's represented as a distributed infrastructure of services, it can't be
-        # easily created and destroyed as a simple local game-like environment
-        env_instance = MddeMultiAgentEnv(make_env(host=self.mdde_registry_host,
-                                                  port=self.mdde_registry_port,
-                                                  reg_config=config_file_full_path,
-                                                  env_config=mdde_config))
+                                                  env_config=mdde_config,
+                                                  write_stats=False))
 
         def env_creator(kvargs):
             env = make_env(**kvargs)
@@ -174,7 +171,9 @@ class DQNTestSample:
                     "env_config": {
                         "host": self.mdde_registry_host,
                         "port": self.mdde_registry_port,
-                        "config": config_file_full_path
+                        "reg_config": config_file_full_path,
+                        "env_config": mdde_config,
+                        "write_stats": True
                     },
                     "num_envs_per_worker": 1,
                     "horizon": self.EPISODE_LEN,
