@@ -10,7 +10,7 @@ from ray.tune.registry import register_trainable, register_env
 from ray.rllib.contrib.maddpg.maddpg import MADDPGTrainer
 
 from mdde.core import Environment
-from mdde.agent.default import DefaultAgent
+from mdde.agent.default import SingleNodeDefaultAgent
 from mdde.scenario.default import DefaultScenario
 from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
@@ -131,14 +131,14 @@ class MaddpgSample:
             agents = list()
             idx = 0
             for node in config_container.get_nodes():
-                agents.append(DefaultAgent(agent_name=node.id,
-                                           agent_id=idx,
-                                           data_node_ids=node.id,
-                                           write_stats=write_stats))
+                agents.append(SingleNodeDefaultAgent(agent_name=node.id,
+                                                     agent_id=idx,
+                                                     data_node_id=node.id,
+                                                     write_stats=write_stats))
                 idx += 1
 
             # Create scenario
-            scenario = DefaultScenario(num_fragments=100,
+            scenario = DefaultScenario(num_fragments=20,
                                        num_steps_before_bench=25,
                                        agents=agents,
                                        benchmark_clients=5)  # Number of YCSB threads

@@ -7,7 +7,7 @@ from ray.rllib.agents.dqn import DQNTrainer
 from ray.tune import run_experiments
 from ray.tune.registry import register_env
 
-from mdde.agent.default import DefaultAgent
+from mdde.agent.default import SingleNodeDefaultAgent
 from mdde.core import Environment
 from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
 from mdde.config import ConfigEnvironment, ConfigRegistry
@@ -92,11 +92,11 @@ class DQNTestSample:
             agents = list()
             idx = 0
             for node in config_container.get_nodes():
-                agents.append(DefaultAgent(node.id, idx, node.id))
+                agents.append(SingleNodeDefaultAgent(node.id, idx, node.id))
                 idx += 1
 
             # Create scenario
-            scenario = DefaultScenario(num_fragments=100,
+            scenario = DefaultScenario(num_fragments=20,
                                        num_steps_before_bench=25,
                                        agents=agents,
                                        benchmark_clients=5)  # Number of YCSB threads
