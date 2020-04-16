@@ -93,6 +93,7 @@ class DefaultScenario(ABCScenario):
         elif tdb_gtype == 'array':  # Exist but an array
             tiledb.remove(self.__tiledb_group_name)  # Remove the array
             tiledb.group_create(self.__tiledb_group_name)  # Create a group instead
+        self._clear_arrays()
 
     def get_benchmark_workload(self) -> str:
         return self._default_workload
