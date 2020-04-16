@@ -50,6 +50,13 @@ class ABCAgent(ABC):
         if not self._group:
             raise ValueError("Agent group can't be empty")
 
+        self._filter_obs: bool = True
+        """
+        If True, agent is expecting to receive full observation space for processing it 
+        using :py:func:`filter_observation`.
+        If False, 
+        """
+
         self._config: ConfigEnvironment = None
         """Environment configuration"""
         # At least one data node must be specified
@@ -63,7 +70,7 @@ class ABCAgent(ABC):
                 raise ValueError("The agent data node ids list contains duplicates")
             self._data_node_id: Tuple[str, ...] = tuple(data_node_ids)
         else:
-            self._data_node_id: Tuple[str, ...] = (data_node_ids, )
+            self._data_node_id: Tuple[str, ...] = (data_node_ids,)
 
         # Read and write access to the registry.
         # These properties will have the implementation of the protocols assigned to them at the time of execution,
@@ -144,6 +151,17 @@ class ABCAgent(ABC):
         self.done = False
 
     @property
+    def obs_filter(self) -> bool:
+        """
+        If True, scenario should invoke :py:func:`.ABCAgent.filter_observation` to get the agent observations.
+        If it's False, :py:func:`.ABCAgent.form_observation` should be used.
+
+        If there are multiple agents having full observation access to the environment, it makes sense to retrieve it
+        once in the scenario and then mutate by the agents when needed.
+        """
+        return self._filter_obs
+
+    @property
     def data_node_ids(self) -> Tuple[str, ...]:
         """
         Get the data node IDs (string) associated with this agent
@@ -200,10 +218,22 @@ class ABCAgent(ABC):
     @abstractmethod
     def filter_observation(self, obs_descr: Tuple[NodeAgentMapping, ...], obs: np.array) -> np.ndarray:
         """
-        Get observation space for the specific agent
-        :param obs_descr: Observation space description
-        :param obs: full_observation: Full observation space provided by the environment
-        :return: agents can have full or limited observation spaces. In case of the latter, provide the filtering logic
-        within this function and return a filtered out observation space
+        Get observation space for the specific agent.
+        :param obs_descr: Observation space description.
+        :param obs: full_observation: Full observation space provided by the environment.
+        :return: Agents can have full or limited observation spaces. In case of the latter, provide the filtering logic
+        within this function and return a filtered out observation space.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def form_observation(self, **kwargs) -> np.ndarray:
+        """
+        Override if the agent should form it's own observations, independent of the full space observations returned
+        by the environment.
+        Use the read access to the registry in order to form the observation space.
+
+        :param kwargs: (optional) Scenario specific parameters.
+        :return: Observation space numpy array.
         """
         raise NotImplementedError

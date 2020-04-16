@@ -49,13 +49,21 @@ class EnvironmentTestCase(unittest.TestCase):
         # Create scenario
         scenario = DefaultScenario(100, 2, agents)
 
+        env_config = ConfigEnvironment(tmp_dir='../../debug/debug/temp',
+                                       result_dir='../../debug/debug/result')
+
         # Create environment
-        environment = Environment(mdde_config, scenario, ctrl_client, write_client, read_client)
+        environment = Environment(config=env_config,
+                                  scenario=scenario,
+                                  registry_ctrl=ctrl_client,
+                                  registry_write=write_client,
+                                  registry_read=read_client,
+                                  write_stats=True)
         # Re-generate data
         environment.initialize_registry()
 
         # Reset
-        reset = environment.reset()
+        observations = environment.reset()
 
         # Retrieve observation and action spaces
         osb = environment.observation_space
