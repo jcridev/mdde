@@ -123,11 +123,11 @@ class DefaultAgent(ABCAgent):
             csv_writer.writerow(['idx', 'src', 'dest', 'src_own', 'dest_own', 'frag', 'copy', 'del'])
             for idx, action in enumerate(a_actions, start=0):
                 csv_writer.writerow([idx,
-                                     action.node_source_id,
+                                     action.node_source_id if not None else '',
                                      action.node_destination_id if not None else '',
                                      1 if action.node_source_id in self.data_node_ids else 0,
                                      1 if action.node_destination_id in self.data_node_ids else 0,
-                                     action.fragment_id,
+                                     action.fragment_id if not None else '',
                                      1 if not action.is_del and action.node_source_id is not None else 0,
                                      1 if action.is_del else 0])
 
@@ -166,7 +166,6 @@ class DefaultAgent(ABCAgent):
         own = np.zeros((len(obs_descr), 1), dtype=np.int8)
         for own_node_idx in [obs_descr.index(own_node) for own_node in obs_descr if own_node.agent_id == self.id]:
             own[own_node_idx][0] = 1
-            #np.insert(obs[:, np.newaxis], 1, own, axis=1)
         return np.insert(obs, 2, own, axis=2)
 
     def form_observation(self, **kwargs) -> np.ndarray:

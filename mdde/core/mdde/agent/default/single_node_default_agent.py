@@ -38,30 +38,30 @@ class SingleNodeDefaultAgent(DefaultAgent):
         to the very same node. These constraints will be observed by the registry. It's beneficial to have ownership
         of the node indicated in the observation space.
         """
-        a_actions = np.empty(1 + len(nodes) * len(fragments) * 2, dtype=object)
+        own_node = self.data_node_ids[0]
+        n_frags = len(fragments)
+        a_actions = np.empty(1 + len(nodes) * n_frags * 2, dtype=object)
+        act_idx_ref = 0
+        for node in nodes:
+            act_starting_point = n_frags * act_idx_ref * 2
+            act_idx_ref += 1
+            for frag_idx, frag_reg_id in enumerate(fragments, 1):
+                ref_idx = frag_idx + act_starting_point
+                # Copy
+                a_actions[ref_idx] = self.Action(node_source_id=node.node_id,
+                                                 node_destination_id=own_node,
+                                                 fragment_id=frag_reg_id,
+                                                 is_del=False)
+                # Delete
+                a_actions[ref_idx + n_frags] = self.Action(node_source_id=node.node_id,
+                                                           node_destination_id=None,
+                                                           fragment_id=frag_reg_id,
+                                                           is_del=True)
 
-        if len(self.mapped_data_node_ids) == 1:
-            own_node = self.data_node_ids[0]
-            n_frags = len(fragments)
-            a_actions = np.empty(1 + len(nodes) * n_frags * 2, dtype=object)
-            act_idx_ref = 0
-            for node in nodes:
-                act_idx_ref += 1
-                for frag_idx, frag_reg_id in enumerate(fragments):
-                    # Copy
-                    a_actions[act_idx_ref + frag_idx] = self.Action(node_source_id=node.node_id,
-                                                                    node_destination_id=own_node,
-                                                                    fragment_id=frag_reg_id,
-                                                                    is_del=False)
-                    # Delete
-                    a_actions[act_idx_ref + n_frags + frag_idx] = self.Action(node_source_id=node.node_id,
-                                                                              node_destination_id=None,
-                                                                              fragment_id=frag_reg_id,
-                                                                              is_del=True)
-
+        # do nothing action
         a_actions[0] = self.Action(node_source_id=None,
                                    node_destination_id=None,
-                                   fragment_id=None, is_del=False)  # do nothing action
+                                   fragment_id=None, is_del=False)
 
         self._actions = a_actions
         if self._write_stats:  # Save descriptions for later analysis
