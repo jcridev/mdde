@@ -23,7 +23,7 @@ class ConfigEnvironment:
         folder should be specified here.
         :param kwargs: Any additional custom arguments. Available for retrieval via self.get(key)
         """
-        self._temp_dir: Union[None, str] = str(Path(tmp_dir).resolve()) if tmp_dir else None
+        self._temp_dir: Union[None, Path] = Path(tmp_dir).resolve() if tmp_dir else None
         """Path to the directory where the environment should store whatever files it needs, if it needs, for the run. 
         If your scenario or agent is required to store any kind of files locally to function, these should be places in 
         the directory defined in this attribute."""
@@ -36,12 +36,28 @@ class ConfigEnvironment:
         if len(kwargs) > 0:
             self._adds = kwargs
 
-    @property
-    def temp_dir(self) -> Union[None, str]:
-        """Path to the directory where the environment should store whatever files it needs, if it needs, for the run.
+    def temp_dir(self, experiment_id: Union[None, str], create: bool = True) -> Union[None, str]:
+        """
+        Path to the directory where the environment should store whatever files it needs, if it needs, for the run.
         If your scenario or agent is required to store any kind of files locally to function, these should be places in
-        the directory defined in this attribute."""
-        return self._temp_dir
+        the directory defined in this attribute.
+
+        :param create: True (default) - Create the folder if not exists. False - don't attempt to create the folder or
+        check its existence.
+        :param experiment_id: Current experiment ID.
+
+        :return: Full path to the folder generated for this agent or a scenario instance if the experiment ID was
+        supplied. Otherwise, path to the root temporary directory. It's recommended to use per-experiment temp folders
+        to ensure that different runs don't interfere with each other in any way.
+        """
+        result_folder = None
+        if self._temp_dir and experiment_id:
+            result_folder = self._temp_dir.joinpath(experiment_id)
+        elif self._temp_dir:
+            result_folder = self._temp_dir
+        if result_folder and create:
+            result_folder.mkdir(parents=True, exist_ok=True)
+        return result_folder
 
     def get(self, key: str) -> Union[AnyStr, int, float]:
         """Get custom attribute defined by the key. If the requested key is not found, KeyError is raised"""
@@ -53,13 +69,14 @@ class ConfigEnvironment:
                    for_entity: Any,
                    get_root: bool = False,
                    pfx: str = '') -> str:
-        """
-        Generate a folder and return full path to it where a scenario or an agent can store any additional
+        """Generate a folder and return full path to it where a scenario or an agent can store any additional
         custom statistical data.
+
         :param get_root: (optional) If True, returns a root folder for the current running experiment:
         {result-dir}/{exp_id}. Prefix is ignored if True.
         :param pfx: Prefix of the folder name. For example 's_' for scenario or 'a_' for an agent.
         :param for_entity: Subclass of an ABCScenario or an ABCAgent.
+
         :return: Full path to the folder generated for this agent or a scenario instance.
         """
         if for_entity is None:
@@ -101,14 +118,13 @@ class ConfigEnvironmentYaml(ConfigEnvironment):
             self.loadYaml(stream)
 
     def loadYaml(self, yaml_obj) -> None:
-        """
-        Load YAML contents from a suitable source
+        """Load YAML contents from a suitable source
         :param yaml_obj: String, file stream
         """
         yml_file = yaml.safe_load(yaml_obj)
 
         if self.FIELD_TEMP_DIR in yml_file:
-            self._temp_dir = yml_file[self.FIELD_TEMP_DIR]
+            self._temp_dir = Path(yml_file[self.FIELD_TEMP_DIR])
 
         if self.FIELD_RESULT_DIR in yml_file:
             self._result_dir = Path(yml_file[self.FIELD_RESULT_DIR])
@@ -136,7 +152,9 @@ class ConfigEnvironmentYaml(ConfigEnvironment):
     class ConfigEnvironmentYamlSerializer:
         @classmethod
         def to_dict(cls, config: ConfigEnvironment):
-            c_dict = {ConfigEnvironmentYaml.FIELD_TEMP_DIR: config._temp_dir}
+            c_dict = {}
+            if config._temp_dir is not None:
+                c_dict[ConfigEnvironmentYaml.FIELD_TEMP_DIR] = str(config._temp_dir)
 
             if config._result_dir is not None:
                 c_dict[ConfigEnvironmentYaml.FIELD_RESULT_DIR] = str(config._result_dir)

@@ -82,8 +82,9 @@ class DefaultScenario(ABCScenario):
     def inject_config(self, env_config: ConfigEnvironment) -> None:
         super(DefaultScenario, self).inject_config(env_config)
         # Initialize TileDB storage needed for the scenario specific data
-        if self._env_config is not None and self._env_config.temp_dir is not None:
-            abs_path = pathlib.Path(self._env_config.temp_dir).resolve().joinpath('def_tdb_arrays')
+        exp_tmp_dir = self._env_config.temp_dir(experiment_id=self.experiment_id)
+        if self._env_config is not None and exp_tmp_dir is not None:
+            abs_path = pathlib.Path(exp_tmp_dir).resolve().joinpath('def_tdb_arrays')
             self.__tiledb_group_name = abs_path.as_uri()
             self.__tiledb_stats_array = abs_path.joinpath('stats').as_uri()
         # Create the tileDB group of arrays used by this scenario
