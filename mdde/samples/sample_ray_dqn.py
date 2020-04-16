@@ -196,7 +196,7 @@ class DQNTestSample:
                     "batch_mode": "truncate_episodes",
 
                     # --- Parallelism ---
-                    "num_workers": 1,
+                    "num_workers": 0,
                     "num_gpus": 0,
                     "num_gpus_per_worker": 0,
 
