@@ -8,9 +8,6 @@ services:
       dockerfile: registry-redis.Dockerfile
     image: mdde/registry:redis-latest
     container_name: mdde_registry
-    ports:
-      - "8942:8942"
-      - "8954:8954"
     depends_on:
       - registry_store
 #    healthcheck:
@@ -29,8 +26,6 @@ services:
   # Registry storage DB
     image: "redis:5"
     container_name: mdde_registrystore
-    ports:
-      - "16379:6379"
     networks:
       back:
         aliases:
@@ -39,8 +34,6 @@ services:
   # Data storage node 0
     image: "redis:5"
     container_name: mdde_data0
-    ports:
-      - "16480:6379"
     networks:
       back:
         aliases:
@@ -49,8 +42,6 @@ services:
   # Data storage node 1
     image: "redis:5"
     container_name: mdde_data1
-    ports:
-      - "16481:6379"
     networks:
       back:
         aliases:
@@ -59,8 +50,6 @@ services:
   # Data storage node 2
     image: "redis:5"
     container_name: mdde_data2
-    ports:
-      - "16482:6379"
     networks:
       back:
         aliases:
@@ -69,8 +58,6 @@ services:
   # Data storage node 3
     image: "redis:5"
     container_name: mdde_data3
-    ports:
-      - "16483:6379"
     networks:
       back:
         aliases:
