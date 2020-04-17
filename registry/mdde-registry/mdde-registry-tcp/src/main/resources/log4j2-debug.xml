@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <Property name="logPath">target/test/mdde-logs-test</Property>
+        <Property name="logPath">${sys:mddeRegLogDir:-target/test/mdde-logs-test}</Property>
         <Property name="rollingTraceFileName">mdde-trace-test</Property>
     </Properties>
     <Appenders>
@@ -23,7 +23,7 @@
             <AppenderRef ref="LogToConsole"/>
             <AppenderRef ref="RollingTrace"/>
         </Logger>
-        <Root level="info">
+        <Root level="trace">
             <AppenderRef ref="LogToConsole"/>
         </Root>
     </Loggers>

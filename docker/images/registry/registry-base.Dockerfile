@@ -44,4 +44,4 @@ RUN mv $REGISTRY_SRC/mdde-registry/packaged $REGISTRY_BIN
 # Cleanup
 RUN rm -rf $REGISTRY_SRC
 
-CMD exec java -DmddeRegLogDir="$REGISTRY_LOGS" -jar $REGISTRY_BIN/mdde-registry-tcp.jar -p $CONTROL_PORT -b $BENCHMARK_PORT -c $MDDE_SHARED/config.yml
+CMD exec java -Dlog4j.configurationFile=log4j2.xml -DmddeRegLogDir="$REGISTRY_LOGS" -jar $REGISTRY_BIN/mdde-registry-tcp.jar -p $CONTROL_PORT -b $BENCHMARK_PORT -c $MDDE_SHARED/config.yml
