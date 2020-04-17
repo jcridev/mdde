@@ -3,7 +3,6 @@ services:
   maddpg:
   # MADDPG Environment (build an appropriate image in ../../images/environment/)
     image: mdde/env:maddpg-ray-latest
-    container_name: mdde_maddpg
     depends_on:
       - registry
     networks:

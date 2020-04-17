@@ -7,7 +7,6 @@ services:
       context: ../../images/registry
       dockerfile: registry-redis.Dockerfile
     image: mdde/registry:redis-latest
-    container_name: mdde_registry
     depends_on:
       - registry_store
 #    healthcheck:
@@ -25,7 +24,6 @@ services:
   registry_store:
   # Registry storage DB
     image: "redis:5"
-    container_name: mdde_registrystore
     networks:
       back:
         aliases:
@@ -33,7 +31,6 @@ services:
   redis_node_0:
   # Data storage node 0
     image: "redis:5"
-    container_name: mdde_data0
     networks:
       back:
         aliases:
@@ -41,7 +38,6 @@ services:
   redis_node_1:
   # Data storage node 1
     image: "redis:5"
-    container_name: mdde_data1
     networks:
       back:
         aliases:
@@ -49,7 +45,6 @@ services:
   redis_node_2:
   # Data storage node 2
     image: "redis:5"
-    container_name: mdde_data2
     networks:
       back:
         aliases:
@@ -57,7 +52,6 @@ services:
   redis_node_3:
   # Data storage node 3
     image: "redis:5"
-    container_name: mdde_data3
     networks:
       back:
         aliases:
@@ -65,11 +59,9 @@ services:
 networks:
   back:
   # Network wiring up the MDDE containers
-    name: mddeback
     internal: false
     driver: bridge  
 volumes:
   mdde_reg_logs: # MDDE registry logs
-    name: mdde_reg_logs_v
+
   mdde_shared: # MDDE shared volume
-    name: mdde_shared_v
