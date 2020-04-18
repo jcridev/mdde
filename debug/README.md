@@ -1,6 +1,6 @@
 # Debug environment set up
 
-Current directory `debug` is the working directory.
+The current directory `debug` is the working directory.
 
 Pre-requisites:
 * Anaconda 1.7 
@@ -15,9 +15,9 @@ Pre-requisites:
   
 3. `sudo docker-compose -f ../docker/redis_nodes.docker-compose.yml up`
 
-Leave the databases running. To shut down the Redis nodes, press Ctrl-C in the terminal window where the `up` command was executed (wuthout `-d`) or `sudo docker-compose -f ../docker/redis_nodes.docker-compose.yml down` in another.
+Leave the databases running. To shut down the Redis nodes, press Ctrl-C in the terminal window where the `up` command was executed (without `-d`) or `sudo docker-compose -f ../docker/redis_nodes.docker-compose.yml down` in another.
 
-Open another window and start the Registry server
+Open another window and start the Registry server.
 
 4. `java -jar ../registry/mdde-registry/mdde-registry-tcp/target/mdde-registry-tcp.jar -p 8942 -b 8954 -c registry_config.yml`
 

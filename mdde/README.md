@@ -3,7 +3,7 @@
 
 This is the code that presents MDDE environment to the learners. It is the layer between a reinforcement learning framework and the data distribution infrastructure.
 
-This is the place where behavior of the agents, scenarios and the reward functions are defined.
+This is the place where the behavior of the agents, scenarios, and reward functions are defined.
 
 - [Installation](#installation)
   - [Environment](#environment)

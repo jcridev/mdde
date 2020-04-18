@@ -32,7 +32,7 @@ To provide the benchmark functionality, we rely on the [YCSB](https://github.com
 
 ### Data storage
 
-Current implemenation of the registry supports [Redis](https://redis.io/) as a data storage medium for the registry store itself and the data nodes. 
+The current implementation of the registry supports [Redis](https://redis.io/) as a data storage medium for the registry store itself and the data nodes. 
 
 ### Libraries
 
@@ -47,14 +47,14 @@ Current implemenation of the registry supports [Redis](https://redis.io/) as a d
 
 ## Structure
 
-* `./mdde-registry` parent POM
-    * `/mdde-registry-core` Core functionality of the registry
-    * `/mdde-registry-tcp` TCP server
-    * `/shared` folder containing packages that can be shared with JAVA based projects, that are being integrated with MDDE registry
-        * `/mdde-registry-shared` enums for registry commands, error codes; serialization containers
-        * `/mdde-registry-tcp-shared` tcp client and serialization containers
+* `./mdde-registry` parent POM.
+    * `/mdde-registry-core` Core functionality of the registry.
+    * `/mdde-registry-tcp` TCP server.
+    * `/shared` folder containing packages that can be shared with JAVA based projects, that are being integrated with MDDE registry.
+        * `/mdde-registry-shared` enums for registry commands, error codes; serialization containers.
+        * `/mdde-registry-tcp-shared` tcp client and serialization containers.
 
-**Note**: the shared projects are bult with the Java language level 8, while the main mdde-registry modules require the minimum language level 11.  
+**Note**: the shared projects are built with the Java language level 8, while the main mdde-registry modules require the minimum language level 11.  
 
 ## Build
 
@@ -65,7 +65,7 @@ mvn -Dmaven.test.skip=true clean package
 
 ## Install shared dependencies
 
-If you want to install the shared dependencies into the local maven repository, you can choose whichmodules you require. For example for YCSB MDDE Redis tcp based client, you can run the following commands
+If you want to install the shared dependencies into the local maven repository, you can choose which modules you require. For example, for YCSB MDDE Redis TCP based client, you can run the following commands.
 
 ```
 cd ./mdde-registry
