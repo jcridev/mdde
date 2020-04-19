@@ -5,7 +5,7 @@ import sqlite3
 import pickle
 import zlib
 from pathlib import Path
-from typing import Set, Tuple, Dict, Union
+from typing import Set, Tuple, Dict, Union, AnyStr
 
 import numpy as np
 
@@ -272,7 +272,8 @@ class Environment:
                                    action_n: Dict[int, int],
                                    reward_n: Dict[int, float],
                                    done_n: Dict[int, bool],
-                                   after_reset: bool) -> None:
+                                   after_reset: bool,
+                                   timestamp: Union[None, int, float, AnyStr] = None) -> None:
         """
         Write statistics data to a CSV file.
         Opens a CSV writer that remains open for the duration of the run.
@@ -282,6 +283,7 @@ class Environment:
         :param reward_n: {agent_id: reward}.
         :param done_n: {agent_id: done_flag}.
         :param after_reset: True - first step after reset.
+        :param timestamp: (optional) Step timestamp. Default is Unix time in nanoseconds.
         """
         active_agents = self._scenario.get_agents()
         if not self.__file_csv_writer:
@@ -296,6 +298,7 @@ class Environment:
                 header.append("reward_{}".format(agent.id))
                 header.append("done_{}".format(agent.id))
             header.append('reset')
+            header.append('ts')
             csv_writer.writerow(header)
         csv_writer = self.__file_csv_writer[1]
         row = [episode_idx, step_idx]
@@ -303,7 +306,11 @@ class Environment:
             row.extend([action_n.get(agent.id),
                         reward_n.get(agent.id),
                         1 if done_n.get(agent.id) else 0])
-        row.append(after_reset)
+        row.append(1 if done_n.get(after_reset) else 0)  # First step after reset flag
+        if not timestamp:
+            row.append(time.time_ns())  # Step timestamp in nanoseconds
+        else:
+            row.append(timestamp)
         csv_writer.writerow(row)
 
     def _dump_observation_to_sqlite(self,
