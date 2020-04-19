@@ -330,7 +330,8 @@ class Environment:
             cur = conn.cursor()
             if not db_exists:  # Create schema if a newly created file
                 schema_q = 'CREATE TABLE IF NOT EXISTS observations (episode INTEGER NOT NULL, ' \
-                           'step INTEGER NOT NULL, agent INTEGER NOT NULL, shape BLOB NOT NULL, obs BLOB NOT NULL);'
+                           'step INTEGER NOT NULL, agent INTEGER NOT NULL, shape BLOB NOT NULL, obs BLOB NOT NULL, ' \
+                           'PRIMARY KEY (episode, step, agent));'
                 cur.execute(schema_q)
             insert_q = "INSERT INTO observations (episode, step, agent, shape, obs) VALUES (?, ?, ?, ?, ?)"
             for agent_id, obs in obs_n.items():
