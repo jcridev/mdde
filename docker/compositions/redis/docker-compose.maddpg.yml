@@ -11,6 +11,10 @@ services:
           - maddpg
     volumes:
       - mdde_shared:/mdde/shared
+      - mdde_results:/mdde/results
     environment:
       - REG_HOST=registry
       - REG_PORT=8942
+volumes:
+  mdde_results: # MDDE results
+
