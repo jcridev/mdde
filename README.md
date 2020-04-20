@@ -17,7 +17,8 @@ The current implementation of MDDE focuses on read-oriented scenarios.
 
 ## Structure
 
-![MDDE structure overview](docs/assets/mdde_overview.svg) 
+
+![MDDE structure overview](docs/assets/mdde_overview.svg)
 
 
 ### Registry
