@@ -9,6 +9,9 @@ import org.apache.logging.log4j.Logger;
 
 import java.text.MessageFormat;
 
+/**
+ * Handler for the MDDE control API calls.
+ */
 public class MddeCommandReaderHandler extends ChannelInboundHandlerAdapter {
     protected static final Logger logger = LogManager.getLogger(MddeCommandReaderHandler.class);
 
@@ -39,9 +42,11 @@ public class MddeCommandReaderHandler extends ChannelInboundHandlerAdapter {
         try {
             if(logger.isTraceEnabled()){
                 if (_lastReceivedMessage != null && !_lastReceivedMessage.isEmpty()) {
-                    logger.trace("Channel read complete: {}; Length: {}", ctx.channel().remoteAddress(), _lastReceivedMessage.length());
+                    logger.trace("Channel read complete: {}; Length: {}",
+                            ctx.channel().remoteAddress(), _lastReceivedMessage.length());
                 } else {
-                    logger.trace("Channel read complete: {}; Empty message.", ctx.channel().remoteAddress());
+                    logger.trace("Channel read complete: {}; Empty message.",
+                            ctx.channel().remoteAddress());
                 }
             }
             var response = processCommand(_lastReceivedMessage);
@@ -58,9 +63,9 @@ public class MddeCommandReaderHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
-     * Perform actual command processing by the MDDE registry logic
-     * @param command Incoming command text
-     * @return Textual response to be sent back to the client
+     * Perform actual command processing by the MDDE registry logic.
+     * @param command Incoming command text.
+     * @return Textual response to be sent back to the client.
      */
     protected String processCommand(String command){
         var cmd = CommandProcessorSingleton.getDefaultInstance().getCommandProcessor();

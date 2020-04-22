@@ -12,27 +12,28 @@ import org.apache.logging.log4j.Logger;
 
 public class Listener {
     private static final Logger logger = LogManager.getLogger(Listener.class);
+    // Control API protocol
     private ChannelFuture _controlChannelFuture = null;
-    private EventLoopGroup _cncConnectionGroup = new NioEventLoopGroup();
-    private EventLoopGroup _cncWorkerGroup = new NioEventLoopGroup();
-
+    private final EventLoopGroup _cncConnectionGroup = new NioEventLoopGroup();
+    private final EventLoopGroup _cncWorkerGroup = new NioEventLoopGroup();
+    // Benchmark protocol
     private ChannelFuture _benchmarkChannelFuture;
-    private EventLoopGroup _benchmarkConnectionGroup = new NioEventLoopGroup();
-    private EventLoopGroup _benchmarkWorkerGroup = new NioEventLoopGroup();
+    private final EventLoopGroup _benchmarkConnectionGroup = new NioEventLoopGroup();
+    private final EventLoopGroup _benchmarkWorkerGroup = new NioEventLoopGroup();
 
     /**
-     * Start the server listener
-     * @param commandPort TCP port to listen incoming registry manipulation commands
-     * @param benchmarkPort TCP port to handle benchmark
+     * Start the server listener.
+     * @param commandPort TCP port to listen incoming registry manipulation commands.
+     * @param benchmarkPort TCP port to handle benchmark.
      * @throws InterruptedException
      */
     public void start(int commandPort, int benchmarkPort) throws InterruptedException {
         start(commandPort,benchmarkPort, false);
     }
     /**
-     * Start the query and registry control server listener
-     * @param port TCP port to listen
-     * @param isEcho True - instead of processing the actual commands, received payload is echoed back to the client
+     * Start the query and registry control server listener.
+     * @param port TCP port to listen.
+     * @param isEcho True - instead of processing the actual commands, received payload is echoed back to the client.
      * @throws InterruptedException
      */
     private ChannelFuture startControlServer(int port, boolean isEcho) throws InterruptedException{
@@ -43,17 +44,13 @@ public class Listener {
                 .option(ChannelOption.SO_BACKLOG, 256)
                 .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-        ChannelFuture f = b.bind(port).sync();
-        if(f.isSuccess()){
-            logger.info("TCP Server listens on port {}", port);
-        }
-        return f;
+        return b.bind(port).sync();
     }
 
     /**
-     * Start the benchmark interface
-     * @param port
-     * @return
+     * Start the benchmark interface.
+     * @param port Benchmark interface port.
+     * @return Netty 4 ChannelFuture for the benchmark TCP interface.
      * @throws InterruptedException
      */
     private ChannelFuture startBenchmarkServer(int port, boolean isEcho) throws InterruptedException{
@@ -64,11 +61,16 @@ public class Listener {
                 .option(ChannelOption.SO_BACKLOG, 256)
                 .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-        ChannelFuture f = b.bind(port).sync();
-        return f;
+        return b.bind(port).sync();
     }
 
-
+    /**
+     * Start the primary control API and benchmark TCP listeners.
+     * @param portControl Port number used for control API.
+     * @param portBenchmark Port number used for benchmark.
+     * @param isEcho If True - instead of processing the incoming calls, echo them back instead (for server tests).
+     * @throws InterruptedException Error creating either the control API or the benchmark TCP pipeline.
+     */
     protected void start(int portControl, int portBenchmark, boolean isEcho) throws InterruptedException {
         try {
             _controlChannelFuture = startControlServer(portControl, isEcho);
@@ -104,12 +106,14 @@ public class Listener {
     /**
      * Shut down the TCP server
      */
-    void stop(){
+    synchronized void stop(){
         if(_controlChannelFuture != null){
             _controlChannelFuture.channel().close();
+            _controlChannelFuture = null;
         }
         if(_benchmarkChannelFuture != null){
             _benchmarkChannelFuture.channel().close();
+            _benchmarkChannelFuture = null;
         }
     }
 }

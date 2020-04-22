@@ -11,7 +11,9 @@ import io.netty.util.ReferenceCountUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-
+/**
+ * Handler for the TCP calls by the benchmark runner.
+ */
 public class MddeBenchmarkHandler extends ChannelInboundHandlerAdapter {
     protected static final Logger logger = LogManager.getLogger(MddeBenchmarkHandler.class);
 
@@ -31,7 +33,9 @@ public class MddeBenchmarkHandler extends ChannelInboundHandlerAdapter {
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         try {
             if(_lastReceivedMessage != null) {
-                logger.trace(_lastReceivedMessage);
+                if (logger.isTraceEnabled()){
+                    logger.trace(_lastReceivedMessage.toString());
+                }
                 ctx.write(processCommand(_lastReceivedMessage));
             }
             ctx.flush();
@@ -45,25 +49,40 @@ public class MddeBenchmarkHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
+    /**
+     * Execute the received and decoded benchmark command.
+     * @param command Decoded benchmark command.
+     * @return Response container for the benchmark client.
+     */
     protected BenchmarkContainerOut processCommand(BenchmarkContainerIn command){
         var commandTag = command.getOperation();
         try {
+            logger.trace("Benchmark command is executed in thread: {}.", Thread.currentThread().getId());
             var runner = BenchmarkRunnerSingleton.getDefaultInstance().getRunner();
+
+            BenchmarkContainerOut response = null;
             switch (commandTag) {
                 case LOCATE_TUPLE:
+                    logger.trace("Start to process tuple location command");
                     var runnerArg = CommandArgsConverter.unmarshalLocateTuple(command);
                     var result = runner.getTupleLocation(runnerArg);
-                    return CommandArgsConverter.marshalTupleLocatorResponse(BenchmarkResultCodes.OK, result);
+                    response = CommandArgsConverter.marshalTupleLocatorResponse(BenchmarkResultCodes.OK, result);
+                    logger.trace("Finished to process tuple location command");
+                    break;
                 case RELEASE_CAPACITY:
+                    logger.trace("Start to process release capacity command");
                     var nodeIdArg = CommandArgsConverter.unmarshalString(command);
                     runner.notifyNodeAccessFinished(nodeIdArg);
-                    return CommandArgsConverter.marshalStringResponse(BenchmarkResultCodes.OK, "ok");
+                    response = CommandArgsConverter.marshalStringResponse(BenchmarkResultCodes.OK, "ok");
+                    logger.trace("Finished to process release capacity command");
+                    break;
                 default:
                     throw new IllegalArgumentException(
                             String.format("Unhandled benchmark command command '%s'",
                                     command.getOperation().toString()));
             }
 
+            return response;
         }
         catch (Exception e){
             logger.error("processCommand error", e);

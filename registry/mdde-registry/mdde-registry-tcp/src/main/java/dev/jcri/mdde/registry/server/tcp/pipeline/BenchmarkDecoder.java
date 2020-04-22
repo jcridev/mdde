@@ -2,15 +2,17 @@ package dev.jcri.mdde.registry.server.tcp.pipeline;
 
 import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkContainerIn;
 import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkOperationCodes;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 
-import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
+/**
+ * Decoder responsible for unmarshalling of incoming benchmark commands.
+ */
 public class BenchmarkDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     @Override

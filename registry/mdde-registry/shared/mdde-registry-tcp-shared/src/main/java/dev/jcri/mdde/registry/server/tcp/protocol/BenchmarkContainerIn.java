@@ -4,14 +4,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Incoming benchmark command container.
+ */
 public class BenchmarkContainerIn {
-    private BenchmarkOperationCodes _operation;
-    private List<byte[]> _parameter;
+    /**
+     * Command code.
+     */
+    private final BenchmarkOperationCodes _operation;
+    /**
+     * (optional) Arguments.
+     */
+    private final List<byte[]> _parameter;
 
     /**
-     * Benchmark command container
-     * @param operation Byte operation code
-     * @param parameter (Optional) String encoded arguments. Max argument size can't 127 symbols
+     * Benchmark command container.
+     * @param operation Byte operation code.
+     * @param parameter (Optional) String encoded arguments. Max argument size can't 127 symbols.
      */
     public BenchmarkContainerIn(BenchmarkOperationCodes operation, List<byte[]> parameter) {
         Objects.requireNonNull(operation, "Supply a valid operation code");
@@ -29,25 +38,38 @@ public class BenchmarkContainerIn {
     }
 
     /**
-     * Get operation code
-     * @return BenchmarkOperationCodes (Byte enum)
+     * Get operation code.
+     * @return BenchmarkOperationCodes (Byte enum).
      */
     public BenchmarkOperationCodes getOperation() {
         return _operation;
     }
 
     /**
-     * (optional) String encoded arguments
-     * @return String encoded arguments or null if none supplied
+     * (optional) String encoded arguments.
+     * @return String encoded arguments or null if none supplied.
      */
     public List<byte[]> getParameter() {
         return _parameter;
     }
 
+    /**
+     * Get the number of the arguments received with the command.
+     * @return Total number of the received arguments.
+     */
     public byte numberOfArguments(){
         if(_parameter == null){
             return 0;
         }
         return (byte) _parameter.size();
+    }
+
+    /**
+     * Description of the command.
+     * @return Get string description of the received command.
+     */
+    @Override
+    public String toString() {
+        return String.format("Bench cmd: '%s' with args(%d)", _operation.toString(), numberOfArguments());
     }
 }

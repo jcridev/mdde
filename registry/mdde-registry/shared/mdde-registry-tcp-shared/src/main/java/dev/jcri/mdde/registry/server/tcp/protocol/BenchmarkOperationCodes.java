@@ -15,7 +15,7 @@ public enum BenchmarkOperationCodes {
     private final byte _code;
     private final String _description;
 
-    private BenchmarkOperationCodes(byte code, String description){
+    BenchmarkOperationCodes(byte code, String description){
         _code = code;
         _description = description;
     }
@@ -24,7 +24,7 @@ public enum BenchmarkOperationCodes {
         return _code;
     }
 
-    private static Map<Byte, BenchmarkOperationCodes> _commandsMap =
+    private static final Map<Byte, BenchmarkOperationCodes> _commandsMap =
             Arrays.stream(BenchmarkOperationCodes.values()).collect(Collectors.toMap(e -> e._code, e -> e));
 
     public static BenchmarkOperationCodes getValidCode(byte code) throws NoSuchElementException {
@@ -35,7 +35,10 @@ public enum BenchmarkOperationCodes {
         return command;
     }
 
-
+    /**
+     * Code description.
+     * @return Code description as a string.
+     */
     @Override
     public String toString() {
         return _description;

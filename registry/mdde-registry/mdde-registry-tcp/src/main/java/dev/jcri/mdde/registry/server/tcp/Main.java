@@ -36,6 +36,7 @@ import dev.jcri.mdde.registry.store.impl.redis.RedisStoreManager;
 import dev.jcri.mdde.registry.store.impl.redis.WriteCommandHandlerRedis;
 import dev.jcri.mdde.registry.store.queue.IDataShuffleQueue;
 import dev.jcri.mdde.registry.store.queue.impl.redis.DataShuffleQueueRedis;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -57,8 +58,9 @@ public class Main {
     /**
      * Main entry point
      * @param args expects:
-     *             -p port on which this TCP server should be listening
-     *             -c path to the appropriate MDDE configuration YAML
+     *             -p port on which this TCP server should be listening for control API commands.
+     *             -b port on which this TCP server should be listening for benchmark commands.
+     *             -c path to the appropriate MDDE configuration YAML.
      */
     public static void main(String[] args){
         AppParams parsedArgs = null;
@@ -143,6 +145,7 @@ public class Main {
         var statsTempFolder = Paths.get(ycsbConfig.getTemp(), "stats").toString();
         IStatsCollectorFactory statsCollectorFactory =
                 new LocalClientStatsCSVCollectorFactory(statsTempFolder, readCommandHandler);
+        // Configure benchmark runner
         YCSBRunner ycsbRunner = new YCSBRunner(ycsbConfig, nodes, connectionProperties, statsCollectorFactory);
         BenchmarkRunner benchmarkRunner = new BenchmarkRunner(tupleLocatorFactory, readCommandHandler, ycsbRunner);
         // Initialize write command handler
@@ -190,9 +193,9 @@ public class Main {
     }
 
     /**
-     * Simple CLI arguments parser and verifier
-     * @param args Main(args[]) contents
-     * @return Parsed arguments object or Exception thrown
+     * Simple CLI arguments parser and verifier.
+     * @param args Main(args[]) contents.
+     * @return Parsed arguments object or Exception thrown.
      */
     private static AppParams parseArgs(String[] args){
         final String portTag = "-p";
@@ -214,7 +217,7 @@ public class Main {
             var tag = args[i];
             if(i+1 >= args.length){
                 throw new IllegalArgumentException(
-                        MessageFormat.format("Parameter {} passed without a value", tag));
+                        MessageFormat.format("Parameter {} passed without a value.", tag));
             }
             var val = args[i+1];
             argsMap.put(tag, val);
@@ -240,7 +243,7 @@ public class Main {
     }
 
     /**
-     * Parsed CLI arguments container
+     * Parsed CLI arguments container.
      */
     private static final class AppParams{
         private final String _pathToConfigFile;
@@ -248,15 +251,15 @@ public class Main {
         private final int tcpBenchmarkPort;
 
         private AppParams(String pathToConfigFile, int tcpPort, int tcpBenchmarkPort) {
-            Objects.requireNonNull(pathToConfigFile, "Path to MDDE Registry config can't be null");
+            Objects.requireNonNull(pathToConfigFile, "Path to MDDE Registry config can't be null.");
             if(tcpBenchmarkPort < 1){
-                throw new IllegalArgumentException(String.format("Illegal benchmark handler TCP port: %d", tcpBenchmarkPort));
+                throw new IllegalArgumentException(String.format("Illegal benchmark handler TCP port: %d.", tcpBenchmarkPort));
             }
             if(tcpPort < 1){
-                throw new IllegalArgumentException(String.format("Illegal control handler TCP port: %d", tcpPort));
+                throw new IllegalArgumentException(String.format("Illegal control handler TCP port: %d.", tcpPort));
             }
             if(tcpBenchmarkPort == tcpPort){
-                throw new IllegalArgumentException("Benchmark and command handlers can't run on the same port");
+                throw new IllegalArgumentException("Benchmark and command handlers can't run on the same port.");
             }
 
             this._pathToConfigFile = pathToConfigFile;
@@ -265,24 +268,24 @@ public class Main {
         }
 
         /**
-         * Path to the MDDE config YAML
-         * @return Path to the configuration file
+         * Path to the MDDE config YAML.
+         * @return Path to the configuration file.
          */
         public String getPathToConfigFile() {
             return _pathToConfigFile;
         }
 
         /**
-         * TCP port of this server
-         * @return Port number
+         * TCP port of this server.
+         * @return Port number.
          */
         public int getTcpPort() {
             return _tcpPort;
         }
 
         /**
-         * TCP port of the benchmark endpoint
-         * @return Port number
+         * TCP port of the benchmark endpoint.
+         * @return Port number.
          */
         public int getTcpBenchmarkPort() {
             return tcpBenchmarkPort;

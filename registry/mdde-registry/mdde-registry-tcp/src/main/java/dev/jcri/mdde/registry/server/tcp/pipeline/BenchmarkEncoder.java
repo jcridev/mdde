@@ -1,21 +1,25 @@
 package dev.jcri.mdde.registry.server.tcp.pipeline;
 
 import dev.jcri.mdde.registry.server.tcp.protocol.BenchmarkContainerOut;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.CompositeByteBuf;
+
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
+/**
+ * Encoder for marshalling benchmark responses.
+ */
 public class BenchmarkEncoder extends MessageToMessageEncoder<BenchmarkContainerOut> {
 
+    /**
+     * Marshall benchmark response message.
+     * @param ctx Channel context.
+     * @param msg Response object for marshalling.
+     * @param out Marshalled response.
+     * @throws Exception Failure to marshal the benchmark response object.
+     */
     @Override
     protected void encode(ChannelHandlerContext ctx,
                           BenchmarkContainerOut msg,
