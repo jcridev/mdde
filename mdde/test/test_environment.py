@@ -47,7 +47,10 @@ class EnvironmentTestCase(unittest.TestCase):
             idx += 1
 
         # Create scenario
-        scenario = DefaultScenario(100, 2, agents)
+        scenario = DefaultScenario(num_fragments=20,
+                                   num_steps_before_bench=2,
+                                   agents=agents,
+                                   benchmark_clients=5)
 
         env_config = ConfigEnvironment(tmp_dir='../../debug/debug/temp',
                                        result_dir='../../debug/debug/result')
