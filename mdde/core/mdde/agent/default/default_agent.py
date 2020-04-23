@@ -143,7 +143,7 @@ class DefaultAgent(ABCAgent):
             raise IndexError("Action id '{}' is out of actions space: 0 - {}".format(action_id, self._actions))
 
         if action_id == 0:
-            return EActionResult.done  # do nothing (agent is done for the learning round)
+            return EActionResult.did_nothing  # do nothing (agent is done for the learning round)
 
         selected_action: DefaultAgent.Action = self._actions[action_id]
 

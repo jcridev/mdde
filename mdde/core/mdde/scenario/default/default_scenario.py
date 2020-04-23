@@ -13,7 +13,7 @@ from mdde.fragmentation.default import DefaultFragmenter, DefaultFragmentSorter
 from mdde.fragmentation.protocol import PFragmentSorter, PFragmenter
 from mdde.registry.container import BenchmarkStatus
 from mdde.registry.protocol import PRegistryReadClient
-from mdde.registry.workload import EDefaultYCSBWorkload
+from mdde.registry.workload import EDefaultYCSBWorkload, YCSBWorkloadInfo
 from mdde.scenario.abc import ABCScenario
 
 
@@ -26,7 +26,9 @@ class DefaultScenario(ABCScenario):
                  num_fragments: int,
                  num_steps_before_bench: int,
                  agents: Sequence[ABCAgent],
-                 benchmark_clients: int = 1):
+                 benchmark_clients: int = 1,
+                 data_gen_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_1000_LATEST,
+                 bench_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_1000_LATEST):
         """
         Constructor
         :param num_fragments: Target number of fragments to be generated out of data record present in data nodes
@@ -34,18 +36,21 @@ class DefaultScenario(ABCScenario):
         :param agents: Collection of configured agents
         :param benchmark_clients: Number of the benchmark clients to be created during the benchmark run.
         Default value is 1. Values ∈ (0, inf)
+        :param data_gen_workload: (optional) Workload ID which should be used for data generation.
+        :param bench_workload: (optional) Workload ID which should be used for benchmarking.
         """
         super().__init__('Default scenario')
         self._logger = logging.getLogger('Default scenario')
 
-        self.__workload_info = EDefaultYCSBWorkload.READ_10000_ZIPFIAN.value
+        self.__workload_data_gen_info: YCSBWorkloadInfo = data_gen_workload.value
+        """Data generation workload used for the scenario"""
+        self.__workload_bench_info: YCSBWorkloadInfo = bench_workload.value
+        """Benchmark workload used for the scenario"""
 
-        self._default_workload = self.__workload_info.tag
-        """Workload used for the scenario"""
         self._benchmark_clients = benchmark_clients
         """Number of YCSB clients per benchmark run"""
 
-        self._TOTAL_READS = self.__workload_info.operation_count
+        self._TOTAL_READS = self.__workload_bench_info.operation_count
         """Total number of read operations per benchmark run"""
 
         self._num_fragments: int = num_fragments
@@ -64,7 +69,7 @@ class DefaultScenario(ABCScenario):
         self._action_history[0] - first step after the benchmark, array of all agents.
         self._action_history[0][0] - first step result for the first agent.
         self._action_history[0][0][0] - 1 - agent took action during the step, 0 - no action was taken
-        self._action_history[0][0][1] - EActionResult
+        self._action_history[0][0][1] - EActionResult value
         """
         self._action_history.fill(-1)
 
@@ -97,10 +102,10 @@ class DefaultScenario(ABCScenario):
         self._clear_arrays()
 
     def get_benchmark_workload(self) -> str:
-        return self._default_workload
+        return self.__workload_data_gen_info.tag
 
     def get_data_generator_workload(self) -> str:
-        return self._default_workload
+        return self.__workload_bench_info.tag
 
     def get_benchmark_num_clients(self) -> int:
         return self._benchmark_clients
@@ -197,7 +202,8 @@ class DefaultScenario(ABCScenario):
                     a_act = self._action_history[a_act_history_step][agent_idx]
                     # Increase the multiplier for each correct action taken, if no correct actions were taken,
                     # the final agent reward will be 0
-                    if a_act[0] == 1 and a_act[1] != EActionResult.denied.value:
+                    if a_act[0] == 1 and a_act[1] == EActionResult.done.value:
+                        # Only give rewards for the actions that were success and not "do nothing"
                         agent_correctness_multiplier += 1.0 / self._num_steps_before_bench
                 # Agent reward
 

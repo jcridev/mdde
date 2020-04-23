@@ -49,8 +49,10 @@ public class MddeCommandReaderHandler extends ChannelInboundHandlerAdapter {
                             ctx.channel().remoteAddress());
                 }
             }
-            var response = processCommand(_lastReceivedMessage);
-            ctx.write(response);
+            if (_lastReceivedMessage != null) {
+                var response = processCommand(_lastReceivedMessage);
+                ctx.write(response);
+            }
             ctx.flush();
         }
         catch (Exception ex){

@@ -12,8 +12,11 @@ public enum EMddeArgs {
     /**
      * Path to the local directory utilized by a stats collector
      */
-    LOCAL_STATS_DIR_PATH("mdde.st.dir");
-
+    LOCAL_STATS_DIR_PATH("mdde.st.dir"),
+    /**
+     * Insertion scheme
+     */
+    INSERT_SCHEME("mdde.ins");
 
 
     private final String _actionFlag;

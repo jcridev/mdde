@@ -9,6 +9,7 @@ import dev.jcri.mdde.registry.exceptions.MddeRegistryException;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfiguration;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.MDDEClientConfigurationWriter;
 import dev.jcri.mdde.registry.shared.benchmark.ycsb.cli.EMddeArgs;
+import dev.jcri.mdde.registry.shared.benchmark.ycsb.cli.EYCSBInsertOrder;
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkNodeStats;
 import dev.jcri.mdde.registry.shared.configuration.DBNetworkNodesConfiguration;
 import dev.jcri.mdde.registry.utility.ResourcesTools;
@@ -144,25 +145,44 @@ public class YCSBRunner implements Closeable {
     }
 
     /**
-     * Load workload data to the YCSB store
-     * @param pathToWorkloadFile Path to YCSB workload file
+     * Load workload data to the YCSB store. Nodes for inserted items are selected sequentially
+     * (EYCSBInsertOrder.SEQUENTIAL).
+     * @param pathToWorkloadFile Path to YCSB workload file.
+     * @param ycsbClient ID of the MDDE YCSB client.
+     * @return Parsed YCSB output
+     */
+    private YCSBOutput loadWorkload(String pathToWorkloadFile,
+                                    String pathToMDDENodesConfig,
+                                    String ycsbClient) throws IOException {
+        return loadWorkload(pathToWorkloadFile, pathToMDDENodesConfig, ycsbClient, EYCSBInsertOrder.SEQUENTIAL);
+    }
+
+    /**
+     * Load workload data to the YCSB store.
+     * @param pathToWorkloadFile Path to YCSB workload file.
+     * @param ycsbClient ID of the MDDE YCSB client.
+     * @param insertOrder Insert order.
      * @return Parsed YCSB output
      */
     private YCSBOutput loadWorkload(String pathToWorkloadFile,
                                    String pathToMDDENodesConfig,
-                                   String ycsbClient) throws IOException {
+                                   String ycsbClient,
+                                   EYCSBInsertOrder insertOrder) throws IOException {
 
         if(ycsbClient == null || ycsbClient.isBlank()){
             throw new IllegalArgumentException("Specific YCSB client must be set");
         }
 
         // Example ycsb.bat load mdde.redis -P ..\workloads\workloada -p mdde.redis.configfile=.\\test-config.yml
-        var command = String.format("%s load %s -P %s -p %s=%s",
+        var command = String.format("%s load %s -P %s -p %s=%s -p %s=%s",
                 getYCSBExecutableName(),
-                ycsbClient,
-                pathToWorkloadFile,
+                ycsbClient, // YCSB Client (must be present in the built YCSB version)
+                pathToWorkloadFile, // Path to workload file
                 EMddeArgs.CONFIG_FILE,
-                pathToMDDENodesConfig);
+                pathToMDDENodesConfig, // Path to config
+                EMddeArgs.INSERT_SCHEME,
+                insertOrder.toString() // Insertion order
+        );
         logger.debug(command);
         var strOutput = executeYCSBCommand(_ycsbConfig.getYcsbBin(), command);
         return _ycsbParser.parse(strOutput);

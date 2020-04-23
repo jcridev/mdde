@@ -10,6 +10,7 @@ from mdde.agent.default.default_agent import DefaultAgent
 from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.tcp import RegistryClientTCP
 from mdde.registry.protocol import PRegistryReadClient, PRegistryControlClient, PRegistryWriteClient
+from mdde.registry.workload import EDefaultYCSBWorkload
 from mdde.scenario.default import DefaultScenario
 
 
@@ -50,7 +51,9 @@ class EnvironmentTestCase(unittest.TestCase):
         scenario = DefaultScenario(num_fragments=20,
                                    num_steps_before_bench=2,
                                    agents=agents,
-                                   benchmark_clients=5)
+                                   benchmark_clients=5,
+                                   data_gen_workload=EDefaultYCSBWorkload.READ_100000_1000_LATEST,
+                                   bench_workload=EDefaultYCSBWorkload.READ_100000_1000_LATEST)
 
         env_config = ConfigEnvironment(tmp_dir='../../debug/debug/temp',
                                        result_dir='../../debug/debug/result')

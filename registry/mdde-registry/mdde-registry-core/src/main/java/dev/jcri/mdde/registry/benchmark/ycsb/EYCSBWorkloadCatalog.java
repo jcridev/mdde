@@ -7,15 +7,37 @@ import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 /**
- * Pre-defined YCSB workloads
+ * Pre-defined YCSB workloads.
  */
 public enum EYCSBWorkloadCatalog {
     /**
      * Generate and READ 10000 data records with Zipfian distribution
      */
     READ_10000_ZIPFIAN("read10000zipfian", "/benchmark/ycsb/workload_read_10000_zipfian"),
+    /**
+     * Generate and READ 10000 data records with 'Latest' distribution
+     */
     READ_10000_LATEST("read10000latest", "/benchmark/ycsb/workload_read_10000_latest"),
-    READ_10000_UNIFORM("read10000uniform", "/benchmark/ycsb/workload_read_10000_uniform");
+    /**
+     * Generate and READ 10000 data records with Uniform distribution
+     */
+    READ_10000_UNIFORM("read10000uniform", "/benchmark/ycsb/workload_read_10000_uniform"),
+    /**
+     * Generate 10000 records and READ 1000 records with 'Latest' distribution
+     */
+    READ_10000_1000_LATEST("read10000o1000latest", "/benchmark/ycsb/workload_read_10000_1000_latest"),
+    /**
+     * Generate 100000 records and READ 10000 records with 'Latest' distribution
+     */
+    READ_100000_1000_LATEST("read100000o1000latest", "/benchmark/ycsb/workload_read_100000_1000_latest"),
+    /**
+     * Generate 100000 records and READ 1000000 records with 'Latest' distribution
+     */
+    READ_1000000_1000_LATEST("read1000000o1000latest", "/benchmark/ycsb/workload_read_1000000_1000_latest"),
+    /**
+     * Generate 100000 records and READ 2000000 records with 'Latest' distribution
+     */
+    READ_2000000_1000_LATEST("read2000000o1000latest", "/benchmark/ycsb/workload_read_2000000_1000_latest");
 
     private final String _tag;
     private final String _resourceFile;

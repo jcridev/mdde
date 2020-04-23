@@ -169,7 +169,9 @@ class DefaultFragmenter(PFragmenter):
         if len(tuples) < optimal_fragment_size:
             self._logger.warning("Forming a fragment based on intersecting tuples with a suboptimal length "
                                  "of {} instead of the optimal {}".format(len(tuples), optimal_fragment_size))
-        registry_writer.write_fragment_create(new_frag_id, tuples)
+        response = registry_writer.write_fragment_create(new_frag_id, tuples)
+        if response.failed:
+            raise RuntimeError("Fragmentation failure: ({}) {}".format(response.error_code, response.error))
 
     @staticmethod
     def _split_list(items: [], target_splits: int) -> Sequence[Sequence[str]]:
