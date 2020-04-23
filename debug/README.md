@@ -13,13 +13,17 @@ Pre-requisites:
    
 2. `conda env create -f ../mdde/support/conda-p37.yml`   
   
-3. `sudo docker-compose -f ../docker/redis_nodes.docker-compose.yml up`
+3. ``` 
+   cd ../docker/compositions/redis
+   sh start_redis_only.sh
+   cd ../../../debug
+   ```
 
-Leave the databases running. To shut down the Redis nodes, press Ctrl-C in the terminal window where the `up` command was executed (without `-d`) or `sudo docker-compose -f ../docker/redis_nodes.docker-compose.yml down` in another.
+Leave the databases running. To shut down the Redis nodes, press Ctrl-C in the terminal window where the `up` command was executed or `sudo docker-compose -f ../docker/compositions/redis/docker-compose.debug.yml down` in another.
 
 Open another window and start the Registry server.
 
-4. `java -jar ../registry/mdde-registry/mdde-registry-tcp/target/mdde-registry-tcp.jar -p 8942 -b 8954 -c registry_config.yml`
+1. `java -jar ../registry/mdde-registry/packaged/mdde-registry-tcp.jar -p 8942 -b 8954 -c registry_config.yml`
 
 
 In yet another terminal window, activate conda environment.
