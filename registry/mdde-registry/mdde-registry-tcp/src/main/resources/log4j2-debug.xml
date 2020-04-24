@@ -6,15 +6,15 @@
     </Properties>
     <Appenders>
         <Console name="LogToConsole" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %message{nolookups}%xThrowable{separator(|)}%n"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight{%level}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue} %c{1.} [%t] %m %throwable{short.message}     %throwable{10}%n"/>
         </Console>
         <RollingFile name="RollingTrace"
                      fileName="${logPath}/${rollingTraceFileName}.log"
-                     filePattern="${logPath}/${rollingTraceFileName}_%d{yyyy-MM-dd}.log">
-            <PatternLayout pattern="[%highlight{%-5level}] %d{DEFAULT} %c{1}.%M() - %message{nolookups}%xThrowable{separator(|)}%n" />
+                     filePattern="${logPath}/old/${rollingTraceFileName}_%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout pattern="[%highlight{%-5level}] %d{yyyy-MM-dd HH:mm:ss.SSS} %c{1.} [%t] %m %ex%n" />
             <Policies>
                 <OnStartupTriggeringPolicy />
-                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+                <SizeBasedTriggeringPolicy size="50mb" />
             </Policies>
         </RollingFile>
     </Appenders>

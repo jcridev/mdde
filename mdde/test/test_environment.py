@@ -52,8 +52,8 @@ class EnvironmentTestCase(unittest.TestCase):
                                    num_steps_before_bench=2,
                                    agents=agents,
                                    benchmark_clients=5,
-                                   data_gen_workload=EDefaultYCSBWorkload.READ_100000_1000_LATEST,
-                                   bench_workload=EDefaultYCSBWorkload.READ_100000_1000_LATEST)
+                                   data_gen_workload=EDefaultYCSBWorkload.READ_10000_1000_LATEST,
+                                   bench_workload=EDefaultYCSBWorkload.READ_10000_1000_LATEST)
 
         env_config = ConfigEnvironment(tmp_dir='../../debug/debug/temp',
                                        result_dir='../../debug/debug/result')

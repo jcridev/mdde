@@ -15,7 +15,7 @@ import java.sql.*;
 import java.util.UUID;
 
 /**
- * Snapshots manager with an SQLLite based catalog
+ * Snapshots manager with an SQLLite based catalog.
  */
 public class FileBasedSnapshotManager extends StoreSnapshotManagerBase {
     private static final Logger logger = LogManager.getLogger(FileBasedSnapshotManager.class);
@@ -86,6 +86,11 @@ public class FileBasedSnapshotManager extends StoreSnapshotManagerBase {
         }
     }
 
+    /**
+     * Retrieve ID of default snapshot.
+     * @return ID of the default snapshot if exists, null otherwise.
+     * @throws IOException Failed to read the ID.
+     */
     public String getDefaultSnapshotId() throws IOException {
         try(var connection = getSnapshotsCatalogConnection()){
             Statement statement = connection.createStatement();
@@ -102,6 +107,11 @@ public class FileBasedSnapshotManager extends StoreSnapshotManagerBase {
         }
     }
 
+    /**
+     * Delete all snapshots from the configured snapshot folder.
+     * @return True - Success.
+     * @throws IOException Error removing snapshots.
+     */
     public boolean flushSnapshots() throws IOException {
         var pathToDb = getSnapshotsDbPath();
         if(!new File(pathToDb).exists()){
@@ -134,9 +144,9 @@ public class FileBasedSnapshotManager extends StoreSnapshotManagerBase {
     }
 
     /**
-     * Crete full snapshot of the Registry with Data and dump them in the snapshots directory
-     * @param isDefault If True - newly created snapshot is set as Default and will be used during the RESET execution
-     * @return
+     * Crete full snapshot of the Registry with Data and dump them in the snapshots directory.
+     * @param isDefault If True - newly created snapshot is set as Default and will be used during the RESET execution.
+     * @return Snapshot ID.
      * @throws IOException
      */
     public String createSnapshot(boolean isDefault) throws IOException {
@@ -169,9 +179,9 @@ public class FileBasedSnapshotManager extends StoreSnapshotManagerBase {
     }
 
     /**
-     * Load snapshot from a file
-     * @param snapshotId ID of the snapshot to load
-     * @return True - snapshot was restored successfully
+     * Load snapshot from a file.
+     * @param snapshotId ID of the snapshot to load.
+     * @return True - snapshot was restored successfully.
      * @throws IOException
      */
     public boolean loadSnapshot(String snapshotId) throws IOException{
