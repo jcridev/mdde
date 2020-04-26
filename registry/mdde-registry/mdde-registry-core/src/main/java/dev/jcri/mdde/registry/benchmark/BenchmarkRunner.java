@@ -383,11 +383,11 @@ public class BenchmarkRunner {
                 result.setError(null);
 
                 // Await for node statistics
-                int awaitCycles = 12;
+                int awaitCycles = 100;
                 if(this._ycsbRunner.statsResultsReady() == false){
                     while(awaitCycles > 0){
                         awaitCycles--;
-                        TimeUnit.SECONDS.sleep(5);
+                        TimeUnit.SECONDS.sleep(2);
                         if(this._ycsbRunner.statsResultsReady()){
                             break;
                         }

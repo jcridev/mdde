@@ -32,7 +32,7 @@ class EnvironmentTestCase(unittest.TestCase):
         os.makedirs(os.path.abspath(agents_path), exist_ok=True)
 
         # Create Registry client
-        tcp_client = RegistryClientTCP(self.REGISTRY_HOST, self.REGISTRY_PORT)
+        tcp_client = RegistryClientTCP(self.REGISTRY_HOST, self.REGISTRY_PORT, keep_open=False)
         read_client: PRegistryReadClient = tcp_client
         write_client: PRegistryWriteClient = tcp_client
         ctrl_client: PRegistryControlClient = tcp_client
@@ -76,27 +76,33 @@ class EnvironmentTestCase(unittest.TestCase):
         act: Dict[int, int] = environment.action_space
 
         # Run benchmark
-        # environment.benchmark()
+        environment.benchmark()
 
         # Make steps
-        for i in range(0, 100):
+        for i in range(0, 1000):
             osb = environment.observation_space
             action_n = {}
             for k, v in act.items():
                 action_n[k] = random.randrange(0, v - 1)
             obs_s, reward_s, done = environment.step(action_n=action_n)
 
+        # Run benchmark
+        environment.benchmark()
         # Reset
         reset = environment.reset()
+        # Run benchmark
+        environment.benchmark()
 
         # Make steps
-        for i in range(0, 100):
+        for i in range(0, 1000):
             osb = environment.observation_space
             action_n = {}
             for k, v in act.items():
                 action_n[k] = random.randrange(0, v - 1)
             obs_s, reward_s, done = environment.step(action_n=action_n)
 
+        # Run benchmark
+        environment.benchmark()
 
 if __name__ == '__main__':
     unittest.main()

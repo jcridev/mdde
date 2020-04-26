@@ -1,4 +1,5 @@
 import socket
+import logging
 from typing import Set, Dict, List, Union
 
 from mdde.registry.protocol import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient
@@ -12,26 +13,46 @@ from .serializer import Serializer
 class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryControlClient):
     """Registry client utilizing TCP Socket connection for communication with the registry"""
 
-    _default_encoding = "utf-8"
+    _logger = logging.getLogger('registry_client.tcp')
+    _default_encoding = 'utf-8'
 
-    def __init__(self, host: str, port: int):
+    def __init__(self, host: str, port: int, keep_open: bool = False):
         """
-        Constructor
+        Constructor of the TCP client for MDDE registry.
         :param host: Host (domain, ip, localhost, etc.) where the MDDE registry is running
         :param port: Port where the MDDE registry control socket is listening
+        :param keep_open: If True, the TCP socket will be re-used and not re-open with every request. Suitable for
+        sequential execution of operations only.
         """
         self._registry_server = (host, port)
+        """(host, port) connection info to the registry."""
+        self._reuse_socket = keep_open
+        """Keep-socket-open flag."""
+        self.__reg_socket: Union[None, socket.socket] = None
+        """Socket"""
+
+    def __del__(self):
+        if self._reuse_socket and self.__reg_socket is not None:
+            self.__reg_socket.close()
 
     def _execute_tcp_call(self, message: str) -> str:
         """
-        Connect to the registry, send the JSON serialized command, retrieve JSON serialized response
-        :param message: JSON request
+        Connect to the registry, send the JSON serialized command, retrieve JSON serialized response.
+        Note: The Registry is not transaction safe and intended to be used in an environment with unstable network. If a
+        connection error occurred, we do not attempt to recover but instead fail the entire experiment.
+        :param message: JSON request.
                         Example: {"cmd":"PREPBENCHMARK", "args": null}
-        :return: JSON string
+        :return: JSON string response.
         """
         msg_marshalled = self._marshall_message(message)
-        reg_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        reg_socket.connect(self._registry_server)
+        reg_socket: socket.socket
+        if not self._reuse_socket or (self._reuse_socket and not self.__reg_socket):  # Create new socket for the call
+            reg_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            reg_socket.connect(self._registry_server)
+            if self._reuse_socket:
+                self.__reg_socket = reg_socket
+        else:  # Reuse existing socket
+            reg_socket = self.__reg_socket
         try:
             reg_socket.sendall(msg_marshalled)
             # Read the response length
@@ -41,7 +62,7 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
             while received_length < len_header_len:
                 len_bytes = reg_socket.recv(4)
                 if not len_bytes:
-                    raise EOFError("No response from the server received")
+                    raise EOFError('No response from the server received')
                 received_length += len(len_bytes)
                 length_buf.extend(len_bytes)
             # Decode expected length of the response
@@ -52,13 +73,14 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
             while received_length < expected_response_length:
                 payload_bytes_chunk = reg_socket.recv(expected_response_length)
                 if not payload_bytes_chunk:
-                    raise EOFError("No response payload from the server received")
+                    raise EOFError('No response payload from the server received')
                 received_length += len(payload_bytes_chunk)
                 response_buf.extend(payload_bytes_chunk)
             # Decode retrieved message
             return self._decode_message(response_buf)
         finally:
-            reg_socket.close()
+            if not self._reuse_socket:
+                reg_socket.close()
 
     def _marshall_message(self, message: str) -> []:
         """
