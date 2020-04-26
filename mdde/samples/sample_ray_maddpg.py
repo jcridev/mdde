@@ -36,7 +36,7 @@ class MaddpgSample:
     """Path to directory for temporary files created by the scenario or agents"""
 
     NUM_EPISODES = 1000
-    EPISODE_LEN = 201
+    EPISODE_LEN = 1001
     LEARNING_RATE = 1e-2
     NUM_ADVERSARIES = 0
     SAMPLE_BATCH_SIZE = 25
@@ -118,7 +118,7 @@ class MaddpgSample:
             # unexpected behavior. Customize the code of this extension if more complex environment are needed
 
             # Create Registry client
-            tcp_client = RegistryClientTCP(host, port)
+            tcp_client = RegistryClientTCP(host, port, keep_open=True)
             read_client: PRegistryReadClient = tcp_client
             write_client: PRegistryWriteClient = tcp_client
             ctrl_client: PRegistryControlClient = tcp_client

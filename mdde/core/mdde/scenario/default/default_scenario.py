@@ -260,12 +260,17 @@ class DefaultScenario(ABCScenario):
                 aid = agents[i].id
                 a_step = step[i]
                 if a_step[0] != 1:
-                    reward_n[aid] = 0.0
+                    reward_n[aid] = 0.
                 else:
                     if a_step[1] == EActionResult.denied.value:
-                        reward_n[aid] = -1.0
+                        # Negative reward for an incorrect action
+                        reward_n[aid] = -1.
+                    elif a_step[1] == EActionResult.did_nothing.value:
+                        # Zero reward for doing nothing
+                        reward_n[aid] = 0.
                     else:
-                        reward_n[aid] = 0.0
+                        # 1.0 for doing something which is correct
+                        reward_n[aid] = 1.
                 i += 1
             return reward_n
 
