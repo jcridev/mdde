@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple, Union, Sequence, Dict
+from typing import Tuple, Union, Sequence, Dict, List
 import pathlib
 
 import numpy as np
@@ -28,16 +28,20 @@ class DefaultScenario(ABCScenario):
                  agents: Sequence[ABCAgent],
                  benchmark_clients: int = 1,
                  data_gen_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_1000_LATEST,
-                 bench_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_1000_LATEST):
+                 bench_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_1000_LATEST,
+                 corr_act_threshold: float = 0.7):
         """
-        Constructor
+        Constructor of the default scenario.
         :param num_fragments: Target number of fragments to be generated out of data record present in data nodes
         :param num_steps_before_bench: Number of joint steps taken by the agents before benchmark is executed
         :param agents: Collection of configured agents
         :param benchmark_clients: Number of the benchmark clients to be created during the benchmark run.
-        Default value is 1. Values ∈ (0, inf)
+        Default value is 1. Values ∈ (0, inf).
         :param data_gen_workload: (optional) Workload ID which should be used for data generation.
         :param bench_workload: (optional) Workload ID which should be used for benchmarking.
+        :param corr_act_threshold: (optional) Threshold of the correct action percentage taken by the agents within
+        the number of steps between benchmarks. If the percentage is lower than the threshold, benchmark is not
+        executed. Values ∈ [0., 1.].
         """
         super().__init__('Default scenario')
         self._logger = logging.getLogger('Default scenario')
@@ -62,6 +66,7 @@ class DefaultScenario(ABCScenario):
             raise ValueError("num_steps_before_bench must be > 0")
 
         self._num_steps_before_bench = num_steps_before_bench
+        """Number of steps executed without running benchmark."""
         self._current_step = 0
         """Step counter, incremented at every self.do_run_benchmark until reaches self._num_steps_before_bench - 1"""
         self._action_history = np.zeros((self._num_steps_before_bench, len(self._agents), 2), dtype=np.int16)
@@ -72,6 +77,13 @@ class DefaultScenario(ABCScenario):
         self._action_history[0][0][1] - EActionResult value
         """
         self._action_history.fill(-1)
+
+        if corr_act_threshold < 0 or corr_act_threshold > 1.:
+            raise ValueError("corr_act_threshold must be a value in range [0., 1.].")
+
+        self._corr_act_threshold = corr_act_threshold
+        """Threshold of the correct action percentage taken by the agents within the number of steps between benchmark 
+        runs."""
 
         self.__tiledb_group_name: str = 'def_tdb_arrays'
         """Tile DB group of arrays where all scenario arrays are located"""
@@ -140,9 +152,33 @@ class DefaultScenario(ABCScenario):
         self._action_history[self._current_step] = step_action_res
 
     def do_run_benchmark(self) -> bool:
+        """
+        Decide if a benchmark run should be executed.
+        Benchmark should be executed at the specified step frequency and only when agents are performing the amout of
+        valid steps above the specified threshold.
+        :return: True - benchmark should be executed before the reward is calculated.
+        """
         if self._current_step == self._num_steps_before_bench - 1:
             self._current_step = 0
-            return True
+            # Check the quality of the steps
+            # TODO: Refactor (it's ok for a small number of agents and steps but won't scale with massive experiments)
+            agent_fails = np.zeros((len(self.get_agents()), 2), dtype=np.uint16)
+            for agent_idx in range(0, len(self.get_agents())):
+                for a_act_history_step in range(0, self._num_steps_before_bench):
+                    a_act = self._action_history[a_act_history_step][agent_idx]
+                    if a_act[0] == 1:  # increment the number of steps taken by the agent within the window
+                        agent_fails[agent_idx][0] += 1
+                        if a_act[1] == EActionResult.denied.value:  # increment failed steps
+                            agent_fails[agent_idx][1] += 1
+            a_act_fail = np.sum(agent_fails, 0)
+            if a_act_fail[0] == 0:
+                # None of the agents participated
+                return False
+            if a_act_fail[1] == 0:
+                # All actions were correct
+                return True
+            # If agents participated (even if did nothing) compare to the threshold
+            return a_act_fail[1] / a_act_fail[0] + self._corr_act_threshold < 1.
         self._current_step += 1
         return False
 

@@ -49,7 +49,7 @@ class EnvironmentTestCase(unittest.TestCase):
 
         # Create scenario
         scenario = DefaultScenario(num_fragments=20,
-                                   num_steps_before_bench=2,
+                                   num_steps_before_bench=5,
                                    agents=agents,
                                    benchmark_clients=5,
                                    data_gen_workload=EDefaultYCSBWorkload.READ_10000_1000_LATEST,
@@ -79,7 +79,7 @@ class EnvironmentTestCase(unittest.TestCase):
         # environment.benchmark()
 
         # Make steps
-        for i in range(0, 20):
+        for i in range(0, 100):
             osb = environment.observation_space
             action_n = {}
             for k, v in act.items():
@@ -90,7 +90,7 @@ class EnvironmentTestCase(unittest.TestCase):
         reset = environment.reset()
 
         # Make steps
-        for i in range(0, 20):
+        for i in range(0, 100):
             osb = environment.observation_space
             action_n = {}
             for k, v in act.items():
