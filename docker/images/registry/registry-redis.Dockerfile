@@ -14,7 +14,7 @@ COPY $cofig_file $MDDE_SHARED/config.yml
 
 # YCSB
 # using a tested with the image commit (might not be the latest)
-ENV YCSB_COMMIT eed4388f915f54038863c7c81354705985a97bf8
+ENV YCSB_COMMIT fbd1d188db970dd0284a976abae664ca558b006c
 
 ENV YCSB_GIT_DIR /usr/src/ycsb_git
 ENV YCSB_BIN /usr/bin/ycsb
