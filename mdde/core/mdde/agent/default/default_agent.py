@@ -19,7 +19,8 @@ class DefaultAgent(ABCAgent):
                  agent_id: int,
                  data_node_ids: List[str],
                  group: str = ABCAgent.DEFAULT_GROUP,
-                 write_stats: bool = False):
+                 write_stats: bool = False,
+                 allow_do_nothing: bool = True):
         """
         Default agent constructor
         :param agent_name: Name of the agent instance.
@@ -28,12 +29,16 @@ class DefaultAgent(ABCAgent):
         :param group: (optional) Group of the agent.
         :param write_stats: (optional) If True - agent will write some data (description of it's action space), to the
         results folder provided in `self._config` for later analysis.
+        :param allow_do_nothing: (optional) If True - when the agent generates its action space, it will add a
+        'do_nothing' action at 0. Otherwise the agent must always take an action.
         """
         super().__init__(agent_name, agent_id, data_node_ids, group)
         self._actions: Union[np.ndarray, None] = None
         """Agent's action space"""
         self._write_stats = write_stats
         """If set to true, will write additional info for later analysis on disk."""
+        self._allow_do_nothing = allow_do_nothing
+        """Allow 'do_nothing' action."""
 
     class Action(NamedTuple):
         """
@@ -50,7 +55,7 @@ class DefaultAgent(ABCAgent):
         is_del: bool
 
     def get_actions(self) -> int:
-        """Number of actions where indexes of actions are within [0, number_of_actions)"""
+        """Number of actions where indexes of actions are within [0, number_of_actions)."""
         return len(self._actions)
 
     def create_action_space(self,
@@ -68,11 +73,17 @@ class DefaultAgent(ABCAgent):
         f*n_f*n_o - copy from others
         We assume that no fragments are created or fully removed without a trace for the default agent.
         """
-        a_actions = np.empty(1 + len(nodes) * len(fragments), dtype=object)
-        a_actions[0] = self.Action(node_source_id=None,
-                                   node_destination_id=None,
-                                   fragment_id=None, is_del=False)  # do nothing action
-        act_cnt: int = 1
+        act_cnt: int = 0
+        if self._allow_do_nothing:
+            act_cnt = 1
+            a_actions = np.empty(1 + len(nodes) * len(fragments), dtype=object)
+            a_actions[0] = self.Action(node_source_id=None,
+                                       node_destination_id=None,
+                                       fragment_id=None,
+                                       is_del=False)  # do nothing action
+        else:
+            a_actions = np.empty(len(nodes) * len(fragments), dtype=object)
+
         for node in nodes:
             is_own_node = node.node_id in self.data_node_ids
             if not is_own_node:
@@ -142,7 +153,7 @@ class DefaultAgent(ABCAgent):
         if self.get_actions() <= action_id or action_id < 0:
             raise IndexError("Action id '{}' is out of actions space: 0 - {}".format(action_id, self._actions))
 
-        if action_id == 0:
+        if action_id == 0 and self._allow_do_nothing:
             return EActionResult.did_nothing  # do nothing (agent is done for the learning round)
 
         selected_action: DefaultAgent.Action = self._actions[action_id]

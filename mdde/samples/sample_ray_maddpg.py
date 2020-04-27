@@ -134,7 +134,8 @@ class MaddpgSample:
                 agents.append(SingleNodeDefaultAgent(agent_name=node.id,
                                                      agent_id=idx,
                                                      data_node_id=node.id,
-                                                     write_stats=write_stats))
+                                                     write_stats=write_stats,
+                                                     allow_do_nothing=True))
                 idx += 1
 
             # Create scenario
