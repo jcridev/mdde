@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.text.MessageFormat;
+import java.util.Optional;
 
 /**
  * Handler for the MDDE control API calls.
@@ -56,7 +57,7 @@ public class MddeCommandReaderHandler extends ChannelInboundHandlerAdapter {
             ctx.flush();
         }
         catch (Exception ex){
-            logger.error(ex);
+            logger.error(ex.getMessage(), ex);
         }
         finally {
             _lastReceivedMessage = null;
@@ -76,7 +77,7 @@ public class MddeCommandReaderHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error(cause);
+        logger.error(cause, cause);
         ctx.close();
     }
 }

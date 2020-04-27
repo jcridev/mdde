@@ -56,7 +56,7 @@ public abstract class CommandParserWriteBase<TOut, TArgs>
             }
         }
         catch (Exception ex){
-            logger.error(ex);
+            logger.error(ex.getMessage(), ex);
             return _serializer.serializeException(ex);
         }
     }

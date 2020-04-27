@@ -92,7 +92,7 @@ public class MddeBenchmarkHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error(cause);
+        logger.error(cause.getMessage(), cause);
         ctx.close();
     }
 }

@@ -67,7 +67,7 @@ public class Main {
         try {
             parsedArgs = parseArgs(args);
         }catch (Exception e){
-            logger.error(e);
+            logger.error(e.getMessage(), e);
             System.err.println(e.getMessage());
             System.exit(1);
         }
@@ -79,7 +79,7 @@ public class Main {
             String configString = new String(configBytes, StandardCharsets.UTF_8);
             mddeConfig = mddeAllRedisConfigReader.readConfig(configString);
         } catch (Exception e) {
-            logger.error(e);
+            logger.error(e.getMessage(), e);
             System.err.println(e.getMessage());
             System.exit(1);
         }
@@ -96,7 +96,7 @@ public class Main {
                                         connectionProperties,
                                         mddeConfig.getSnapshotsDir());
         } catch (IOException e) {
-            logger.error(e);
+            logger.error(e.getMessage(), e);
             System.err.println(e.getMessage());
             System.exit(1);
         }
@@ -109,7 +109,7 @@ public class Main {
                     logger.info("Stopped the listener.");
                 }
             } catch (Exception ex) {
-                logger.error(ex);
+                logger.error(ex.getMessage(), ex);
             }
         }));
 
@@ -119,7 +119,7 @@ public class Main {
             _listener.start(parsedArgs.getTcpPort(), parsedArgs.getTcpBenchmarkPort());
         }
         catch (Exception ex){
-            logger.error(ex);
+            logger.error(ex.getMessage(), ex);
             System.err.println(ex.getMessage());
             System.exit(1);
         }

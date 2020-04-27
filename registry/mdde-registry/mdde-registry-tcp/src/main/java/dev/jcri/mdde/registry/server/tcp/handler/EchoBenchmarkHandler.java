@@ -33,7 +33,7 @@ public class EchoBenchmarkHandler extends ChannelInboundHandlerAdapter {
             }
         }
         catch (Exception ex){
-            logger.error(ex);
+            logger.error(ex.getMessage(), ex);
         }
         finally {
             _lastReceivedMessage = null;
@@ -52,7 +52,7 @@ public class EchoBenchmarkHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error(cause);
+        logger.error(cause.getMessage(), cause);
         ctx.close();
     }
 }

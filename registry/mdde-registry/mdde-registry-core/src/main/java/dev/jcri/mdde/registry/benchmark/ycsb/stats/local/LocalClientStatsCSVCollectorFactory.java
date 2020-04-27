@@ -63,7 +63,7 @@ public class LocalClientStatsCSVCollectorFactory implements IStatsCollectorFacto
         // Check if the path is a directory
         if (!logsFolderFile.isDirectory()){
             var error = new NotDirectoryException(_logsFolder);
-            logger.error(error);
+            logger.error(error.getMessage(), error);
             throw error;
         }
         // Remove any previous run data
