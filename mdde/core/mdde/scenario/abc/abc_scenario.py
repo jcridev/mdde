@@ -256,12 +256,12 @@ class ABCScenario(ABC):
         for node in nodes:
             obs_node_id = obs_nodes.get(node.node_id, None)
             if obs_node_id is None:
-                self._logger.warning("Node: '{}',  mapped to agent '{}' is not part of the returned observation space.",
+                self._logger.warning("Node: '%s',  mapped to agent '%d' is not part of the returned observation space.",
                                      node.node_id, node.agent_id)
                 continue
             obs_node_frags = fragment_catalog['nodefrags'].get(obs_node_id, None)
             if obs_node_frags is None:
-                self._logger.warning("No observations were received for node: '{}',  mapped to agent '{}'.",
+                self._logger.warning("No observations were received for node: '%s',  mapped to agent '%d'.",
                                      node.node_id, node.agent_id)
                 continue
             n_y = nodes.index(node)

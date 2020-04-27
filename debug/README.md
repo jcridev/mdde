@@ -11,7 +11,8 @@ Pre-requisites:
 
 1. `sh prepare_test.sh`
    
-2. `conda env create -f ../mdde/support/conda-p37.yml`   
+2. `conda env create -f ../mdde/support/conda-p37.yml`
+   * To *remove* the environment or its old version, run `conda env remove --name mdde-p37 --all` 
   
 3. ``` 
    cd ../docker/compositions/redis
@@ -36,13 +37,11 @@ Setup MDDE.
    
 7. `pip install -e ./core`
    
-8.  `pip install -e ./extensions/mdde-registry-client-tcp`
-    
-9. `pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-0.8.0.dev3-cp37-cp37m-manylinux1_x86_64.whl`
-    
-10. `pip install -e ./extensions/integration-ray`
+8.  `pip install -e ./extensions/mdde-registry-client-tcp`    
 
-11. Run debug or sample configuration
+9. `pip install -e ./extensions/integration-ray`
+
+10. Run debug or sample configuration
     *  Debug, without a learner:
         1.  `cd test`
         2.  `python test_environment.py`

@@ -2,7 +2,7 @@
 <Configuration status="WARN">
     <Properties>
         <Property name="logPath">${sys:mddeRegLogDir:-target/mdde-logs}</Property>
-        <Property name="rollingFileName">mdde-registry-%i</Property>
+        <Property name="rollingFileName">mdde-registry-log</Property>
     </Properties>
     <Appenders>
         <Console name="LogToConsole" target="SYSTEM_OUT">

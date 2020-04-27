@@ -16,7 +16,8 @@ packages = find_namespace_packages(include=['mdde.*'], exclude=['mdde.test.*'])
 requirements = ['typing-extensions; python_version<"3.8"',
                 'tiledb>=0.5.6',  # conda install -c conda-forge tiledb-py
                 'natsort',
-                'PyYAML']
+                'PyYAML',
+                'numpy>=1.18.1']
 
 setup(
     name='mdde',

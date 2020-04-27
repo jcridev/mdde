@@ -3,3 +3,4 @@ typing-extensions; python_version<"3.8"
 tiledb>=0.5.6
 natsort
 PyYAML
+numpy>=1.18.1

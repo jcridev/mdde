@@ -1,5 +1,6 @@
 import argparse
 import os
+import logging
 
 from pathlib import Path
 
@@ -19,7 +20,6 @@ from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
 
 
 # https://ray.readthedocs.io/en/latest/installation.html
-
 
 class MaddpgSample:
     run_result_dir = None
@@ -255,7 +255,7 @@ class MaddpgSample:
                     # === Multi-agent setting ===
                     "multiagent": {
                         "policies": policies,
-                        "policy_mapping_fn": ray.tune.function(policy_mapping_fn)
+                        "policy_mapping_fn": policy_mapping_fn
                     },
                 },
             },

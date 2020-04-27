@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 
 from gym.spaces import Discrete, Box
@@ -18,6 +19,9 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         Initialize Ray environment
         :param env: MDDE Environment.
         """
+        logging.basicConfig(level=logging.INFO,
+                            format="%(asctime)s [%(levelname)s] %(message)s")
+
         if not env:
             raise TypeError('env must be MDDE\'s Environment and can\'t be None')
         self._env = env
