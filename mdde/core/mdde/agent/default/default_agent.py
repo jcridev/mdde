@@ -157,7 +157,7 @@ class DefaultAgent(ABCAgent):
             return EActionResult.did_nothing  # do nothing (agent is done for the learning round)
 
         selected_action: DefaultAgent.Action = self._actions[action_id]
-        
+
         if selected_action.is_del:
             if selected_action.node_source_id not in self.data_node_ids:
                 return EActionResult.denied  # Can't remove from the foreign node

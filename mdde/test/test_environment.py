@@ -5,8 +5,9 @@ import unittest
 import logging
 import random
 
+
 from mdde.core import Environment
-from mdde.agent.default.default_agent import DefaultAgent
+from mdde.agent.default import SingleNodeDefaultAgent
 from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.tcp import RegistryClientTCP
 from mdde.registry.protocol import PRegistryReadClient, PRegistryControlClient, PRegistryWriteClient
@@ -44,7 +45,7 @@ class EnvironmentTestCase(unittest.TestCase):
         agents = list()
         idx = 0
         for node in config_container.get_nodes():
-            agents.append(DefaultAgent(node.id, idx, node.id))
+            agents.append(SingleNodeDefaultAgent(node.id, idx, node.id))
             idx += 1
 
         # Create scenario
