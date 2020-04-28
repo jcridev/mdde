@@ -157,12 +157,16 @@ class DefaultAgent(ABCAgent):
             return EActionResult.did_nothing  # do nothing (agent is done for the learning round)
 
         selected_action: DefaultAgent.Action = self._actions[action_id]
-
+        
         if selected_action.is_del:
+            if selected_action.node_source_id not in self.data_node_ids:
+                return EActionResult.denied  # Can't remove from the foreign node
             # delete action
             action_result = self._invoke_delete_from_self(selected_action.node_source_id,
                                                           selected_action.fragment_id)
         else:
+            if selected_action.node_destination_id not in self.data_node_ids:
+                return EActionResult.denied  # Can't copy to a foreign node
             # copy actions
             action_result = self._invoke_copy_to_self(selected_action.node_source_id,
                                                       selected_action.node_destination_id,
