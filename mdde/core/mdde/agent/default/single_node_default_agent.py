@@ -48,31 +48,34 @@ class SingleNodeDefaultAgent(DefaultAgent):
         """
         own_node = self.data_node_ids[0]
         n_frags = len(fragments)
+        cur_act_idx = 0
         if self._allow_do_nothing:
-            a_actions = np.empty(1 + len(nodes) * n_frags * 2, dtype=object)
+            a_actions = np.empty(1 + len(nodes) * n_frags + n_frags, dtype=object)
             a_actions[0] = self.Action(node_source_id=None,
                                        node_destination_id=None,
                                        fragment_id=None,
                                        is_del=False)  # do nothing action
+            cur_act_idx += 1
         else:
-            a_actions = np.empty(len(nodes) * n_frags * 2, dtype=object)
+            a_actions = np.empty(len(nodes) * n_frags + n_frags, dtype=object)
 
-        act_idx_ref = 0
+        # Delete actions
+        for frag_idx, frag_reg_id in enumerate(fragments, cur_act_idx):
+            # Delete
+            a_actions[frag_idx] = self.Action(node_source_id=own_node,
+                                              node_destination_id=None,
+                                              fragment_id=frag_reg_id,
+                                              is_del=True)
+        cur_act_idx = cur_act_idx + n_frags
+        # Copy actions per node
         for node in nodes:
-            act_starting_point = n_frags * act_idx_ref * 2
-            for frag_idx, frag_reg_id in enumerate(fragments, 1 if self._allow_do_nothing else 0):
-                ref_idx = frag_idx + act_starting_point
-                # Copy
-                a_actions[ref_idx] = self.Action(node_source_id=node.node_id,
-                                                 node_destination_id=own_node,
-                                                 fragment_id=frag_reg_id,
-                                                 is_del=False)
-                # Delete
-                a_actions[ref_idx + n_frags] = self.Action(node_source_id=node.node_id,
-                                                           node_destination_id=None,
-                                                           fragment_id=frag_reg_id,
-                                                           is_del=True)
-            act_idx_ref += 1
+            for frag_idx, frag_reg_id in enumerate(fragments, cur_act_idx):
+                a_actions[frag_idx] = self.Action(node_source_id=node.node_id,
+                                                  node_destination_id=own_node,
+                                                  fragment_id=frag_reg_id,
+                                                  is_del=False)
+
+            cur_act_idx = cur_act_idx + n_frags
 
         self._actions = a_actions
         if self._write_stats:  # Save descriptions for later analysis
