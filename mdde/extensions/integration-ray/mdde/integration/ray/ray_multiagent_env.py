@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Dict, Callable
 
 from gym.spaces import Discrete, Box
 from ray import rllib
@@ -14,10 +14,16 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
     https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py
     """
 
-    def __init__(self, env: Environment):
+    def __init__(self,
+                 env: Environment,
+                 observation_shaper: Callable[[np.ndarray], np.ndarray] = None):
         """
         Initialize Ray environment
         :param env: MDDE Environment.
+        :type env: mdde.core.Environment
+        :param observation_shaper: (optional) If specified, will be used for re-shaping the observations,
+        otherwise the observations are flattened.
+        :type observation_shaper: Callable[[np.ndarray], np.ndarray]
         """
         logging.basicConfig(level=logging.INFO,
                             format="%(asctime)s [%(levelname)s] %(message)s")
@@ -25,6 +31,10 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         if not env:
             raise TypeError('env must be MDDE\'s Environment and can\'t be None')
         self._env = env
+        """MDDE Environment instance."""
+
+        self._observation_shaper = observation_shaper
+        """Re-shaper of the environment."""
 
     def reset(self):
         """
@@ -40,7 +50,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         obs = self._env.reset()
         obs_n = {}
         for k, v in obs.items():
-            obs_n[k] = v.astype(np.float64).flatten()
+            obs_n[k] = self._shape_obs(v)
         return obs_n
 
     def step(self, action_dict):
@@ -95,8 +105,11 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         done_dict = {}
         info_dict = {}
         for k, v in obs.items():
-            obs_n[k] = v.astype(np.float64).flatten()
+            # Re-shape the observation
+            obs_n[k] = self._shape_obs(v)
+            # Done
             done_dict[k] = done[k]
+            # Info
             info_dict[k] = {}  # TODO: return something meaningful here
         done_dict["__all__"] = all(d for d in done.values())
 
@@ -105,14 +118,13 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
     @property
     def observation_space_dict(self) -> Dict[int, Box]:
         """
-        Environment observation space shape
-        :return: Dictionary containing the shape of the observation space per agent
+        Environment observation space shape.
+        :return: Dictionary containing the shape of the observation space per agent.
         """
         obs_n = {}
-        # MultiBinary(v) Currently not supported by Ray MADDPG, making a Box instead
+        # MultiBinary(v) is not supported currently by Ray's MADDPG, making a Box instead.
         for k, v in self._env.observation_space.items():
-            v_float = v.astype(np.float64).flatten()
-            obs_n[k] = Box(low=0.0, high=1.0, shape=v_float.shape, dtype=np.float64)
+            obs_n[k] = self._box_obs(v)
         return obs_n
 
     @property
@@ -125,6 +137,29 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         for k, v in self._env.action_space.items():
             act_n[k] = Discrete(v)
         return act_n
+
+    def _shape_obs(self, agent_obs: np.ndarray) -> np.ndarray:
+        """
+        Reshape observations by either using the custom :func:`self.observation_shaper` or :func:`np.flatten()`.
+        :param agent_obs: Observations as returned by the scenario.
+        :type agent_obs: np.ndarray
+        :return: Reshaped obsevations
+        """
+        if self._observation_shaper:
+            v_float = self._observation_shaper(agent_obs)
+        else:
+            v_float = agent_obs.astype(np.float64).flatten()
+        return v_float
+
+    def _box_obs(self, agent_obs: np.ndarray) -> Box:
+        """
+        Reshape observations and wrap into the Gym.Box shape.
+        :param agent_obs: Observations as returned by the scenario.
+        :type agent_obs: np.ndarray
+        :return: 2D Box
+        """
+        v_float = self._shape_obs(agent_obs)
+        return Box(low=0.0, high=1.0, shape=v_float.shape, dtype=np.float64)
 
     @staticmethod
     def configure_ray(ray) -> None:

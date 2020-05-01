@@ -156,19 +156,41 @@ class MaddpgSample:
 
             return environment
 
+        def obs_shaper_2d_box(obs):
+            """Reshapes the environment into a form suitable for 2D box. Example 1.
+            Note: Guaranteed to work only with the Default agent - Default scenario combination."""
+            # Resulted shape (Example: 2 agents, 5 fragments):
+            # a_1: [0-4(allocation) 5-9(popularity) 10-14(ownership binary flag)]
+            # a_2: [0-4(allocation) 5-9(popularity) 10-14(ownership binary flag)]
+            return obs.reshape((obs.shape[0], obs.shape[1] * obs.shape[2]), order='F')
+
+        def obs_shaper_flat_box(obs):
+            """Reshapes the environment into a form suitable for 2D 'flat' box. Example 2.
+            Note: Guaranteed to work only with the Default agent - Default scenario combination."""
+            # Resulted shape (Example: 2 agents, 5 fragments):
+            # [0-4(a_1: allocation) 5-9(a_1: popularity) 10-14(a_1: ownership binary flag)
+            #  15-19(a_2: allocation) 20-24(a_2: popularity) 24-29(a_2: ownership binary flag)]
+            return obs.reshape((obs.shape[0], obs.shape[1] * obs.shape[2]), order='F')\
+                      .reshape((obs.shape[0] * obs.shape[1] * obs.shape[2]), order='C')
+
+        sample_selected_shaper = obs_shaper_flat_box
+        """Observation shaper selected. Set None if you want to use the default one in the wrapper."""
+
         # Create and initialize environment before passing it to Ray
         # This makes it impossible to run multiple instances of the environment, however it's intentional due to the
         # the nature of the environment that's represented as a distributed infrastructure of services, it can't be
         # easily created and destroyed as a simple local game-like environment
-        env_instance = MddeMultiAgentEnv(make_env(host=self.mdde_registry_host,
-                                                  port=self.mdde_registry_port,
-                                                  reg_config=config_file_full_path,
-                                                  env_config=mdde_config,
-                                                  write_stats=False))
+        env_instance = MddeMultiAgentEnv(env=make_env(host=self.mdde_registry_host,
+                                                      port=self.mdde_registry_port,
+                                                      reg_config=config_file_full_path,
+                                                      env_config=mdde_config,
+                                                      write_stats=False),
+                                         observation_shaper=sample_selected_shaper)
 
         def env_creator(kvargs):
             env = make_env(**kvargs)
-            return MddeMultiAgentEnv(env)
+            return MddeMultiAgentEnv(env=env,
+                                     observation_shaper=sample_selected_shaper)
 
         register_env("mdde", env_creator)
 
