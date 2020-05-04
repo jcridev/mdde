@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Callable
+from typing import Union, Dict, Callable
 
 from gym.spaces import Discrete, Box
 from ray import rllib
@@ -16,14 +16,14 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
 
     def __init__(self,
                  env: Environment,
-                 observation_shaper: Callable[[np.ndarray], np.ndarray] = None):
+                 observation_shaper: Union[None, Callable[[np.ndarray], np.ndarray]] = None):
         """
         Initialize Ray environment
         :param env: MDDE Environment.
         :type env: mdde.core.Environment
         :param observation_shaper: (optional) If specified, will be used for re-shaping the observations,
         otherwise the observations are flattened.
-        :type observation_shaper: Callable[[np.ndarray], np.ndarray]
+        :type observation_shaper: None or Callable[[np.ndarray], np.ndarray]
         """
         logging.basicConfig(level=logging.INFO,
                             format="%(asctime)s [%(levelname)s] %(message)s")
