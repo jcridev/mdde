@@ -18,7 +18,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
                  env: Environment,
                  observation_shaper: Union[None, Callable[[np.ndarray], np.ndarray]] = None):
         """
-        Initialize Ray environment
+        Initialize Ray environment.
         :param env: MDDE Environment.
         :type env: mdde.core.Environment
         :param observation_shaper: (optional) If specified, will be used for re-shaping the observations,

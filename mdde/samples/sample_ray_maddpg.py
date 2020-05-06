@@ -63,7 +63,7 @@ class MaddpgSample:
 
                 self.cur_time = result["time_total_s"]
 
-    def test_maddpg(self):
+    def run_maddpg(self):
         # RAY tmp
         temp_dir_full_path_obj = Path(self.ray_temp_dir).resolve()
         temp_dir_full_path_obj.mkdir(parents=True, exist_ok=True)
@@ -207,6 +207,7 @@ class MaddpgSample:
                 env_instance.action_space_dict[i],
                 {
                     "agent_id": i,
+                    "use_state_preprocessor": sample_selected_shaper == obs_shaper_2d_box,
                     "use_local_critic": use_local_critic[i],
                     "obs_space_dict": env_instance.observation_space_dict,
                     "act_space_dict": env_instance.action_space_dict,
@@ -326,4 +327,4 @@ if __name__ == '__main__':
 
     runner = MaddpgSample()
     runner.setUp()
-    runner.test_maddpg()
+    runner.run_maddpg()
