@@ -5,4 +5,4 @@
 # Project name as defined when compose was launched
 PROJ=${1:-mdde_maddpg}
 
-docker-compose -f ./docker-compose.yml -f ./docker-compose.maddpg.yml -p $PROJ down
+docker-compose -f ../docker-compose.yml -f ../docker-compose.maddpg.yml -p $PROJ down
