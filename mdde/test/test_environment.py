@@ -85,7 +85,7 @@ class EnvironmentTestCase(unittest.TestCase):
             action_n = {}
             for k, v in act.items():
                 action_n[k] = random.randrange(0, v - 1)
-            obs_s, reward_s, done = environment.step(action_n=action_n)
+            obs_s, reward_s, done, act_l = environment.step(action_n=action_n)
 
         # Run benchmark
         environment.benchmark()
@@ -100,7 +100,7 @@ class EnvironmentTestCase(unittest.TestCase):
             action_n = {}
             for k, v in act.items():
                 action_n[k] = random.randrange(0, v - 1)
-            obs_s, reward_s, done = environment.step(action_n=action_n)
+            obs_s, reward_s, done, act_l = environment.step(action_n=action_n)
 
         # Run benchmark
         environment.benchmark()

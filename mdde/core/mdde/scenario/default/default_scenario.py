@@ -274,7 +274,8 @@ class DefaultScenario(ABCScenario):
                 i += 1
             return reward_n
 
-    def get_observation(self, registry_read: PRegistryReadClient) -> Dict[int, np.ndarray]:
+    def get_observation(self, registry_read: PRegistryReadClient)\
+            -> Tuple[Dict[int, np.ndarray], Dict[int, np.ndarray]]:
         agent_nodes, fragments, obs = self.get_full_allocation_observation(registry_read=registry_read)
         # Expand observation space per agent to include read frequencies from the latest benchmark run or with
         # default values if no benchmark values yet available
@@ -289,9 +290,10 @@ class DefaultScenario(ABCScenario):
         obs = np.insert(obs, 1, stats, axis=2)
         # Feed to agents for "filtering"
         obs_n: Dict[int, np.ndarray] = {}
+        action_legal_n: Dict[int, np.ndarray] = {}
         for agent in self.get_agents():
-            obs_n[agent.id] = agent.filter_observation(agent_nodes, obs)
-        return obs_n
+            obs_n[agent.id], action_legal_n[agent.id] = agent.filter_observation(agent_nodes, fragments, obs)
+        return obs_n, action_legal_n
 
     def flush(self) -> None:
         # Delete arrays when finished

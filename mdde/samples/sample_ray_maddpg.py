@@ -174,7 +174,7 @@ class MaddpgSample:
             return obs.reshape((obs.shape[0], obs.shape[1] * obs.shape[2]), order='F')\
                       .reshape((obs.shape[0] * obs.shape[1] * obs.shape[2]), order='C')
 
-        sample_selected_shaper = obs_shaper_flat_box
+        sample_selected_shaper = obs_shaper_2d_box
         """Observation shaper selected. Set None if you want to use the default one in the wrapper."""
 
         # Create and initialize environment before passing it to Ray

@@ -216,10 +216,14 @@ class ABCAgent(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def filter_observation(self, obs_descr: Tuple[NodeAgentMapping, ...], obs: np.array) -> np.ndarray:
+    def filter_observation(self,
+                           obs_descr: Tuple[NodeAgentMapping, ...],
+                           fragments: Tuple[str, ...],
+                           obs: np.array) -> np.ndarray:
         """
         Get observation space for the specific agent.
         :param obs_descr: Observation space description.
+        :param fragments: Ordered list of fragments.
         :param obs: full_observation: Full observation space provided by the environment.
         :return: Agents can have full or limited observation spaces. In case of the latter, provide the filtering logic
         within this function and return a filtered out observation space.

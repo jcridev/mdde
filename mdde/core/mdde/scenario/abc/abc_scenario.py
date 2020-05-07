@@ -200,7 +200,8 @@ class ABCScenario(ABC):
         for agent in self.get_agents():
             agent.reset()
 
-    def get_observation(self, registry_read: PRegistryReadClient) -> Dict[int, np.ndarray]:
+    def get_observation(self, registry_read: PRegistryReadClient)\
+            -> Tuple[Dict[int, np.ndarray], Dict[int, np.ndarray]]:
         """
         Observations per client. The default implementation takes in account only allocation and returns it as full
         observation space for each agent.
@@ -208,14 +209,16 @@ class ABCScenario(ABC):
         Override this method with a custom observation composition that suits your scenario.
 
         :param registry_read: Read-only client to the registry.
-        :return: Dict['agent_id':np.ndarray]
+        :return: [0] dictionary of observations per agent;
+        [1] dictionary of the indexes of valid actions per agent in the current state of the environment.
         """
         # retrieve full allocation observation for the scenario
         agent_nodes, fragments, obs = self.get_full_allocation_observation(registry_read=registry_read)
-        obs_n: Dict[int, np.ndarray] = {}
+        obs_n: Dict[int, np.ndarray] = {}  # observations
+        act_legal: Dict[int, np.ndarray] = {}  # actions
         for agent in self.get_agents():
-            obs_n[agent.id] = agent.filter_observation(agent_nodes, obs)
-        return obs_n
+            obs_n[agent.id], act_legal[agent.id] = agent.filter_observation(agent_nodes, fragments, obs)
+        return obs_n, act_legal
 
     def get_ordered_nodes(self) -> Tuple[NodeAgentMapping, ...]:
         """

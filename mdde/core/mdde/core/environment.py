@@ -210,15 +210,15 @@ class Environment:
         self._initialize_action_space()
         self._logger.info("Environment initialization is complete")
 
-    def reset(self) -> Dict[int, np.ndarray]:
+    def reset(self) -> Tuple[Dict[int, np.ndarray], Dict[int, np.ndarray]]:
         """
         Reset the environment, reverting to the original data snapshot.
-        :return: Observation space state after the reset per agent.
+        :return: Observation space state after the reset per agent; Legal actions per agent in the current state;
         """
         self._logger.info("Resetting the environment")
         # Writes stats if needed
         if self._write_stats:
-            obs_n = self.observation_space
+            obs_n, legal_act = self.observation_space
             self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n)
         # Call registry reset
         self._set_registry_mode(ERegistryMode.benchmark)
@@ -236,11 +236,12 @@ class Environment:
         self.__episode_count += 1
 
     def step(self, action_n: Dict[int, int]) \
-            -> Tuple[Dict[int, np.ndarray], Dict[int, float], Dict[int, bool]]:
+            -> Tuple[Dict[int, np.ndarray], Dict[int, float], Dict[int, bool], Dict[int, np.ndarray]]:
         """
         Execute actions chosen for each agent, get resulted rewards and new observations
         :param action_n: Dict['agent_id':action_id]
-        :return: Dict['agent_id':'np.ndarray of observations'], Dict['agent_id':'reward'], Dict['agent_id':'done flag']
+        :return: Dict['agent_id':'np.ndarray of observations'], Dict['agent_id':'reward'], Dict['agent_id':'done flag'],
+        Dict['agent_id':'np.ndarray of legality or illegality of actions in the current state']
         """
         self.__step_count += 1
         # Act
@@ -250,7 +251,7 @@ class Environment:
             # Run the benchmark now if appropriate for the current scenario
             self.benchmark()
         # Observe
-        obs_n = self.observation_space
+        obs_n, legal_act_n = self.observation_space
         # Get the reward
         reward_n = self._scenario.get_reward()
         # Get the done flag
@@ -264,7 +265,7 @@ class Environment:
                                             self.__did_reset_flag)
             #self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n)
         self.__did_reset_flag = False
-        return obs_n, reward_n, done_n
+        return obs_n, reward_n, done_n, legal_act_n
 
     def _dump_action_reward_to_csv(self,
                                    step_idx: int,
@@ -354,10 +355,11 @@ class Environment:
         return self._scenario.get_agents()
 
     @property
-    def observation_space(self) -> Dict[int, np.ndarray]:
+    def observation_space(self) -> Tuple[Dict[int, np.ndarray], Dict[int, np.ndarray]]:
         """
-        Retrieve all observation spaces for all agents
-        :return: Dict['agent_id':np.ndarray]
+        Retrieve all observation spaces for all agents.
+        :return: Two dictionaries where keys are agent ids: [0] dictionary of observations per agent;
+        [1] dictionary of the indexes of valid actions per agent in the current state of the environment.
         """
         return self._scenario.get_observation(registry_read=self._registry_read)
 

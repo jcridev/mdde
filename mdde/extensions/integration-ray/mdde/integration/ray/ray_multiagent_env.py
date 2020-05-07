@@ -47,7 +47,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
                     "traffic_light_1": [0, 3, 5, 1],
                 }
         """
-        obs = self._env.reset()
+        obs, act_l = self._env.reset()
         obs_n = {}
         for k, v in obs.items():
             obs_n[k] = self._shape_obs(v)
@@ -100,7 +100,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
                 discrete_actions[k] = a_idx
             else:
                 discrete_actions[k] = v
-        obs, reward, done = self._env.step(discrete_actions)
+        obs, reward, done, act_l = self._env.step(discrete_actions)
         obs_n = {}
         done_dict = {}
         info_dict = {}
@@ -123,7 +123,8 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         """
         obs_n = {}
         # MultiBinary(v) is not supported currently by Ray's MADDPG, making a Box instead.
-        for k, v in self._env.observation_space.items():
+        observation, legal_actions = self._env.observation_space
+        for k, v in observation.items():
             obs_n[k] = self._box_obs(v)
         return obs_n
 
