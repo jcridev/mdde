@@ -1,6 +1,6 @@
 # Base image for the ray-based experiments
 FROM ubuntu:18.04
-# CPU bound environment container for MADDPG implemented in Ray RLlib
+# CPU bound environment container for algorithms implemented in Ray RLlib
 # Context (repo root): ../../../
 
 LABEL org.label-schema.name="mdde/env/ray-base"
@@ -66,9 +66,9 @@ COPY $GIT_MDDE_SRC/extensions/mdde-registry-client-tcp ./mdde-registry-client-tc
 COPY $GIT_MDDE_SRC/extensions/integration-ray ./integration-ray
 
 # Script creating the conda environment suitable for the used version of MADDPG from RLlib
-COPY $GIT_MDDE_SRC/support/scripts-ray/maddpg_create_conda_env.sh ./sample_create_conda_env.sh
+COPY $GIT_MDDE_SRC/support/scripts-ray/sample_create_conda_env.sh ./sample_create_conda_env.sh
 # Entrypoint script
-COPY $GIT_MDDE_SRC/support/scripts-ray/maddpg_execute_in_conda.sh ./sample_execute_in_conda.sh
+COPY $GIT_MDDE_SRC/support/scripts-ray/sample_execute_in_conda.sh ./sample_execute_in_conda.sh
 RUN chmod +x ./sample_create_conda_env.sh
 RUN chmod +x ./sample_execute_in_conda.sh
 
