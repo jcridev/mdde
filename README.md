@@ -8,7 +8,7 @@ The current implementation of MDDE focuses on read-oriented scenarios.
 
 - [Structure](#structure)
   - [Registry](#registry)
-  - [Environment](#environment)
+  - [Stage](#stage)
 - [Development](#development)
 - [Deployment](#deployment)
 - [Additional repositories](#additional-repositories)
@@ -26,22 +26,20 @@ The current implementation of MDDE focuses on read-oriented scenarios.
 
 Since the goal is the creation of an environment for assessment and design of reinforcement learning algorithms, abstraction from existing database engines and the extensive heuristic optimization and distribution algorithms, which are built-in most of these, was one of the priorities. Additionally, an RL algorithm must have fine-grained control over the distribution and replication of data records. In order o satisfy these requirements, a simple distributed data orchestration module is provided: [Registry](https://github.com/akharitonov/mdde/tree/master/registry). 
 
-### Environment
+### Stage
 `./mdde` 
 
 One of the primary goals in development was the simplification of integration with RL frameworks or algorithm implementation,
-while at the same time maintaining a high level of extensibility and accessibility for the researchers in the field. Therefore, the core [environment](https://github.com/akharitonov/mdde/tree/master/mdde) is written in Python and responsible for forming fragments, processing, and transforming action and observation spaces. This environment communicates with the registry via TCP connection and can be deployed separately from it and data nodes.
+while at the same time maintaining a high level of extensibility and accessibility for the researchers in the field. Therefore, the *[stage](https://github.com/akharitonov/mdde/tree/master/mdde)* module of MDDE is written in Python and responsible for forming fragments, processing, and transforming action and observation spaces. *Stage* instance communicates with the *registry* via TCP connection and can be deployed separately from it and data nodes.
 
 
 ## Development
 
-...
+In order to set up a local development and debug version of MDDE, please switch to the `./debug` folder and follow the instructions in the `README.md` file there.
 
 ## Deployment
 
-`./docker`
-
-...
+For examples of Docker-based experiments configurations using our provided sample code from `./mdde/samples`, please proceed to `./docker` folder.
 
 ## Additional repositories
 
