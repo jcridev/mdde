@@ -1,5 +1,5 @@
-import argparse
 import os
+import argparse
 import logging
 
 from pathlib import Path
@@ -18,22 +18,24 @@ from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient,
 from mdde.registry.tcp import RegistryClientTCP
 from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
 
-
 # https://ray.readthedocs.io/en/latest/installation.html
 
-class MaddpgSample:
+
+class MADDPGSample:
+    """Demonstration sample code showing how RAY's MADDPG can be executed used with MDDE."""
+
     run_result_dir = None
-    """Ray results output folder"""
+    """Ray results output folder for the current experimental run."""
     ray_temp_dir = None
-    """Make sure "TEST_TEMP_DIR" not too long for the plasma store, otherwise ray will fail"""
+    """Make sure "TEST_TEMP_DIR" not too long for the plasma store, otherwise ray will fail."""
     mdde_registry_host = 'localhost'
-    """MDDE registry host"""
+    """MDDE registry host."""
     mdde_registry_port = 8942
-    """MDDE registry control TCP port"""
+    """MDDE registry control TCP port."""
     mdde_registry_config = None
-    """Path to the MDDE registry configuration YAML"""
+    """Path to the MDDE registry configuration YAML."""
     env_temp_dir = None
-    """Path to directory for temporary files created by the scenario or agents"""
+    """Path to directory for temporary files created by the scenario or agents."""
 
     NUM_EPISODES = 1000
     EPISODE_LEN = 1001
@@ -92,7 +94,7 @@ class MaddpgSample:
         MddeMultiAgentEnv.configure_ray(ray)
 
         maddpg_agent = MADDPGTrainer.with_updates(
-            mixins=[MaddpgSample.CustomStdOut]
+            mixins=[MADDPGSample.CustomStdOut]
         )
         register_trainable("MADDPG", maddpg_agent)
 
@@ -174,7 +176,7 @@ class MaddpgSample:
             return obs.reshape((obs.shape[0], obs.shape[1] * obs.shape[2]), order='F')\
                       .reshape((obs.shape[0] * obs.shape[1] * obs.shape[2]), order='C')
 
-        sample_selected_shaper = obs_shaper_2d_box
+        sample_selected_shaper = obs_shaper_flat_box
         """Observation shaper selected. Set None if you want to use the default one in the wrapper."""
 
         # Create and initialize environment before passing it to Ray
@@ -290,7 +292,7 @@ class MaddpgSample:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--result-dir',
-                        help='Results dir',
+                        help='Results dir (tensorboard)',
                         type=str,
                         default='../../debug/debug/result')
     parser.add_argument('-t', '--temp-dir',
@@ -316,15 +318,15 @@ if __name__ == '__main__':
 
     config = parser.parse_args()
 
-    MaddpgSample.run_result_dir = config.result_dir
-    MaddpgSample.ray_temp_dir = config.temp_dir
+    MADDPGSample.run_result_dir = config.result_dir
+    MADDPGSample.ray_temp_dir = config.temp_dir
 
-    MaddpgSample.mdde_registry_host = config.reg_host
-    MaddpgSample.mdde_registry_port = config.reg_port
-    MaddpgSample.mdde_registry_config = config.config
+    MADDPGSample.mdde_registry_host = config.reg_host
+    MADDPGSample.mdde_registry_port = config.reg_port
+    MADDPGSample.mdde_registry_config = config.config
 
-    MaddpgSample.env_temp_dir = config.env_temp_dir
+    MADDPGSample.env_temp_dir = config.env_temp_dir
 
-    runner = MaddpgSample()
+    runner = MADDPGSample()
     runner.setUp()
     runner.run_maddpg()

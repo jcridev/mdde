@@ -1,5 +1,8 @@
 import os
 import argparse
+import logging
+
+from pathlib import Path
 
 import ray
 from ray import utils
@@ -7,34 +10,35 @@ from ray.rllib.agents.dqn import DQNTrainer
 from ray.tune import run_experiments
 from ray.tune.registry import register_env
 
-from mdde.agent.default import SingleNodeDefaultAgent
 from mdde.core import Environment
-from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
-from mdde.config import ConfigEnvironment, ConfigRegistry
+from mdde.agent.default import SingleNodeDefaultAgent
+from mdde.scenario.default import DefaultScenario
+from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.registry.tcp import RegistryClientTCP
-
+from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
 
 # https://ray.readthedocs.io/en/latest/installation.html
-from mdde.scenario.default import DefaultScenario
 
 
 class DQNTestSample:
-    ray_result_dir = None
-    """Ray results output folder"""
+    """Demonstration sample code showing how RAY's DQN can be executed used with MDDE."""
+
+    run_result_dir = None
+    """Ray results output folder for the current experimental run."""
     ray_temp_dir = None
-    """Make sure "TEST_TEMP_DIR" not too long for the plasma store, otherwise ray will fail"""
+    """Make sure "TEST_TEMP_DIR" not too long for the plasma store, otherwise ray will fail."""
     mdde_registry_host = 'localhost'
-    """MDDE registry host"""
+    """MDDE registry host."""
     mdde_registry_port = 8942
-    """MDDE registry control TCP port"""
+    """MDDE registry control TCP port."""
     mdde_registry_config = None
-    """Path to the MDDE registry configuration YAML"""
+    """Path to the MDDE registry configuration YAML."""
     env_temp_dir = None
-    """Path to directory for temporary files created by the scenario or agents"""
+    """Path to directory for temporary files created by the scenario or agents."""
 
     NUM_EPISODES = 1000
-    EPISODE_LEN = 201
+    EPISODE_LEN = 1001
     LEARNING_RATE = 1e-2
     NUM_ADVERSARIES = 0
     SAMPLE_BATCH_SIZE = 25
@@ -43,11 +47,24 @@ class DQNTestSample:
     def setUp(self) -> None:
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # {'0': 'DEBUG', '1': 'INFO', '2': 'WARNING', '3': 'ERROR'}
 
-    def test_dqn(self):
-        temp_dir_full_path = os.path.realpath(self.ray_temp_dir)
-        result_dur_full_path = os.path.realpath(self.ray_result_dir)
-        config_file_full_path = os.path.realpath(self.mdde_registry_config)
-        temp_env_dir = os.path.realpath(self.env_temp_dir)
+    def run_dqn(self):
+        # RAY tmp
+        temp_dir_full_path_obj = Path(self.ray_temp_dir).resolve()
+        temp_dir_full_path_obj.mkdir(parents=True, exist_ok=True)
+        temp_dir_full_path = str(temp_dir_full_path_obj)
+        # Result paths
+        result_dir_path_root = Path(self.run_result_dir).resolve()
+        # Separate MDDE output and Ray output
+        result_dir_path_ray_obj = result_dir_path_root.joinpath("ray")
+        result_dir_path_ray_obj.mkdir(parents=True, exist_ok=True)
+        result_dir_path_ray = str(result_dir_path_ray_obj)
+        result_dir_path_mdde_obj = result_dir_path_root.joinpath("mdde")
+        result_dir_path_mdde_obj.mkdir(parents=True, exist_ok=True)
+        result_dir_path_mdde = str(result_dir_path_mdde_obj)
+        # Config
+        config_file_full_path = str(Path(self.mdde_registry_config).resolve())
+        # MDDE tmp
+        temp_env_dir = self.env_temp_dir
 
         os.makedirs(os.path.abspath(temp_env_dir), exist_ok=True)
 
@@ -58,7 +75,8 @@ class DQNTestSample:
                  num_cpus=4,
                  temp_dir=temp_dir_full_path)
 
-        mdde_config = ConfigEnvironment(temp_env_dir)
+        mdde_config = ConfigEnvironment(tmp_dir=temp_env_dir,
+                                        result_dir=result_dir_path_mdde)
 
         def make_env(host: str,
                      port: int,
@@ -92,7 +110,11 @@ class DQNTestSample:
             agents = list()
             idx = 0
             for node in config_container.get_nodes():
-                agents.append(SingleNodeDefaultAgent(node.id, idx, node.id))
+                agents.append(SingleNodeDefaultAgent(agent_name=node.id,
+                                                     agent_id=idx,
+                                                     data_node_id=node.id,
+                                                     write_stats=write_stats,
+                                                     allow_do_nothing=True))
                 idx += 1
 
             # Create scenario
@@ -128,21 +150,21 @@ class DQNTestSample:
             # Resulted shape (Example for default scenario and default single-node agent: 2 agents, 5 fragments):
             # [0-4(a_1: allocation) 5-9(a_1: popularity) 10-14(a_1: ownership binary flag)
             #  15-19(a_2: allocation) 20-24(a_2: popularity) 25-29(a_2: ownership binary flag)]
-            return obs.reshape((obs.shape[0], obs.shape[1] * obs.shape[2]), order='F')\
-                      .reshape((obs.shape[0] * obs.shape[1] * obs.shape[2]), order='C')
+            return obs.reshape((obs.shape[0], obs.shape[1] * obs.shape[2]), order='F') \
+                .reshape((obs.shape[0] * obs.shape[1] * obs.shape[2]), order='C')
 
-        sample_selected_shaper = obs_shaper_2d_box
+        sample_selected_shaper = obs_shaper_flat_box
         """Observation shaper selected. Set None if you want to use the default one in the wrapper."""
 
         # Create and initialize environment before passing it to Ray
         # This makes it impossible to run multiple instances of the environment, however it's intentional due to the
         # the nature of the environment that's represented as a distributed infrastructure of services, it can't be
         # easily created and destroyed as a simple local game-like environment
-        env_instance = MddeMultiAgentEnv(make_env(host=self.mdde_registry_host,
-                                                  port=self.mdde_registry_port,
-                                                  reg_config=config_file_full_path,
-                                                  env_config=mdde_config,
-                                                  write_stats=False),
+        env_instance = MddeMultiAgentEnv(env=make_env(host=self.mdde_registry_host,
+                                                      port=self.mdde_registry_port,
+                                                      reg_config=config_file_full_path,
+                                                      env_config=mdde_config,
+                                                      write_stats=False),
                                          observation_shaper=sample_selected_shaper)
 
         def env_creator(kvargs):
@@ -183,7 +205,7 @@ class DQNTestSample:
                     "episodes_total": self.NUM_EPISODES,
                 },
                 "checkpoint_freq": 0,
-                "local_dir": result_dur_full_path,
+                "local_dir": result_dir_path_ray,
                 "restore": False,
                 "config": {
                     # === Log ===
@@ -261,7 +283,7 @@ if __name__ == '__main__':
 
     config = parser.parse_args()
 
-    DQNTestSample.ray_result_dir = config.result_dir
+    DQNTestSample.run_result_dir = config.result_dir
     DQNTestSample.ray_temp_dir = config.temp_dir
 
     DQNTestSample.mdde_registry_host = config.reg_host
@@ -272,4 +294,4 @@ if __name__ == '__main__':
 
     runner = DQNTestSample()
     runner.setUp()
-    runner.test_dqn()
+    runner.run_dqn()
