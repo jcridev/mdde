@@ -1,4 +1,4 @@
-FROM mdde/ray-base:latest
+FROM mdde/env/ray-base:latest
 # CPU bound environment container for DQN implemented in Ray RLlib
 # Context (repo root): ../../../
 
