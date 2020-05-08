@@ -177,11 +177,13 @@ class ABCScenario(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def process_benchmark_stats(self, bench_end_result: BenchmarkStatus) -> None:
+    def process_benchmark_stats(self, registry_read: PRegistryReadClient, bench_end_result: BenchmarkStatus) -> None:
         """
         When environment successfully executes a benchmark, the results will be passed to the scenario via this
         method. Override it to process the received statistics any way that makes sense for your scenario.
-        :param bench_end_result: Benchmark run results
+        :param registry_read: Read-access to the registry, in case scenario needs it to process benchmark stats
+        adequately.
+        :param bench_end_result: Benchmark run results.
         """
         raise NotImplementedError
 

@@ -182,7 +182,7 @@ class DefaultScenario(ABCScenario):
         self._current_step += 1
         return False
 
-    def process_benchmark_stats(self, bench_end_result: BenchmarkStatus) -> None:
+    def process_benchmark_stats(self, registry_read: PRegistryReadClient,  bench_end_result: BenchmarkStatus) -> None:
         if bench_end_result.failed or not bench_end_result.completed:
             raise RuntimeError("Scenario should receive a completed non failed benchmark only")
 
@@ -207,6 +207,7 @@ class DefaultScenario(ABCScenario):
                     frag: Dict = v
                     result[node_idx, frag_idx] = result[node_idx, frag_idx] + frag.get('r', 0)
 
+        self._initialize_stat_values_store_if_needed_read_obs_space(registry_read=registry_read)
         self._write_stats(result)
         self.__throughput = bench_stats.throughput
         self.__benchmark_data_ready = True
@@ -305,11 +306,28 @@ class DefaultScenario(ABCScenario):
         # Flush arrays, no point to store these between episodes
         self.flush()
 
-    def _initialize_stat_values_store_if_needed(self, shape: Tuple[int, ...]) -> None:
-        """Initialize storage for the benchmark statistics if it wasn't created yet"""
+    def _initialize_stat_values_store_if_needed_read_obs_space(self, registry_read: PRegistryReadClient) -> None:
+        """
+        Initialize the TileDB stats array with no pre-supplied observations shape. It will retrieve, observations, and
+        create a new array based on that. Only use in cases where it's uncertain if the array was initialized or not but
+        there is no observation space yet.
+        :param registry_read: Read-only client for the registry.
+        """
+        if self.__tiledb_stats_array is not None and tiledb.array_exists(self.__tiledb_stats_array):
+            return
 
-        if self.__tiledb_stats_array is not None \
-                and tiledb.array_exists(self.__tiledb_stats_array):
+        agent_nodes, fragments, obs = self.get_full_allocation_observation(registry_read=registry_read)
+        # Expand observation space per agent to include read frequencies from the latest benchmark run or with
+        # default values if no benchmark values yet available
+        self._initialize_stat_values_store_if_needed(obs.shape)
+
+    def _initialize_stat_values_store_if_needed(self, shape: Tuple[int, ...]) -> None:
+        """
+        Initialize storage for the benchmark statistics if it wasn't created yet.
+        :param shape: Shape of the stats map.
+        """
+
+        if self.__tiledb_stats_array is not None and tiledb.array_exists(self.__tiledb_stats_array):
             return
         # Create array with one dense dimension to store read statistics from the latest benchmark run.
         dom = tiledb.Domain(tiledb.Dim(name='n', domain=(0, shape[0] - 1), tile=shape[0] - 1, dtype=np.int64),

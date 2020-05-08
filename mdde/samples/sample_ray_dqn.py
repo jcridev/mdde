@@ -82,7 +82,8 @@ class DQNTestSample:
                      port: int,
                      reg_config: str,
                      env_config: ConfigEnvironment,
-                     write_stats: bool) -> Environment:
+                     write_stats: bool,
+                     initial_benchmark: bool = False) -> Environment:
             """
             Configure MDDE environment to run default.
             :param host: MDDE registry host or IP.
@@ -90,6 +91,7 @@ class DQNTestSample:
             :param reg_config: Path to MDDE registry config.
             :param env_config: Environment configuration object.
             :param write_stats: True to write additional analytics info.
+            :param initial_benchmark: Execute benchmark immediately upon execution.
             :return: MDDE Environment.
             """
 
@@ -131,7 +133,7 @@ class DQNTestSample:
                                       registry_read=read_client,
                                       write_stats=write_stats)
             # Re-generate data
-            environment.initialize_registry()
+            environment.initialize_registry(with_benchmark=initial_benchmark)
 
             return environment
 
@@ -164,7 +166,8 @@ class DQNTestSample:
                                                       port=self.mdde_registry_port,
                                                       reg_config=config_file_full_path,
                                                       env_config=mdde_config,
-                                                      write_stats=False),
+                                                      write_stats=False,
+                                                      initial_benchmark=False),
                                          observation_shaper=sample_selected_shaper)
 
         def env_creator(kvargs):

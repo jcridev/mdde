@@ -144,9 +144,11 @@ class Environment:
         for agent in self._scenario.get_agents():
             agent.attach_registry(self._registry_read, self._registry_write)
 
-    def initialize_registry(self) -> None:
+    def initialize_registry(self, with_benchmark: bool = True) -> None:
         """
         Initialize or re-initialize the registry. All existing data will be removed, all data generated anew.
+        :param with_benchmark:
+        :return:
         """
         self._logger.info("Environment initialization starting")
         # Registry must be in the 'shuffle' mode
@@ -208,6 +210,9 @@ class Environment:
         # Initialize the action space
         self._logger.info("Initializing action space per agent")
         self._initialize_action_space()
+        # Run the initial benchmark to establish a baseline
+        if with_benchmark:
+            self.benchmark()
         self._logger.info("Environment initialization is complete")
 
     def reset(self) -> Tuple[Dict[int, np.ndarray], Dict[int, np.ndarray]]:
@@ -228,6 +233,8 @@ class Environment:
         # Reset agents state
         self._scenario.reset()
         self.__next_episode()
+        # Execute the initial benchmark
+        self.benchmark()
         # Retrieve the observations
         return self.observation_space
 
@@ -413,7 +420,8 @@ class Environment:
         # Switch back to shuffle
         self._set_registry_mode(target_mode=ERegistryMode.shuffle)
         # Return the result
-        self._scenario.process_benchmark_stats(bench_status_response)
+        self._scenario.process_benchmark_stats(registry_read=self._registry_read,
+                                               bench_end_result=bench_status_response)
         return bench_status_response
 
     def benchmark_status(self) -> BenchmarkStatus:
