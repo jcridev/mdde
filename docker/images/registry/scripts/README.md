@@ -1,0 +1,3 @@
+**[Warning]**: `config.yml` is a sample config file for the docker-compose files provides as examples in `../../../compositions/redis`. If you create a custom compose file, this config must be adjusted as well.
+
+You can also supply a path to a custom configuration file as an `ARG cofig_file` to `registry-redis.Dockerfile`.

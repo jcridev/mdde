@@ -1,14 +1,14 @@
 version: '3.7'
 services:
-  maddpg:
-  # MADDPG Environment (build an appropriate image in ../../images/environment/)
-    image: mdde/env/ray-maddpg:latest
+  dqn:
+  # DQN Environment (build an appropriate image in ../../images/environment/)
+    image: mdde/env/ray-dqn:latest
     depends_on:
       - registry
     networks:
       back:
         aliases:
-          - maddpg
+          - dqn
     volumes:
       - mdde_shared:/mdde/shared
       - mdde_results:/mdde/results
@@ -16,5 +16,5 @@ services:
       - REG_HOST=registry
       - REG_PORT=8942
 volumes:
-  mdde_results: # MDDE results
+  mdde_results: # DQN results
 

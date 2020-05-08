@@ -1,7 +1,7 @@
 # YCSB MDDE Redis client
 FROM mdde/registry:base-latest
 
-LABEL org.label-schema.name="mdde/registry:redis"
+LABEL org.label-schema.name="mdde/registry/redis"
 LABEL org.label-schema.description="MDDE Registry for Redis data nodes"
 LABEL org.label-schema.vcs-url="https://github.com/akharitonov/mdde/"
 LABEL org.label-schema.version="0.5"
@@ -9,7 +9,7 @@ LABEL org.label-schema.schema-version="1.0"
 LABEL maintainer="https://github.com/akharitonov/"
 
 # Copy cofig file to the volume
-ARG cofig_file=./config.yml 
+ARG cofig_file=./sample_configurations/config.yml 
 COPY $cofig_file $MDDE_SHARED/config.yml
 
 # YCSB

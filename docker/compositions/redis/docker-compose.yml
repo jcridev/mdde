@@ -3,17 +3,12 @@ services:
   # Use an override docker-compose that adds the environment configuration
   registry:
   # Registry
-    build: 
-      context: ../../images/registry
-      dockerfile: registry-redis.Dockerfile
-    image: mdde/registry:redis-latest
+#    build: 
+#      context: ../../images/registry
+#      dockerfile: registry-redis.Dockerfile
+    image: mdde/registry/redis:latest
     depends_on:
       - registry_store
-#    healthcheck:
-#      test: ["CMD", "netstat", "-an", "|", "grep 8942 > /dev/null;", "if [ 0 != $$? ];", "then exit 1;", "fi;"]
-#      start_period: 15s
-#      interval: 30s
-#      retries: 5
     networks:
       back:
         aliases:
