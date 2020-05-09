@@ -174,11 +174,13 @@ class DefaultScenario(ABCScenario):
             if a_act_fail[0] == 0:
                 # None of the agents participated
                 return False
+
             if a_act_fail[1] == 0:
                 # All actions were correct
                 return True
+
             # If agents participated (even if did nothing) compare to the threshold
-            return a_act_fail[1] / a_act_fail[0] + self._corr_act_threshold < 1.
+            return a_act_fail[1] / a_act_fail[0] + self._corr_act_threshold <= 1.
         self._current_step += 1
         return False
 
@@ -239,8 +241,8 @@ class DefaultScenario(ABCScenario):
                     a_act = self._action_history[a_act_history_step][agent_idx]
                     # Increase the multiplier for each correct action taken, if no correct actions were taken,
                     # the final agent reward will be 0
-                    if a_act[0] == 1 and a_act[1] == EActionResult.done.value:
-                        # Only give rewards for the actions that were success and not "do nothing"
+                    if a_act[0] == 1 and a_act[1] == EActionResult.ok.value:
+                        # Only give rewards for the actions that were success and not "do nothing" or "done"
                         agent_correctness_multiplier += 1.0 / self._num_steps_before_bench
                 # Agent reward
 

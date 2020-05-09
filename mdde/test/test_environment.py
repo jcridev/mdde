@@ -5,6 +5,7 @@ import unittest
 import logging
 import random
 
+import numpy as np
 
 from mdde.core import Environment
 from mdde.agent.default import SingleNodeDefaultAgent
@@ -73,15 +74,27 @@ class EnvironmentTestCase(unittest.TestCase):
         observations = environment.reset()
 
         # Retrieve observation and action spaces
-        osb = environment.observation_space
+        osb, act_l = environment.observation_space
         act: Dict[int, int] = environment.action_space
 
         # Run benchmark
         environment.benchmark()
 
+        # Make few totally legal steps:
+        for i in range(0, 10):
+            osb, act_l = environment.observation_space
+            action_n = {}
+            for k, v in act_l.items():
+                legal_idx_pool = []
+                for l_idx, l_act in np.ndenumerate(v):
+                    if l_act > 0:
+                        legal_idx_pool.append(l_idx[0])
+                action_n[k] = random.choice(legal_idx_pool)
+            obs_s, reward_s, done, act_l = environment.step(action_n=action_n)
+
         # Make steps
         for i in range(0, 1000):
-            osb = environment.observation_space
+            osb, act_l = environment.observation_space
             action_n = {}
             for k, v in act.items():
                 action_n[k] = random.randrange(0, v - 1)
