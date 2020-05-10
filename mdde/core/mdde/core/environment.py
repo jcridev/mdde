@@ -223,6 +223,7 @@ class Environment:
         self._logger.info("Resetting the environment")
         # Writes stats if needed
         if self._write_stats:
+            self._logger.info("Saving the current observations of the environment")
             obs_n, legal_act = self.observation_space
             self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n)
         # Call registry reset
@@ -254,7 +255,8 @@ class Environment:
         # Act
         self._scenario.make_collective_step(action_n)
         # Measure
-        if self._scenario.do_run_benchmark():
+        bench_execute_step = self._scenario.do_run_benchmark()
+        if bench_execute_step:
             # Run the benchmark now if appropriate for the current scenario
             self.benchmark()
         # Observe
@@ -268,9 +270,15 @@ class Environment:
         assert_with_log(reward_n is not None, "Unable to retrieve rewards", self._logger)
         # Writes stats if needed
         if self._write_stats:
-            self._dump_action_reward_to_csv(self.__step_count, self.__episode_count, action_n, reward_n, done_n,
-                                            self.__did_reset_flag)
-            #self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n)
+            self._dump_action_reward_to_csv(step_idx=self.__step_count,
+                                            episode_idx=self.__episode_count,
+                                            action_n=action_n,
+                                            reward_n=reward_n,
+                                            done_n=done_n,
+                                            after_reset=self.__did_reset_flag)
+            if bench_execute_step:
+                # Dump observations after a benchmark run
+                self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n)
         self.__did_reset_flag = False
         return obs_n, reward_n, done_n, legal_act_n
 
@@ -314,7 +322,7 @@ class Environment:
             row.extend([action_n.get(agent.id),
                         reward_n.get(agent.id),
                         1 if done_n.get(agent.id) else 0])
-        row.append(1 if done_n.get(after_reset) else 0)  # First step after reset flag
+        row.append(1 if after_reset else 0)  # First step after reset flag
         if not timestamp:
             row.append(time.time_ns())  # Step timestamp in nanoseconds
         else:

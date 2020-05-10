@@ -158,6 +158,8 @@ class DefaultScenario(ABCScenario):
         valid steps above the specified threshold.
         :return: True - benchmark should be executed before the reward is calculated.
         """
+        if self.__benchmark_data_ready:
+            return False  # Don't run benchmark multiple times in a row if the previous results were not processed
         if self._current_step == self._num_steps_before_bench - 1:
             self._current_step = 0
             # Check the quality of the steps
