@@ -137,5 +137,5 @@ class SingleNodeDefaultAgent(DefaultAgent):
                         source_has_copy = foreign_nodes_map[action.node_source_id][action_fragment_obs_idx][0]
                         if source_has_copy:
                             legal_act[action_idx] = 1
-        t = legal_act
+
         return np.insert(obs, 2, own, axis=2), legal_act
