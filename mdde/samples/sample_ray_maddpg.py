@@ -227,17 +227,7 @@ class MADDPGSample:
 
         exp_name = "MADDPG_MDDE_DEBUG"
 
-        run_experiments({
-            exp_name: {
-                "run": "contrib/MADDPG",
-                "env": "mdde",
-                "stop": {
-                    "episodes_total": self.NUM_EPISODES,
-                },
-                "checkpoint_freq": 0,
-                "local_dir": result_dir_path_ray,
-                "restore": False,
-                "config": {
+        maddpg_trainer_config = {
                     # === Log ===
                     "log_level": "ERROR",
 
@@ -287,7 +277,21 @@ class MADDPGSample:
                         "policies": policies,
                         "policy_mapping_fn": policy_mapping_fn
                     },
+                }
+
+        maddpg_trainer = MADDPGTrainer(env="mdde", config=maddpg_trainer_config)
+        maddpg_trainer.train()
+        run_experiments({
+            exp_name: {
+                "run": "contrib/MADDPG",
+                "env": "mdde",
+                "stop": {
+                    "episodes_total": self.NUM_EPISODES,
                 },
+                "checkpoint_freq": 0,
+                "local_dir": result_dir_path_ray,
+                "restore": False,
+                "config": maddpg_trainer_config,
             },
         }, verbose=0, reuse_actors=False)  # reuse_actors=True - messes up the results
 

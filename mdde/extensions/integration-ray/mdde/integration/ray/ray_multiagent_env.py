@@ -1,7 +1,7 @@
 import logging
 from typing import Union, Dict, Callable
 
-from gym.spaces import Discrete, Box
+import gym.spaces as spaces  # Discrete, Box, Dict
 from ray import rllib
 import numpy as np
 
@@ -50,7 +50,8 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         obs, act_l = self._env.reset()
         obs_n = {}
         for k, v in obs.items():
-            obs_n[k] = self._shape_obs(v)
+            obs_n[k] = {'obs': self._shape_obs(v),
+                        'action_mask': act_l[k]}
         return obs_n
 
     def step(self, action_dict):
@@ -106,7 +107,8 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         info_dict = {}
         for k, v in obs.items():
             # Re-shape the observation
-            obs_n[k] = self._shape_obs(v)
+            obs_n[k] = {'obs': self._shape_obs(v),
+                        'action_mask': act_l[k]}
             # Done
             done_dict[k] = done[k]
             # Info
@@ -116,7 +118,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         return obs_n, reward, done_dict, info_dict
 
     @property
-    def observation_space_dict(self) -> Dict[int, Box]:
+    def observation_space_dict(self) -> Dict[int, spaces.Box]:
         """
         Environment observation space shape.
         :return: Dictionary containing the shape of the observation space per agent.
@@ -125,18 +127,21 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         # MultiBinary(v) is not supported currently by Ray's MADDPG, making a Box instead.
         observation, legal_actions = self._env.observation_space
         for k, v in observation.items():
-            obs_n[k] = self._box_obs(v)
+            obs_n[k] = spaces.Dict({'obs': self._box_obs(v),
+                                    'action_mask': spaces.Box(low=0.0, high=1.0,
+                                                              shape=legal_actions[k].shape,
+                                                              dtype=np.int8)})
         return obs_n
 
     @property
-    def action_space_dict(self) -> Dict[int, Discrete]:
+    def action_space_dict(self) -> Dict[int, spaces.Discrete]:
         """
         Environment action space shape
         :return: Dictionary containing the shape of the action space per agent
         """
-        act_n: Dict[int, Discrete] = {}
+        act_n: Dict[int, spaces.Discrete] = {}
         for k, v in self._env.action_space.items():
-            act_n[k] = Discrete(v)
+            act_n[k] = spaces.Discrete(v)
         return act_n
 
     def _shape_obs(self, agent_obs: np.ndarray) -> np.ndarray:
@@ -152,7 +157,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
             v_float = agent_obs.astype(np.float64).flatten()
         return v_float
 
-    def _box_obs(self, agent_obs: np.ndarray) -> Box:
+    def _box_obs(self, agent_obs: np.ndarray) -> spaces.Box:
         """
         Reshape observations and wrap into the Gym.Box shape.
         :param agent_obs: Observations as returned by the scenario.
@@ -160,7 +165,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         :return: 2D Box
         """
         v_float = self._shape_obs(agent_obs)
-        return Box(low=0.0, high=1.0, shape=v_float.shape, dtype=np.float64)
+        return spaces.Box(low=0.0, high=1.0, shape=v_float.shape, dtype=np.float64)
 
     @staticmethod
     def configure_ray(ray) -> None:
