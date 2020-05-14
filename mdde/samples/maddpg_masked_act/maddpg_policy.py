@@ -48,6 +48,9 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
     #config = dict(ray.rllib.contrib.maddpg.DEFAULT_CONFIG, **config)
 
     def __init__(self, obs_space, act_space, config):
+        flattened_obs_act = obs_space
+        obs_space = obs_space.original_space['obs']
+        self.__act_mask_len = flattened_obs_act.original_space['action_mask'].shape[0]
         # _____ Initial Configuration
         config = dict(ray.rllib.contrib.maddpg.DEFAULT_CONFIG, **config)
         self.config=config
@@ -254,6 +257,7 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
             loss=actor_loss + critic_loss,
             loss_inputs=loss_inputs)
 
+        self._action_mask = act_ph2_n[agent_id]
         self.sess.run(tf.global_variables_initializer())
 
         # Hard initial update
@@ -317,6 +321,50 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
     @override(Policy)
     def set_state(self, state):
         TFPolicy.set_state(self, state)
+
+    @override(TFPolicy)
+    def _build_compute_actions(self,
+                               builder,
+                               obs_batch,
+                               state_batches=None,
+                               prev_action_batch=None,
+                               prev_reward_batch=None,
+                               episodes=None,
+                               explore=None,
+                               timestep=None):
+        explore = explore if explore is not None else self.config["explore"]
+
+        # Call the exploration before_compute_actions hook.
+        self.exploration.before_compute_actions(
+            timestep=self.global_timestep, tf_sess=self.get_session())
+
+        state_batches = state_batches or []
+        if len(self._state_inputs) != len(state_batches):
+            raise ValueError(
+                "Must pass in RNN state batches for placeholders {}, got {}".
+                    format(self._state_inputs, state_batches))
+
+        builder.add_feed_dict(self.extra_compute_action_feed_dict())
+        obs_batch_obs = [obs_batch[0][:240]]  # MDDE_MARK
+        builder.add_feed_dict({self._obs_input: obs_batch_obs})  # MDDE_MARK
+        builder.add_feed_dict({self._action_mask: [obs_batch[0][240:]]})  # MDDE_MARK
+        if state_batches:
+            builder.add_feed_dict({self._seq_lens: np.ones(len(obs_batch_obs))})  # obs_batch # MDDE_MARK
+        if self._prev_action_input is not None and \
+                prev_action_batch is not None:
+            builder.add_feed_dict({self._prev_action_input: prev_action_batch})
+        if self._prev_reward_input is not None and \
+                prev_reward_batch is not None:
+            builder.add_feed_dict({self._prev_reward_input: prev_reward_batch})
+        builder.add_feed_dict({self._is_training: False})
+        builder.add_feed_dict({self._is_exploring: explore})
+        if timestep is not None:
+            builder.add_feed_dict({self._timestep: timestep})
+        builder.add_feed_dict(dict(zip(self._state_inputs, state_batches)))
+        fetches = builder.add_fetches([self._sampled_action] +
+                                      self._state_outputs +
+                                      [self.extra_compute_action_fetches()])
+        return fetches[0], fetches[1:-1], fetches[-1]
 
     def _build_critic_network(self,
                               obs_n,

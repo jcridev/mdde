@@ -214,7 +214,7 @@ class MADDPGSample:
                     "agent_id": i,
                     "use_state_preprocessor": sample_selected_shaper == obs_shaper_2d_box,
                     "use_local_critic": use_local_critic[i],
-                    "obs_space_dict": env_instance.observation_space_dict,
+                    "obs_space_dict": {k: v['obs'] for (k, v) in env_instance.observation_space_dict.items()},
                     "act_space_dict": env_instance.action_space_dict,
                 }
             )
