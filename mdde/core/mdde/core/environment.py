@@ -225,7 +225,7 @@ class Environment:
         if self._write_stats:
             self._logger.info("Saving the current observations of the environment")
             obs_n, legal_act = self.observation_space
-            self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n)
+            self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n, reset=True)
         # Call registry reset
         self._set_registry_mode(ERegistryMode.benchmark)
         reset_call_response = self._registry_ctrl.ctrl_reset()
@@ -278,7 +278,7 @@ class Environment:
                                             after_reset=self.__did_reset_flag)
             if bench_execute_step:
                 # Dump observations after a benchmark run
-                self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n)
+                self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n, reset=False)
         self.__did_reset_flag = False
         return obs_n, reward_n, done_n, legal_act_n
 
@@ -332,12 +332,15 @@ class Environment:
     def _dump_observation_to_sqlite(self,
                                     step_idx: int,
                                     episode_idx: int,
-                                    obs_n: Dict[int, np.ndarray]) -> None:
+                                    obs_n: Dict[int, np.ndarray],
+                                    reset: bool
+                                    ) -> None:
         """
         Save observations for agents to an SQLite file.
         :param step_idx: Current step.
         :param episode_idx: Current episode.
         :param obs_n: Dictionary of observations per agents for current step.
+        :param reset: True if it's an observation made right before the reset.
         """
         # TODO: A more efficient way to store a large number of matrices for later analysis
         db_path = Path(self.__mdde_result_folder_root).joinpath("obs.db")
@@ -345,13 +348,15 @@ class Environment:
         with sqlite3.connect(db_path) as conn:
             cur = conn.cursor()
             if not db_exists:  # Create schema if a newly created file
-                schema_q = 'CREATE TABLE IF NOT EXISTS observations (episode INTEGER NOT NULL, ' \
-                           'step INTEGER NOT NULL, agent INTEGER NOT NULL, shape BLOB NOT NULL, obs BLOB NOT NULL, ' \
-                           'PRIMARY KEY (episode, step, agent));'
+                schema_q = 'CREATE TABLE IF NOT EXISTS observations (' \
+                           'episode INTEGER NOT NULL, step INTEGER NOT NULL, agent INTEGER NOT NULL, ' \
+                           'reset BOOLEAN NOT NULL, shape BLOB NOT NULL, obs BLOB NOT NULL, ' \
+                           'PRIMARY KEY (episode, step, agent, reset));'
                 cur.execute(schema_q)
-            insert_q = "INSERT INTO observations (episode, step, agent, shape, obs) VALUES (?, ?, ?, ?, ?)"
+            insert_q = "INSERT INTO observations (episode, step, agent, reset, shape, obs) VALUES (?, ?, ?, ?, ?, ?)"
             for agent_id, obs in obs_n.items():
                 cur.execute(insert_q, [episode_idx, step_idx, agent_id,
+                                       1 if reset else 0,
                                        pickle.dumps(obs.shape, 0),  # pickle the shape of the observation
                                        zlib.compress(obs.tobytes(order='C'))])  # dump np.ndarray to bytes
                 # To restore the observation:
