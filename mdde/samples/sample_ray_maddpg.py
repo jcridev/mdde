@@ -65,7 +65,7 @@ class MADDPGSample:
 
                 self.cur_time = result["time_total_s"]
 
-    def run_maddpg(self):
+    def run_maddpg(self, as_debug=False):
         # RAY tmp
         temp_dir_full_path_obj = Path(self.ray_temp_dir).resolve()
         temp_dir_full_path_obj.mkdir(parents=True, exist_ok=True)
@@ -279,21 +279,23 @@ class MADDPGSample:
                     },
                 }
 
-        maddpg_trainer = MADDPGTrainer(env="mdde", config=maddpg_trainer_config)
-        maddpg_trainer.train()
-        run_experiments({
-            exp_name: {
-                "run": "contrib/MADDPG",
-                "env": "mdde",
-                "stop": {
-                    "episodes_total": self.NUM_EPISODES,
+        if as_debug:  # Run MADDPG locally
+            maddpg_trainer = MADDPGTrainer(env="mdde", config=maddpg_trainer_config)
+            maddpg_trainer.train()
+        else:  # Run using Tune
+            run_experiments({
+                exp_name: {
+                    "run": "contrib/MADDPG",
+                    "env": "mdde",
+                    "stop": {
+                        "episodes_total": self.NUM_EPISODES,
+                    },
+                    "checkpoint_freq": 0,
+                    "local_dir": result_dir_path_ray,
+                    "restore": False,
+                    "config": maddpg_trainer_config,
                 },
-                "checkpoint_freq": 0,
-                "local_dir": result_dir_path_ray,
-                "restore": False,
-                "config": maddpg_trainer_config,
-            },
-        }, verbose=0, reuse_actors=False)  # reuse_actors=True - messes up the results
+            }, verbose=0, reuse_actors=False)  # reuse_actors=True - messes up the results
 
 
 if __name__ == '__main__':
@@ -322,6 +324,8 @@ if __name__ == '__main__':
                         help='Path to the MDDE registry configuration YAML',
                         type=str,
                         default='../../debug/registry_config.yml')
+
+    parser.add_argument('--debug', action='store_true')
 
     config = parser.parse_args()
 
