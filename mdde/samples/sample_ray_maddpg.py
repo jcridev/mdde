@@ -340,4 +340,4 @@ if __name__ == '__main__':
 
     runner = MADDPGSample()
     runner.setUp()
-    runner.run_maddpg()
+    runner.run_maddpg(as_debug=config.debug)

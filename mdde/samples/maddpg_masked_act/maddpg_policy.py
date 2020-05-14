@@ -50,7 +50,8 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
     def __init__(self, obs_space, act_space, config):
         flattened_obs_act = obs_space
         obs_space = obs_space.original_space['obs']
-        self.__act_mask_len = flattened_obs_act.original_space['action_mask'].shape[0]
+        """Length of the observation space without the action mask"""
+        self.__act_mask_len = obs_space.shape[0]
         # _____ Initial Configuration
         config = dict(ray.rllib.contrib.maddpg.DEFAULT_CONFIG, **config)
         self.config=config
@@ -345,9 +346,9 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
                     format(self._state_inputs, state_batches))
 
         builder.add_feed_dict(self.extra_compute_action_feed_dict())
-        obs_batch_obs = [obs_batch[0][:240]]  # MDDE_MARK
+        obs_batch_obs = [obs_batch[0][:self.__act_mask_len]]  # MDDE_MARK
         builder.add_feed_dict({self._obs_input: obs_batch_obs})  # MDDE_MARK
-        builder.add_feed_dict({self._action_mask: [obs_batch[0][240:]]})  # MDDE_MARK
+        builder.add_feed_dict({self._action_mask: [obs_batch[0][self.__act_mask_len:]]})  # MDDE_MARK
         if state_batches:
             builder.add_feed_dict({self._seq_lens: np.ones(len(obs_batch_obs))})  # obs_batch # MDDE_MARK
         if self._prev_action_input is not None and \
