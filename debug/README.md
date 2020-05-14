@@ -40,6 +40,7 @@ Setup MDDE.
 8.  `pip install -e ./extensions/mdde-registry-client-tcp`    
 
 9. `pip install -e ./extensions/integration-ray`
+   * You might need to additionally install TensorFlow `pip install tensorflow==1.15.2'`. Currently it's not installed by default to simplify experimental environments configuration (CPU or GPU). 
 
 10. Run debug **or** sample configuration
     *  Debug, without a learner:
