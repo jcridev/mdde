@@ -18,6 +18,7 @@ from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient,
 from mdde.registry.tcp import RegistryClientTCP
 from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
 
+
 # https://ray.readthedocs.io/en/latest/installation.html
 
 
@@ -37,9 +38,6 @@ class MADDPGSample:
     env_temp_dir = None
     """Path to directory for temporary files created by the scenario or agents."""
 
-    NUM_EPISODES = 1000
-    EPISODE_LEN = 1001
-    LEARNING_RATE = 1e-2
     NUM_ADVERSARIES = 0
     SAMPLE_BATCH_SIZE = 25
     TRAIN_BATCH_SIZE = 100
@@ -65,7 +63,7 @@ class MADDPGSample:
 
                 self.cur_time = result["time_total_s"]
 
-    def run_maddpg(self):
+    def run_maddpg(self, config):
         # RAY tmp
         temp_dir_full_path_obj = Path(self.ray_temp_dir).resolve()
         temp_dir_full_path_obj.mkdir(parents=True, exist_ok=True)
@@ -175,8 +173,8 @@ class MADDPGSample:
             # Resulted shape (Example for default scenario and default single-node agent: 2 agents, 5 fragments):
             # [0-4(a_1: allocation) 5-9(a_1: popularity) 10-14(a_1: ownership binary flag)
             #  15-19(a_2: allocation) 20-24(a_2: popularity) 25-29(a_2: ownership binary flag)]
-            return obs.reshape((obs.shape[0], obs.shape[1] * obs.shape[2]), order='F')\
-                      .reshape((obs.shape[0] * obs.shape[1] * obs.shape[2]), order='C')
+            return obs.reshape((obs.shape[0], obs.shape[1] * obs.shape[2]), order='F') \
+                .reshape((obs.shape[0] * obs.shape[1] * obs.shape[2]), order='C')
 
         sample_selected_shaper = obs_shaper_flat_box
         """Observation shaper selected. Set None if you want to use the default one in the wrapper."""
@@ -227,69 +225,75 @@ class MADDPGSample:
 
         exp_name = "MADDPG_MDDE_DEBUG"
 
-        run_experiments({
-            exp_name: {
-                "run": "contrib/MADDPG",
-                "env": "mdde",
-                "stop": {
-                    "episodes_total": self.NUM_EPISODES,
-                },
-                "checkpoint_freq": 0,
-                "local_dir": result_dir_path_ray,
-                "restore": False,
-                "config": {
-                    # === Log ===
-                    "log_level": "ERROR",
+        exp_config = {
+            # === Log ===
+            "log_level": "ERROR",
 
-                    # === Environment ===
-                    "env_config": {
-                        "host": self.mdde_registry_host,
-                        "port": self.mdde_registry_port,
-                        "reg_config": config_file_full_path,
-                        "env_config": mdde_config,
-                        "write_stats": True
-                    },
-                    "num_envs_per_worker": 1,
-                    "horizon": self.EPISODE_LEN,
-
-                    # === Policy Config ===
-                    # --- Model ---
-                    "good_policy": self.GOOD_POLICY,
-                    "adv_policy": self.ADV_POLICY,
-                    "actor_hiddens": [64] * 2,
-                    "actor_hidden_activation": "relu",
-                    "critic_hiddens": [64] * 2,
-                    "critic_hidden_activation": "relu",
-                    "n_step": 1,
-                    "gamma": 0.95,
-
-                    # --- Exploration ---
-                    "tau": 0.01,
-
-                    # --- Replay buffer ---
-                    "buffer_size": 10000,
-
-                    # --- Optimization ---
-                    "actor_lr": self.LEARNING_RATE,
-                    "critic_lr": self.LEARNING_RATE,
-                    "learning_starts": self.TRAIN_BATCH_SIZE * self.EPISODE_LEN,
-                    "sample_batch_size": self.SAMPLE_BATCH_SIZE,
-                    "train_batch_size": self.TRAIN_BATCH_SIZE,
-                    "batch_mode": "truncate_episodes",
-
-                    # --- Parallelism ---
-                    "num_workers": 0,
-                    "num_gpus": 0,
-                    "num_gpus_per_worker": 0,
-
-                    # === Multi-agent setting ===
-                    "multiagent": {
-                        "policies": policies,
-                        "policy_mapping_fn": policy_mapping_fn
-                    },
-                },
+            # === Environment ===
+            "env_config": {
+                "host": self.mdde_registry_host,
+                "port": self.mdde_registry_port,
+                "reg_config": config_file_full_path,
+                "env_config": mdde_config,
+                "write_stats": True
             },
-        }, verbose=0, reuse_actors=False)  # reuse_actors=True - messes up the results
+            "num_envs_per_worker": 1,
+            "horizon": config.ep_len,
+
+            # === Policy Config ===
+            # --- Model ---
+            "good_policy": self.GOOD_POLICY,
+            "adv_policy": self.ADV_POLICY,
+            "actor_hiddens": [64] * 2,
+            "actor_hidden_activation": "relu",
+            "critic_hiddens": [64] * 2,
+            "critic_hidden_activation": "relu",
+            "n_step": 1,
+            "gamma": config.gamma,
+
+            # --- Exploration ---
+            "tau": config.tau,
+
+            # --- Replay buffer ---
+            "buffer_size": config.buffer_size,
+
+            # --- Optimization ---
+            "actor_lr": config.actor_lr,
+            "critic_lr": config.critic_lr,
+            "learning_starts": self.TRAIN_BATCH_SIZE * config.ep_len,
+            "sample_batch_size": self.SAMPLE_BATCH_SIZE,
+            "train_batch_size": self.TRAIN_BATCH_SIZE,
+            "batch_mode": "truncate_episodes",
+
+            # --- Parallelism ---
+            "num_workers": 0,  # run only one env process
+            "num_gpus": 0,
+            "num_gpus_per_worker": 0,
+
+            # === Multi-agent setting ===
+            "multiagent": {
+                "policies": policies,
+                "policy_mapping_fn": policy_mapping_fn
+            },
+        }
+
+        if config.debug:  # Run MADDPG within the same process (useful for debugging)
+            maddpg_trainer = MADDPGTrainer(env="mdde", config=exp_config)
+            maddpg_trainer.train()
+        else:  # Run using Tune
+            run_experiments({
+                exp_name: {
+                    "run": "contrib/MADDPG",
+                    "env": "mdde",
+                    "stop": {
+                        "episodes_total": config.num_episodes,
+                    },
+                    "checkpoint_freq": 0,
+                    "local_dir": result_dir_path_ray,
+                    "restore": False,
+                    "config": exp_config
+                },
+            }, verbose=0, reuse_actors=False)  # reuse_actors=True - messes up the results
 
 
 if __name__ == '__main__':
@@ -319,6 +323,62 @@ if __name__ == '__main__':
                         type=str,
                         default='../../debug/registry_config.yml')
 
+    parser.add_argument('--debug',
+                        help='Debug flag. If set, the agents are executed within the same process (without Tune).',
+                        action='store_true')
+
+    # MADDPG params
+    # Descriptions source: https://docs.ray.io/en/master/rllib-algorithms.html#maddpg
+    # Note: We omit parameters that make no sense as experimental variables in this sample.
+    # - Experiment length
+    parser.add_argument('--num_episodes',
+                        help='Total number of episodes.',
+                        type=int,
+                        default=1000)
+    parser.add_argument('--ep_len',
+                        help='Number of steps per episode.',
+                        type=int,
+                        default=1001)
+    # - Replay buffer
+    parser.add_argument('--buffer_size',
+                        help='Size of the replay buffer.',
+                        type=int,
+                        default=int(1e6))
+
+    # - Optimization
+    parser.add_argument('--critic_lr',
+                        help='Learning rate for the critic (Q-function) optimizer.',
+                        type=float,
+                        default=1e-2)
+    parser.add_argument('--actor_lr',
+                        help='Learning rate for the actor (policy) optimizer.',
+                        type=float,
+                        default=1e-2)
+    parser.add_argument('--tau',
+                        help='Update the target by tau * policy + (1-tau) * target_policy.',
+                        type=float,
+                        default=0.01)
+    parser.add_argument('--actor_feature_reg',
+                        help='Weights for feature regularization for the actor.',
+                        type=float,
+                        default=0.001)
+    parser.add_argument('--grad_norm_clipping',
+                        help='If not None, clip gradients during optimization at this value.',
+                        type=float,
+                        default=0.5)
+    parser.add_argument('--learning_starts',
+                        help='How many steps of the model to sample before learning starts.',
+                        type=int,
+                        default=1024 * 25)
+    # - Q-learning
+    parser.add_argument('--gamma',
+                        help='Discount factor (Q-learning) ∈ [0, 1]. If closer to zero, the agent will give more '
+                             'weight to the most recent rewards. While, closer to 1 will take into consideration '
+                             'future rewards making agent striving to higher rewards in the future than being content'
+                             'with the current reward.',
+                        type=float,
+                        default=0.95)
+
     config = parser.parse_args()
 
     MADDPGSample.run_result_dir = config.result_dir
@@ -332,4 +392,4 @@ if __name__ == '__main__':
 
     runner = MADDPGSample()
     runner.setUp()
-    runner.run_maddpg()
+    runner.run_maddpg(config)
