@@ -75,6 +75,13 @@ RUN chmod +x ./sample_execute_in_conda.sh
 # Create environment
 RUN bash ./sample_create_conda_env.sh $MDDE_SRC
 
+# Patch MADDPG
+RUN rm ${CONDA_PATH}/envs/mdde/lib/python3.7/site-packages/ray/rllib/contrib/maddpg/maddpg_policy.py
+RUN rm ${CONDA_PATH}/envs/mdde/lib/python3.7/site-packages/ray/rllib/models/preprocessors.py
+COPY $GIT_MDDE_SRC/samples/maddpg_masked_act/maddpg_policy.py ${CONDA_PATH}/envs/mdde/lib/python3.7/site-packages/ray/rllib/contrib/maddpg/maddpg_policy.py
+COPY $GIT_MDDE_SRC/samples/maddpg_masked_act/preprocessors.py ${CONDA_PATH}/envs/mdde/lib/python3.7/site-packages/ray/rllib/models/preprocessors.py
+# END of the patch application
+
 # Make sure conda has execution permissions
 RUN find ${CONDA_PATH} -type d -exec chmod +x {} \;
 
