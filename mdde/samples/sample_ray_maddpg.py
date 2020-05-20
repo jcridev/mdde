@@ -37,9 +37,6 @@ class MADDPGSample:
     env_temp_dir = None
     """Path to directory for temporary files created by the scenario or agents."""
 
-    NUM_EPISODES = 1000
-    EPISODE_LEN = 1001
-    LEARNING_RATE = 1e-2
     NUM_ADVERSARIES = 0
     SAMPLE_BATCH_SIZE = 25
     TRAIN_BATCH_SIZE = 100
@@ -65,7 +62,7 @@ class MADDPGSample:
 
                 self.cur_time = result["time_total_s"]
 
-    def run_maddpg(self, as_debug=False):
+    def run_maddpg(self, config):
         # RAY tmp
         temp_dir_full_path_obj = Path(self.ray_temp_dir).resolve()
         temp_dir_full_path_obj.mkdir(parents=True, exist_ok=True)
@@ -240,7 +237,7 @@ class MADDPGSample:
                         "write_stats": True
                     },
                     "num_envs_per_worker": 1,
-                    "horizon": self.EPISODE_LEN,
+                    "horizon": config.ep_len,
 
                     # === Policy Config ===
                     # --- Model ---
@@ -260,9 +257,9 @@ class MADDPGSample:
                     "buffer_size": 10000,
 
                     # --- Optimization ---
-                    "actor_lr": self.LEARNING_RATE,
-                    "critic_lr": self.LEARNING_RATE,
-                    "learning_starts": self.TRAIN_BATCH_SIZE * self.EPISODE_LEN,
+                    "actor_lr": config.actor_lr,
+                    "critic_lr": config.critic_lr,
+                    "learning_starts": config.learning_starts,  # self.TRAIN_BATCH_SIZE * config.ep_len,
                     "sample_batch_size": self.SAMPLE_BATCH_SIZE,
                     "train_batch_size": self.TRAIN_BATCH_SIZE,
                     "batch_mode": "truncate_episodes",
@@ -279,9 +276,9 @@ class MADDPGSample:
                     },
                 }
 
-        if as_debug:  # Run MADDPG locally
+        if config.debug:  # Run MADDPG locally
             maddpg_trainer = MADDPGTrainer(env="mdde", config=maddpg_trainer_config)
-            for step in range(0, self.NUM_EPISODES * self.EPISODE_LEN):
+            for step in range(0, config.num_episodes * config.ep_len):
                 logging.debug("Current step: {}", step)
                 maddpg_trainer.train()
 
@@ -291,7 +288,7 @@ class MADDPGSample:
                     "run": "contrib/MADDPG",
                     "env": "mdde",
                     "stop": {
-                        "episodes_total": self.NUM_EPISODES,
+                        "episodes_total": config.num_episodes,
                     },
                     "checkpoint_freq": 0,
                     "local_dir": result_dir_path_ray,
@@ -328,7 +325,61 @@ if __name__ == '__main__':
                         type=str,
                         default='../../debug/registry_config.yml')
 
-    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--debug',
+                        help='Debug flag. If set, the agents are executed within the same process (without Tune).',
+                        action='store_true')
+
+    # MADDPG params
+    # Descriptions source: https://docs.ray.io/en/master/rllib-algorithms.html#maddpg
+    # Note: We omit parameters that make no sense as experimental variables in this sample.
+    # - Experiment length
+    parser.add_argument('--num_episodes',
+                        help='Total number of episodes.',
+                        type=int,
+                        default=1000)
+    parser.add_argument('--ep_len',
+                        help='Number of steps per episode.',
+                        type=int,
+                        default=1001)
+    # - Replay buffer
+    parser.add_argument('--buffer_size',
+                        help='Size of the replay buffer.',
+                        type=int,
+                        default=int(1e6))
+
+    # - Optimization
+    parser.add_argument('--critic_lr',
+                        help='Learning rate for the critic (Q-function) optimizer.',
+                        type=float,
+                        default=1e-2)
+    parser.add_argument('--actor_lr',
+                        help='Learning rate for the actor (policy) optimizer.',
+                        type=float,
+                        default=1e-2)
+    parser.add_argument('--tau',
+                        help='Update the target by tau * policy + (1-tau) * target_policy.',
+                        type=float,
+                        default=0.01)
+    parser.add_argument('--actor_feature_reg',
+                        help='Weights for feature regularization for the actor.',
+                        type=float,
+                        default=0.001)
+    parser.add_argument('--grad_norm_clipping',
+                        help='If not None, clip gradients during optimization at this value.',
+                        type=float,
+                        default=0.5)
+    parser.add_argument('--learning_starts',
+                        help='How many steps of the model to sample before learning starts.',
+                        type=int,
+                        default=1024 * 25)
+    # - Q-learning
+    parser.add_argument('--gamma',
+                        help='Discount factor (Q-learning) ∈ [0, 1]. If closer to zero, the agent will give more '
+                             'weight to the most recent rewards. While, closer to 1 will take into consideration '
+                             'future rewards making agent striving to higher rewards in the future than being content'
+                             'with the current reward.',
+                        type=float,
+                        default=0.95)
 
     config = parser.parse_args()
 
@@ -343,4 +394,4 @@ if __name__ == '__main__':
 
     runner = MADDPGSample()
     runner.setUp()
-    runner.run_maddpg(as_debug=config.debug)
+    runner.run_maddpg(config)
