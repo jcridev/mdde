@@ -281,7 +281,10 @@ class MADDPGSample:
 
         if as_debug:  # Run MADDPG locally
             maddpg_trainer = MADDPGTrainer(env="mdde", config=maddpg_trainer_config)
-            maddpg_trainer.train()
+            for step in range(0, self.NUM_EPISODES * self.EPISODE_LEN):
+                logging.debug("Current step: {}", step)
+                maddpg_trainer.train()
+
         else:  # Run using Tune
             run_experiments({
                 exp_name: {

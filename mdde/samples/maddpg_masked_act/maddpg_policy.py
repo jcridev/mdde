@@ -48,10 +48,10 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
     #config = dict(ray.rllib.contrib.maddpg.DEFAULT_CONFIG, **config)
 
     def __init__(self, obs_space, act_space, config):
-        flattened_obs_act = obs_space
-        obs_space = obs_space.original_space['obs']
+        flattened_obs_act = obs_space  # MDDE_MARK
+        obs_space = obs_space.original_space['obs']  # MDDE_MARK
         """Length of the observation space without the action mask"""
-        self.__act_mask_len = obs_space.shape[0]
+        self._act_mask_len = obs_space.shape[0]  # MDDE_MARK
         # _____ Initial Configuration
         config = dict(ray.rllib.contrib.maddpg.DEFAULT_CONFIG, **config)
         self.config=config
@@ -102,7 +102,7 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
 
         obs_ph_n = _make_ph_n(obs_space_n, "obs")
         act_ph_n = _make_ph_n(act_space_n, "actions")
-        act_ph2_n = _make_ph_n(act_space_n, "action_mask")
+        act_mask_ph_n = _make_ph_n(act_space_n, "action_mask")  # MDDE_MARK
         new_obs_ph_n = _make_ph_n(obs_space_n, "new_obs")
         new_act_ph_n = _make_ph_n(act_space_n, "new_actions")
         rew_ph = tf.placeholder(
@@ -114,7 +114,7 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
             obs_space_n, act_space_n = [obs_space_n[agent_id]], [
                 act_space_n[agent_id]
             ]
-            obs_ph_n, act_ph_n, act_ph2_n = [obs_ph_n[agent_id]], [act_ph_n[agent_id]], [act_ph2_n[agent_id]]
+            obs_ph_n, act_ph_n, act_mask_ph_n = [obs_ph_n[agent_id]], [act_ph_n[agent_id]], [act_mask_ph_n[agent_id]]  # MDDE_MARK
             new_obs_ph_n, new_act_ph_n = [new_obs_ph_n[agent_id]], [
                 new_act_ph_n[agent_id]
             ]
@@ -162,7 +162,7 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
                 config["actor_hiddens"],
                 getattr(tf.nn, config["actor_hidden_activation"]),
                 scope="actor",
-                action_mask=act_ph2_n[agent_id]))
+                action_mask=act_mask_ph_n[agent_id]))
 
         # Build actor network for t + 1.
         self.new_obs_ph = new_obs_ph_n[agent_id]
@@ -244,7 +244,7 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
             return [(ph.name.split("/")[-1].split(":")[0], ph)
                     for ph in placeholders]
 
-        loss_inputs = _make_loss_inputs(obs_ph_n + act_ph_n + new_obs_ph_n +
+        loss_inputs = _make_loss_inputs(obs_ph_n + act_ph_n + act_mask_ph_n + new_obs_ph_n + # MDDE_MARK
                                         new_act_ph_n + [rew_ph, done_ph])
 
         TFPolicy.__init__(
@@ -258,7 +258,7 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
             loss=actor_loss + critic_loss,
             loss_inputs=loss_inputs)
 
-        self._action_mask = act_ph2_n[agent_id]
+        self._action_mask = act_mask_ph_n[agent_id]
         self.sess.run(tf.global_variables_initializer())
 
         # Hard initial update
@@ -346,9 +346,9 @@ class MADDPGTFPolicy(MADDPGPostprocessing, TFPolicy):
                     format(self._state_inputs, state_batches))
 
         builder.add_feed_dict(self.extra_compute_action_feed_dict())
-        obs_batch_obs = [obs_batch[0][:self.__act_mask_len]]  # MDDE_MARK
+        obs_batch_obs = [obs_batch[0][:self._act_mask_len]]  # MDDE_MARK
         builder.add_feed_dict({self._obs_input: obs_batch_obs})  # MDDE_MARK
-        builder.add_feed_dict({self._action_mask: [obs_batch[0][self.__act_mask_len:]]})  # MDDE_MARK
+        builder.add_feed_dict({self._action_mask: [obs_batch[0][self._act_mask_len:]]})  # MDDE_MARK
         if state_batches:
             builder.add_feed_dict({self._seq_lens: np.ones(len(obs_batch_obs))})  # obs_batch # MDDE_MARK
         if self._prev_action_input is not None and \
