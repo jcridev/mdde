@@ -80,7 +80,8 @@ class DQNTestSample:
                      reg_config: str,
                      env_config: ConfigEnvironment,
                      write_stats: bool,
-                     initial_benchmark: bool = False) -> Environment:
+                     initial_benchmark: bool = False,
+                     do_nothing: bool = True) -> Environment:
             """
             Configure MDDE environment to run default.
             :param host: MDDE registry host or IP.
@@ -89,6 +90,7 @@ class DQNTestSample:
             :param env_config: Environment configuration object.
             :param write_stats: True to write additional analytics info.
             :param initial_benchmark: Execute benchmark immediately upon execution.
+            :param do_nothing: Enable or disable the agents' "do_nothing" action.
             :return: MDDE Environment.
             """
 
@@ -113,7 +115,7 @@ class DQNTestSample:
                                                      agent_id=idx,
                                                      data_node_id=node.id,
                                                      write_stats=write_stats,
-                                                     allow_do_nothing=True))
+                                                     allow_do_nothing=do_nothing))
                 idx += 1
 
             # Create scenario
@@ -164,7 +166,8 @@ class DQNTestSample:
                                                       reg_config=config_file_full_path,
                                                       env_config=mdde_config,
                                                       write_stats=False,
-                                                      initial_benchmark=False),
+                                                      initial_benchmark=False,
+                                                      do_nothing=config.do_nothing),
                                          observation_shaper=sample_selected_shaper)
 
         def env_creator(kvargs):
@@ -204,7 +207,8 @@ class DQNTestSample:
                         "port": self.mdde_registry_port,
                         "reg_config": config_file_full_path,
                         "env_config": mdde_config,
-                        "write_stats": True
+                        "write_stats": True,
+                        "do_nothing": config.do_nothing
                     },
                     "num_envs_per_worker": 1,
                     "horizon": config.ep_len,
@@ -212,7 +216,7 @@ class DQNTestSample:
                     # === Policy Config ===
                     # --- Model ---
                     "n_step": 1,
-                    "gamma": config.gamma,
+                    #"gamma": config.gamma,
 
                     # --- Replay buffer ---
                     "buffer_size": config.buffer_size,
@@ -236,8 +240,9 @@ class DQNTestSample:
                 }
 
         if config.debug:  # Run DQN within the same process (useful for debugging)
-            trainer = DQNTrainer(env="mdde", config=exp_config)
-            trainer.train()
+            dqn_trainer = DQNTrainer(env="mdde", config=exp_config)
+            for step in range(0, config.num_episodes * config.ep_len):
+                dqn_trainer.train()
         else:
             trainer = DQNTrainer
             run_experiments({
@@ -312,6 +317,12 @@ if __name__ == '__main__':
                         help='How many steps of the model to sample before learning starts.',
                         type=int,
                         default=1000)
+
+    # - MDDE scenario
+    parser.add_argument('--do-nothing',
+                        help='Enable or disable the "do nothing" action for agents.',
+                        type=bool,
+                        default=True)
 
 
     config = parser.parse_args()
