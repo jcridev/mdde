@@ -15,6 +15,9 @@ services:
     environment:
       - REG_HOST=registry
       - REG_PORT=8942
+#      - LAUNCH_ARGS=--num_episodes 10
+    env_file:
+      - ./args.env
 volumes:
   mdde_results: # DQN results
 
