@@ -18,35 +18,38 @@ services:
       - mdde_shared:/mdde/shared
   registry_store:
   # Registry storage DB
-    image: "redis:5"
+    build:
+      context: ../../images/redis
+      dockerfile: redis.Dockerfile
+    image: "redis:mdde"
     networks:
       back:
         aliases:
           - regstore
   redis_node_0:
   # Data storage node 0
-    image: "redis:5"
+    image: "redis:mdde"
     networks:
       back:
         aliases:
           - dtnode0
   redis_node_1:
   # Data storage node 1
-    image: "redis:5"
+    image: "redis:mdde"
     networks:
       back:
         aliases:
           - dtnode1
   redis_node_2:
   # Data storage node 2
-    image: "redis:5"
+    image: "redis:mdde"
     networks:
       back:
         aliases:
           - dtnode2
   redis_node_3:
   # Data storage node 3
-    image: "redis:5"
+    image: "redis:mdde"
     networks:
       back:
         aliases:

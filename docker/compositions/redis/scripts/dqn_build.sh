@@ -35,4 +35,4 @@ if [ $SKIPREGISTRY -eq 0 ];then
 fi
 
 # 3. Build the final composition, including MDDE Registry image (From MDDE Registry base image) relying on Redis DB for own storgate and data nodes
-docker-compose -f ../docker-compose.yml -f ../docker-compose.ray-dqn.yml build --no-cache
+(cd .. && docker-compose -f docker-compose.yml -f docker-compose.ray-dqn.yml build --no-cache)
