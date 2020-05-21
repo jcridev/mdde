@@ -103,7 +103,8 @@ class MADDPGSample:
                      reg_config: str,
                      env_config: ConfigEnvironment,
                      write_stats: bool,
-                     initial_benchmark: bool = False) -> Environment:
+                     initial_benchmark: bool = False,
+                     do_nothing: bool = True) -> Environment:
             """
             Configure MDDE environment to run default.
             :param host: MDDE registry host or IP.
@@ -112,6 +113,7 @@ class MADDPGSample:
             :param env_config: Environment configuration object.
             :param write_stats: True to write additional analytics info.
             :param initial_benchmark: Execute benchmark immediately upon execution.
+            :param do_nothing: Enable or disable "do nothing" actions. Enabled by default
             :return: MDDE Environment.
             """
 
@@ -136,7 +138,7 @@ class MADDPGSample:
                                                      agent_id=idx,
                                                      data_node_id=node.id,
                                                      write_stats=write_stats,
-                                                     allow_do_nothing=True))
+                                                     allow_do_nothing=do_nothing))
                 idx += 1
 
             # Create scenario
@@ -187,7 +189,8 @@ class MADDPGSample:
                                                       reg_config=config_file_full_path,
                                                       env_config=mdde_config,
                                                       write_stats=False,
-                                                      initial_benchmark=False),
+                                                      initial_benchmark=False,
+                                                      do_nothing=config.do_nothing),
                                          observation_shaper=sample_selected_shaper)
 
         def env_creator(kvargs):
@@ -234,7 +237,8 @@ class MADDPGSample:
                         "port": self.mdde_registry_port,
                         "reg_config": config_file_full_path,
                         "env_config": mdde_config,
-                        "write_stats": True
+                        "write_stats": True,
+                        "do_nothing": config.do_nothing,
                     },
                     "num_envs_per_worker": 1,
                     "horizon": config.ep_len,
@@ -380,6 +384,13 @@ if __name__ == '__main__':
                              'with the current reward.',
                         type=float,
                         default=0.95)
+
+    # - MDDE scenario
+
+    parser.add_argument('--do-nothing',
+                        help='Enable or disable the "do nothing" action for agents.',
+                        type=bool,
+                        default=True)
 
     config = parser.parse_args()
 
