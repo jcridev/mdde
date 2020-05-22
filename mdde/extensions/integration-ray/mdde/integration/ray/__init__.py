@@ -1,1 +1,2 @@
 from mdde.integration.ray.ray_multiagent_env import MddeMultiAgentEnv
+from mdde.integration.ray.ray_singleagent_env import MddeSignleAgentEnv

@@ -65,24 +65,48 @@ class DefaultAgent(ABCAgent):
                             ) -> int:
         """
         Default agent can remove fragment from self and can also copy fragment from other to self.
-        Action space: 1 + f*n_f*n_o + f*n_o*n_o + f*n_o,
-        where f is the number of fragments, n_f number of foreign nodes, n_o number of own nodes
-        0 - do nothing
-        f*n_o - remove from self
-        f*n_o*n_o - copy within self
-        f*n_f*n_o - copy from others
         We assume that no fragments are created or fully removed without a trace for the default agent.
         """
         act_cnt: int = 0
-        if self._allow_do_nothing:
-            act_cnt = 1
-            a_actions = np.empty(1 + len(nodes) * len(fragments), dtype=object)
-            a_actions[0] = self.Action(node_source_id=None,
-                                       node_destination_id=None,
-                                       fragment_id=None,
-                                       is_del=False)  # do nothing action
+
+        own_nodes_cnt = len(self.data_node_ids)
+        foreign_nodes_cnt = len(nodes) - own_nodes_cnt
+        fragments_cnt = len(fragments)
+        if foreign_nodes_cnt < 0:
+            raise RuntimeError("Unable to create action space for agent {} ({}). "
+                               "Number of nodes managed by the agent is {} which is greater than the total number of "
+                               "nodes {}."
+                               .format(self._agent_name, self._agent_id, own_nodes_cnt, len(nodes)))
+
+        if own_nodes_cnt > 1:
+            # Agent manages more than one node.
+            if self._allow_do_nothing:
+                act_cnt = 1
+                a_actions = np.empty(1  # do nothing
+                                     + own_nodes_cnt * fragments_cnt * (own_nodes_cnt - 1)  # copy between own nodes
+                                     + own_nodes_cnt * fragments_cnt  # delete from own nodes
+                                     + foreign_nodes_cnt * fragments_cnt,  # copy from foreign nodes
+                                     dtype=object)
+                a_actions[0] = self.Action(node_source_id=None,
+                                           node_destination_id=None,
+                                           fragment_id=None,
+                                           is_del=False)  # do nothing action
+            else:
+                a_actions = np.empty(own_nodes_cnt * fragments_cnt * (own_nodes_cnt - 1)  # copy between own nodes
+                                     + own_nodes_cnt * fragments_cnt  # delete from own nodes
+                                     + foreign_nodes_cnt * fragments_cnt,  # copy from foreign nodes
+                                     dtype=object)
         else:
-            a_actions = np.empty(len(nodes) * len(fragments), dtype=object)
+            # agent manages one node only.
+            if self._allow_do_nothing:
+                act_cnt = 1
+                a_actions = np.empty(1 + len(nodes) * len(fragments), dtype=object)
+                a_actions[0] = self.Action(node_source_id=None,
+                                           node_destination_id=None,
+                                           fragment_id=None,
+                                           is_del=False)  # do nothing action
+            else:
+                a_actions = np.empty(len(nodes) * len(fragments), dtype=object)
 
         for node in nodes:
             is_own_node = node.node_id in self.data_node_ids
