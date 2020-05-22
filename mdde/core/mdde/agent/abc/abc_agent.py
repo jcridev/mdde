@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Sequence, Union, Tuple
+from typing import Sequence, Union, Tuple, Any
 import re
 
 import numpy as np
@@ -182,6 +182,14 @@ class ABCAgent(ABC):
         Get the number of actions from 0 to n, each discrete number within the range correspond to a specific action.
         :return: Number of available actions N_a. Each action is mapped to an index within range [0, N_a)
         """
+        raise NotImplementedError
+
+    def get_actions_described(self) -> Any:
+        """Retrieve meaningful read-only described actions sorted or otherwise conforming to their indexes used by
+        the RL algorithms. Generally not useful for the 'proper' DRL. We also don't enforce any specific return
+        type as the composition of the actions and the describing object might differ drastically from one agent
+        to another. Use with care and only in the specific instances where you're sure it's needed (meta-data, stats,
+        etc.). It's also optional for implementation."""
         raise NotImplementedError
 
     @abstractmethod

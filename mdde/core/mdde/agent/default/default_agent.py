@@ -1,4 +1,4 @@
-from typing import List, Tuple, Sequence, NamedTuple, Union
+from typing import List, Tuple, Sequence, NamedTuple, Union, Any
 from pathlib import Path
 import csv
 
@@ -57,6 +57,10 @@ class DefaultAgent(ABCAgent):
     def get_actions(self) -> int:
         """Number of actions where indexes of actions are within [0, number_of_actions)."""
         return len(self._actions)
+
+    def get_actions_described(self) -> Any:
+        """Get action descriptions."""
+        return self._actions
 
     def create_action_space(self,
                             nodes: Tuple[NodeAgentMapping, ...],
