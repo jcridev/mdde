@@ -47,7 +47,7 @@ class MddeSignleAgentEnv(gym.Env):
 
     def step(self, action):
         discrete_actions = {}
-        a_idx = action # np.argmax(action)  # Assuming the result is a flat array of probabilities
+        a_idx = action  # np.argmax(action)  # Assuming the result is a flat array of probabilities
         discrete_actions[self._agent.id] = a_idx
         obs, reward, done, act_l = self._env.step(discrete_actions)
 
