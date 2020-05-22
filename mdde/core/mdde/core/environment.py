@@ -135,11 +135,12 @@ class Environment:
         """
         self._scenario.inject_config(self._config)
         # Make sure the same data node isn't assigned to more than one agent at a time
-        nodes_per_agent: [Set[str]] = []
-        for agent in self._scenario.get_agents():
-            nodes_per_agent.append(set(agent.data_node_ids))
-        if len(set.intersection(*nodes_per_agent)) > 0:
-            raise ValueError("The same data node id can't be assigned to more than one agent at the time")
+        if len(self._scenario.get_agents()) > 1:
+            nodes_per_agent: [Set[str]] = []
+            for agent in self._scenario.get_agents():
+                nodes_per_agent.append(set(agent.data_node_ids))
+            if len(set.intersection(*nodes_per_agent)) > 0:
+                raise ValueError("The same data node id can't be assigned to more than one agent at the time")
         # Attach registry clients to the agents
         for agent in self._scenario.get_agents():
             agent.attach_registry(self._registry_read, self._registry_write)
