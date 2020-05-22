@@ -386,11 +386,16 @@ if __name__ == '__main__':
                         default=0.95)
 
     # - MDDE scenario
-
+    # -- Do-nothing action
     parser.add_argument('--do-nothing',
-                        help='Enable or disable the "do nothing" action for agents.',
-                        type=bool,
-                        default=True)
+                        dest='do_nothing',
+                        action='store_true',
+                        help='(Default) Enable the "do nothing" action for agents.')
+    parser.add_argument('--no-do-nothing',
+                        dest='do_nothing',
+                        action='store_false',
+                        help='Disable the "do nothing" action for agents.')
+    parser.set_defaults(do_nothing=True)
 
     config = parser.parse_args()
 
