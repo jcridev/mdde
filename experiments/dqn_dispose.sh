@@ -3,8 +3,10 @@
 # Prfix for container names
 PFX=${1:-""}
 
+COMPOSE_DIR=../docker/compositions/redis
+
 # With do-nothing
-(cd ../docker/compositions/redis/scripts/ && sh dqn_dispose.sh ${PFX}dqn_dn)
+(cd ${COMPOSE_DIR}/scripts/ && sh dqn_dispose.sh ${PFX}dqn_dn)
 
 # Without do-nothing
-(cd ../docker/compositions/redis/scripts/ && sh dqn_dispose.sh ${PFX}dqn_wdn)
+(cd ${COMPOSE_DIR}/scripts/ && sh dqn_dispose.sh ${PFX}dqn_wdn)

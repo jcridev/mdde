@@ -17,7 +17,7 @@ echo "" > ${COMPOSE_DIR}/${ARGS_FILE}
 
 # Without do-nothing
 rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--do-nothing False" > ${COMPOSE_DIR}/${ARGS_FILE}
+echo "LAUNCH_ARGS=--no-do-nothing" > ${COMPOSE_DIR}/${ARGS_FILE}
 (cd ${COMPOSE_DIR}/scripts && sh dqn_start_detached.sh ${PFX}dqn_wdn)
 
 # Cleanup the args file
