@@ -12,3 +12,9 @@ COMPOSE_DIR=../docker/compositions/redis
 
 # Without do-nothing
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_dispose.sh ${PFX}maddpg_wdn${POSTFX})
+
+# With do-nothing
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_dispose.sh ${PFX}maddpg_dn_g05${POSTFX})
+
+# Without do-nothing
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_dispose.sh ${PFX}maddpg_wdn_g05${POSTFX})
