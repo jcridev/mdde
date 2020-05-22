@@ -10,3 +10,9 @@ COMPOSE_DIR=../docker/compositions/redis
 
 # Without do-nothing
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_dispose.sh ${PFX}maddpg_wdn)
+
+# With do-nothing, gamma=0.5
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_dispose.sh ${PFX}maddpg_dn_g05)
+
+# Without do-nothing, gamma=0.5
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_dispose.sh ${PFX}maddpg_wdn_g05)

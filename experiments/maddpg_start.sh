@@ -20,12 +20,12 @@ rm ${COMPOSE_DIR}/${ARGS_FILE}
 echo "LAUNCH_ARGS=--no-do-nothing" > ${COMPOSE_DIR}/${ARGS_FILE}
 (cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn)
 
-# With do-nothing
+# With do-nothing, gamma=0.5
 rm ${COMPOSE_DIR}/${ARGS_FILE}
 echo "LAUNCH_ARGS=--gamma 0.5" > ${COMPOSE_DIR}/${ARGS_FILE}
 (cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_dn_g05)
 
-# Without do-nothing
+# Without do-nothing, gamma=0.5
 rm ${COMPOSE_DIR}/${ARGS_FILE}
 echo "LAUNCH_ARGS=--no-do-nothing --gamma 0.5" > ${COMPOSE_DIR}/${ARGS_FILE}
 (cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_g05)
