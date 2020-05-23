@@ -197,6 +197,7 @@ class DefaultScenario(ABCScenario):
 
         nodes = self.get_ordered_nodes()
         fragments = self._actual_fragments
+        result_frags_total = np.zeros((len(fragments)), dtype=np.int32)
         result = np.zeros((len(nodes), len(fragments)), dtype=np.int32)
 
         for node in nodes:
@@ -209,8 +210,9 @@ class DefaultScenario(ABCScenario):
                 for k, v in frag_stats.items():
                     frag_idx = fragments.index(k)
                     frag: Dict = v
+                    result_frags_total[frag_idx] = result_frags_total[frag_idx] + frag.get('r', 0)
                     result[node_idx, frag_idx] = result[node_idx, frag_idx] + frag.get('r', 0)
-
+        self._logger.debug("Benchmark reads per fragments total: {}".format(result_frags_total))
         self._initialize_stat_values_store_if_needed_read_obs_space(registry_read=registry_read)
         self._write_stats(result)
         self.__throughput = bench_stats.throughput

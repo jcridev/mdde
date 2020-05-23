@@ -244,11 +244,12 @@ class Environment:
         self.__did_reset_flag = True
         self.__episode_count += 1
 
-    def step(self, action_n: Dict[int, int]) \
+    def step(self, action_n: Dict[int, int], force_bench: bool = False) \
             -> Tuple[Dict[int, np.ndarray], Dict[int, float], Dict[int, bool], Dict[int, np.ndarray]]:
         """
         Execute actions chosen for each agent, get resulted rewards and new observations
         :param action_n: Dict['agent_id':action_id]
+        :param force_bench: Force execution of benchmark after the step disregarding the scenario.
         :return: Dict['agent_id':'np.ndarray of observations'], Dict['agent_id':'reward'], Dict['agent_id':'done flag'],
         Dict['agent_id':'np.ndarray of legality or illegality of actions in the current state']
         """
@@ -257,7 +258,7 @@ class Environment:
         self._scenario.make_collective_step(action_n)
         # Measure
         bench_execute_step = self._scenario.do_run_benchmark()
-        if bench_execute_step:
+        if bench_execute_step or force_bench:
             # Run the benchmark now if appropriate for the current scenario
             self.benchmark()
         # Observe
