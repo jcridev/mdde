@@ -213,6 +213,10 @@ class DefaultScenario(ABCScenario):
                     result_frags_total[frag_idx] = result_frags_total[frag_idx] + frag.get('r', 0)
                     result[node_idx, frag_idx] = result[node_idx, frag_idx] + frag.get('r', 0)
         self._logger.debug("Benchmark reads per fragments total: {}".format(result_frags_total))
+        if self._logger.getEffectiveLevel() == logging.DEBUG:
+            for d_node_idx, d_node_r in enumerate(result):
+                self._logger.debug("Benchmark reads for node {}: {}".format(d_node_idx, d_node_r))
+
         self._initialize_stat_values_store_if_needed_read_obs_space(registry_read=registry_read)
         self._write_stats(result)
         self.__throughput = bench_stats.throughput
