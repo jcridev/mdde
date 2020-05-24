@@ -8,11 +8,11 @@ import numpy as np
 
 from mdde.core import Environment
 from mdde.agent.default import SingleNodeDefaultAgent
+from mdde.registry.workload import EDefaultYCSBWorkload
 from mdde.scenario.default import DefaultScenario
 from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.registry.tcp import RegistryClientTCP
-
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -40,7 +40,7 @@ class MDDEGreedyAgents:
     """Path to directory for temporary files created by the scenario or agents."""
 
     NUM_FRAGMENTS = 20
-    NUM_BENCHMARK_CLIENTS = 25
+    WORKLOAD = EDefaultYCSBWorkload.READ_10000_100000_LATEST
 
     def run(self, config):
         # Result paths
@@ -101,9 +101,11 @@ class MDDEGreedyAgents:
 
             # Create scenario
             scenario = DefaultScenario(num_fragments=self.NUM_FRAGMENTS,
-                                       num_steps_before_bench=14,
+                                       num_steps_before_bench=config.bench_psteps,
                                        agents=agents,
-                                       benchmark_clients=self.NUM_BENCHMARK_CLIENTS)  # Number of YCSB threads
+                                       data_gen_workload=self.WORKLOAD,
+                                       bench_workload=self.WORKLOAD,
+                                       benchmark_clients=config.bench_clients)  # Number of YCSB threads
 
             # Create environment
             environment = Environment(config=env_config,
@@ -125,7 +127,8 @@ class MDDEGreedyAgents:
                        initial_benchmark=True)
         """Initialized instance of the environment."""
 
-        node_id_actions = {agent.data_node_ids[0]: agent.get_actions_described() for agent in env._scenario.get_agents()}
+        node_id_actions = {agent.data_node_ids[0]: agent.get_actions_described() for agent in
+                           env._scenario.get_agents()}
         """Data node id as a key. Actions of the agent managing the node as values"""
         step = 0
         while True:
@@ -138,6 +141,10 @@ class MDDEGreedyAgents:
                 logging.debug("All agents are doing nothing, breaking")
                 break
             obs_s, reward, done, act_l_s = env.step(act_n)
+
+            for idx_r, agent_reward in reward.items():
+                logging.info("Reward at step {} for agent {}: {}".format(step, idx_r, agent_reward))
+            logging.info("Sum of rewards: %d", sum(reward.values()))
             step += 1
 
         logging.debug("Done after %d steps", step)
@@ -208,6 +215,16 @@ if __name__ == '__main__':
                         help='Path to the MDDE registry configuration YAML',
                         type=str,
                         default='../../../debug/registry_config.yml')
+
+    parser.add_argument('--bench-psteps',
+                        help='Frequency of benchmark execution (execute every N steps).',
+                        type=int,
+                        default=2)
+
+    parser.add_argument('--bench-clients',
+                        help='Number of benchmark clients.',
+                        type=int,
+                        default=5)
 
     config = parser.parse_args()
 
