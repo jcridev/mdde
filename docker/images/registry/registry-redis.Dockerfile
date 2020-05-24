@@ -1,5 +1,5 @@
 # YCSB MDDE Redis client
-FROM mdde/registry:base-latest
+FROM mdde/registry/base:latest
 
 LABEL org.label-schema.name="mdde/registry/redis"
 LABEL org.label-schema.description="MDDE Registry for Redis data nodes"
