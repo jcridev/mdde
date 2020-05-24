@@ -1,0 +1,12 @@
+workload_read_10000_zipfianrecordcount=100000
+operationcount=100000
+workload=site.ycsb.workloads.CoreWorkload
+
+readallfields=true
+
+readproportion=1
+updateproportion=0
+scanproportion=0
+insertproportion=0
+
+requestdistribution=uniform

@@ -23,6 +23,18 @@ public enum EYCSBWorkloadCatalog {
      */
     READ_10000_UNIFORM("read10000uniform", "/benchmark/ycsb/workload_read_10000_uniform"),
     /**
+     * Generate and READ 100000 data records with Zipfian distribution
+     */
+    READ_100000_ZIPFIAN("read100000zipfian", "/benchmark/ycsb/workload_read_100000_zipfian"),
+    /**
+     * Generate and READ 100000 data records with 'Latest' distribution
+     */
+    READ_100000_LATEST("read100000latest", "/benchmark/ycsb/workload_read_100000_latest"),
+    /**
+     * Generate and READ 100000 data records with Uniform distribution
+     */
+    READ_100000_UNIFORM("read100000uniform", "/benchmark/ycsb/workload_read_100000_uniform"),
+    /**
      * Generate 10000 records and READ 1000 records with 'Latest' distribution
      */
     READ_10000_1000_LATEST("read10000o1000latest", "/benchmark/ycsb/workload_read_10000_1000_latest"),
@@ -37,7 +49,23 @@ public enum EYCSBWorkloadCatalog {
     /**
      * Generate 100000 records and READ 2000000 records with 'Latest' distribution
      */
-    READ_2000000_1000_LATEST("read2000000o1000latest", "/benchmark/ycsb/workload_read_2000000_1000_latest");
+    READ_2000000_1000_LATEST("read2000000o1000latest", "/benchmark/ycsb/workload_read_2000000_1000_latest"),
+    /**
+     * Generate 1000 records and READ 10000 records with 'Latest' distribution
+     */
+    READ_1000_10000_LATEST("read1000o10000latest", "/benchmark/ycsb/workload_read_1000_10000_latest"),
+    /**
+     * Generate 1000 records and READ 100000 records with 'Latest' distribution
+     */
+    READ_1000_100000_LATEST("read1000o100000latest", "/benchmark/ycsb/workload_read_1000_100000_latest"),
+    /**
+     * Generate 10000 records and READ 100000 records with 'Latest' distribution
+     */
+    READ_10000_100000_LATEST("read10000o100000latest", "/benchmark/ycsb/workload_read_10000_100000_latest"),
+    /**
+     * Generate 10000 records and READ 1000000 records with 'Latest' distribution
+     */
+    READ_10000_1000000_LATEST("read10000o1000000latest", "/benchmark/ycsb/workload_read_10000_1000000_latest");
 
     private final String _tag;
     private final String _resourceFile;
