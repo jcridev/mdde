@@ -18,8 +18,8 @@ public class Listener {
     private final EventLoopGroup _cncWorkerGroup = new NioEventLoopGroup();
     // Benchmark protocol
     private ChannelFuture _benchmarkChannelFuture;
-    private final EventLoopGroup _benchmarkConnectionGroup = new NioEventLoopGroup();
-    private final EventLoopGroup _benchmarkWorkerGroup = new NioEventLoopGroup();
+    private final EventLoopGroup _benchmarkConnectionGroup = new NioEventLoopGroup(256);
+    private final EventLoopGroup _benchmarkWorkerGroup = new NioEventLoopGroup(256);
 
     /**
      * Start the server listener.
