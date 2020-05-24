@@ -224,7 +224,7 @@ if __name__ == '__main__':
     parser.add_argument('--bench-clients',
                         help='Number of benchmark clients.',
                         type=int,
-                        default=5)
+                        default=250)
 
     config = parser.parse_args()
 

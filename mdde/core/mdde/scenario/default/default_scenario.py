@@ -27,8 +27,8 @@ class DefaultScenario(ABCScenario):
                  num_steps_before_bench: int,
                  agents: Sequence[ABCAgent],
                  benchmark_clients: int = 1,
-                 data_gen_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_1000_LATEST,
-                 bench_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_1000_LATEST,
+                 data_gen_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST,
+                 bench_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST,
                  corr_act_threshold: float = 0.7):
         """
         Constructor of the default scenario.

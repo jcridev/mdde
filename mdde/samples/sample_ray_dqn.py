@@ -120,9 +120,9 @@ class DQNTestSample:
 
             # Create scenario
             scenario = DefaultScenario(num_fragments=20,
-                                       num_steps_before_bench=25,
+                                       num_steps_before_bench=config.bench_psteps,
                                        agents=agents,
-                                       benchmark_clients=5)  # Number of YCSB threads
+                                       benchmark_clients=config.bench_clients)  # Number of YCSB threads
 
             # Create environment
             environment = Environment(config=env_config,
@@ -329,6 +329,16 @@ if __name__ == '__main__':
                         action='store_false',
                         help='Disable the "do nothing" action for agents.')
     parser.set_defaults(do_nothing=True)
+
+    parser.add_argument('--bench-psteps',
+                        help='Frequency of benchmark execution (execute every N steps).',
+                        type=int,
+                        default=25)
+
+    parser.add_argument('--bench-clients',
+                        help='Number of benchmark clients.',
+                        type=int,
+                        default=250)
 
 
     config = parser.parse_args()
