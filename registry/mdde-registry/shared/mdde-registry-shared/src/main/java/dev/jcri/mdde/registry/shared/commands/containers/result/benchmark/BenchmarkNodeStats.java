@@ -1,6 +1,7 @@
 package dev.jcri.mdde.registry.shared.commands.containers.result.benchmark;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
 import java.util.Collection;
@@ -62,5 +63,14 @@ public class BenchmarkNodeStats {
     @JsonSetter(FRAGMENTS_FIELD)
     public void setFragments(Map<String, BenchmarkFragmentStats> reads) {
         this._fragments = reads;
+    }
+
+    @JsonIgnore
+    public int getTotalNumberOfReads(){
+        int res = 0;
+        for (String fragKey: this._fragments.keySet()){
+            res += this._fragments.get(fragKey).getReadCount();
+        }
+        return res;
     }
 }

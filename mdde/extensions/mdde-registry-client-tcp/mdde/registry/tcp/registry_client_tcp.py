@@ -164,8 +164,14 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
 
     def ctrl_get_benchmark(self) -> RegistryResponse[BenchmarkStatus]:
         response = self._serialize_and_run_command('BENCHSTATE')
-        benchmark_get_result: Union[None, BenchmarkStatus] = None
+        return self.__process_benchmark_response(response)
 
+    def ctrl_get_benchmark_counterfeit(self) -> RegistryResponse[BenchmarkStatus]:
+        response = self._serialize_and_run_command('RUNCNTFTBENCH')
+        return self.__process_benchmark_response(response)
+
+    def __process_benchmark_response(self, response) -> RegistryResponse[BenchmarkStatus]:
+        benchmark_get_result: Union[None, BenchmarkStatus] = None
         result_dict: Dict = response[RegistryResponseJson.R_RES]
         if result_dict:
             stage: Union[None, EBenchmarkState] = None
@@ -206,7 +212,6 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
                     nodes = rr_nodes
                 result = BenchmarkResult(throughput, error, nodes)
             benchmark_get_result = BenchmarkStatus(stage, run_id, failed, completed, result)
-
         return RegistryResponse[BenchmarkStatus](benchmark_get_result,
                                                  response[RegistryResponseJson.R_ERR],
                                                  response[RegistryResponseJson.R_ERRCODE])

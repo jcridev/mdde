@@ -111,4 +111,9 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
     protected BenchmarkStatus processGetBenchmarkState(){
         return _stateCommandHandler.retrieveLatestBenchmarkRunStatus();
     }
+
+    @Override
+    protected BenchmarkStatus processGetCounterfeitBenchmark() {
+        return _stateCommandHandler.retrieveCounterfeitBenchmarkStatus();
+    }
 }

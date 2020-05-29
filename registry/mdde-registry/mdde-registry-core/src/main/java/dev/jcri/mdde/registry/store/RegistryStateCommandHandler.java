@@ -210,11 +210,19 @@ public final class RegistryStateCommandHandler {
     }
 
     /**
-     * Retrieve the status of the latest executed or currently executing benchmark
-     * @return Current status of the benchmark run
+     * Retrieve the status of the latest executed or currently executing benchmark.
+     * @return Current status of the benchmark run.
      */
     public synchronized BenchmarkStatus retrieveLatestBenchmarkRunStatus(){
         return _benchmarkRunner.getBenchmarkStatus();
+    }
+
+    /**
+     * Retrieve the status of the estimate benchmark based on the latest executed real benchmark run.
+     * @return Estimate benchmark status. Empty if there was no benchmark run executed prior to this call.
+     */
+    public synchronized BenchmarkStatus retrieveCounterfeitBenchmarkStatus(){
+        return _benchmarkRunner.getCounterfeitStatus();
     }
 
     /**
@@ -232,6 +240,7 @@ public final class RegistryStateCommandHandler {
             _writeCommandHandler.flush();
             // Flush data nodes
             _dataShuffler.flushData();
+            // Flush shuffler queue
             _dataShuffleQueue.clear();
 
             if(defaultSnapshotId == null){

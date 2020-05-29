@@ -154,7 +154,7 @@ class DefaultScenario(ABCScenario):
     def do_run_benchmark(self) -> bool:
         """
         Decide if a benchmark run should be executed.
-        Benchmark should be executed at the specified step frequency and only when agents are performing the amout of
+        Benchmark should be executed at the specified step frequency and only when agents are performing the amount of
         valid steps above the specified threshold.
         :return: True - benchmark should be executed before the reward is calculated.
         """
