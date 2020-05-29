@@ -29,7 +29,8 @@ class Environment:
                  registry_write: PRegistryWriteClient,
                  registry_read: PRegistryReadClient,
                  experiment_id: Union[None, str] = None,
-                 write_stats: bool = False):
+                 write_stats: bool = False,
+                 counterfeit_bench_until: int = -1):
         """
         Environment constructor
         :param config: (optional) MDDE configuration object
@@ -40,6 +41,8 @@ class Environment:
         :param experiment_id: (optional) Id of the current experiment. Used for identification of the environment
         instance. If not explicitly specified a random id is generated. Id is an alphanumeric string with the max length
         of 8. Symbols beyond 8 will be ignored, special characters and spaces will be removed.
+        :param counterfeit_bench_until: -1 never execute counterfeit benchmark instead of the real one,
+        0 only counterfeit, >0 number of steps after which real benchmark is executed.
         """
         if not isinstance(scenario, ABCScenario):
             raise TypeError("scenario must extend ABCScenario")
@@ -92,7 +95,7 @@ class Environment:
             raise AssertionError("Stats can't be writen, results folder is not configured.")
 
         self.__file_csv_writer = None
-
+        self.__counterfeit_bench_until = counterfeit_bench_until
         self.activate_scenario()
 
     def __del__(self):
@@ -212,7 +215,7 @@ class Environment:
         self._logger.info("Initializing action space per agent")
         self._initialize_action_space()
         # Run the initial benchmark to establish a baseline
-        if with_benchmark:
+        if with_benchmark or self.__counterfeit_bench_until > -1:
             self.benchmark()
         self._logger.info("Environment initialization is complete")
 
@@ -260,7 +263,10 @@ class Environment:
         bench_execute_step = self._scenario.do_run_benchmark()
         if bench_execute_step or force_bench:
             # Run the benchmark now if appropriate for the current scenario
-            self.benchmark()
+            if self.do_execute_counterfeit_benchmark():
+                self.benchmark_counterfeit()
+            else:
+                self.benchmark()
         # Observe
         obs_n, legal_act_n = self.observation_space
         # Get the reward
@@ -396,6 +402,17 @@ class Environment:
             act_n[agent.id] = agent.get_actions()
         return act_n
 
+    def do_execute_counterfeit_benchmark(self) -> bool:
+        """Decide if counterfeit benchmark should execute instead of the actual."""
+        if self.__counterfeit_bench_until == 0:
+            return True
+        if self.__counterfeit_bench_until < 0:
+            return False
+        if self.__counterfeit_bench_until >= self.__step_count:
+            return True
+
+        return False
+
     def benchmark(self, without_waiting: bool = False) -> Union[None, BenchmarkStatus]:
         """Execute benchmark run"""
         # Execute the shuffle queue
@@ -444,6 +461,15 @@ class Environment:
         if bench_status.failed:
             raise RuntimeError(bench_status.error)
         return bench_status.result
+
+    def benchmark_counterfeit(self) -> Union[None, BenchmarkStatus]:
+        bench_status_response = self._registry_ctrl.ctrl_get_benchmark_counterfeit()
+        if bench_status_response.failed:
+            raise RuntimeError(bench_status_response.error)
+        bench_status = bench_status_response.result
+        self._scenario.process_benchmark_stats(registry_read=self._registry_read,
+                                               bench_end_result=bench_status)
+        return bench_status
 
     def _initialize_action_space(self) -> None:
         """

@@ -2,6 +2,8 @@ package dev.jcri.mdde.registry.benchmark;
 
 import dev.jcri.mdde.registry.benchmark.cluster.IReadOnlyTupleLocator;
 import dev.jcri.mdde.registry.benchmark.cluster.ITupleLocatorFactory;
+import dev.jcri.mdde.registry.benchmark.counterfeit.CounterfeitBenchSettings;
+import dev.jcri.mdde.registry.benchmark.counterfeit.CounterfeitRunner;
 import dev.jcri.mdde.registry.benchmark.ycsb.EYCSBWorkloadCatalog;
 import dev.jcri.mdde.registry.benchmark.ycsb.YCSBRunner;
 import dev.jcri.mdde.registry.data.exceptions.KeyNotFoundException;
@@ -31,6 +33,7 @@ public class BenchmarkRunner {
     private final ITupleLocatorFactory _tupleLocatorFactory;
     private final IReadCommandHandler _storeReader;
     private final YCSBRunner _ycsbRunner;
+    private final CounterfeitRunner _counterfeitRunner;
 
     /**
      * State of the executing benchmark, results of the executed benchmark
@@ -52,6 +55,8 @@ public class BenchmarkRunner {
         _tupleLocatorFactory = tupleLocatorFactory;
         _storeReader = storeReader;
         _ycsbRunner = ycsbRunner;
+
+        _counterfeitRunner = new CounterfeitRunner(storeReader);
     }
 
     private IReadOnlyTupleLocator _tmpTupleLocator = null;
@@ -199,15 +204,24 @@ public class BenchmarkRunner {
     }
 
     /**
-     * Retrieve the status of the benchmark run
-     * @return Info about the stage of the running benchmark or the latest generated benchmark result values
+     * Retrieve the status of the benchmark run.
+     * @return Info about the stage of the running benchmark or the latest generated benchmark result values.
      */
     public BenchmarkStatus getBenchmarkStatus(){
         var result = this._runnerState.getResult();
         var failed = this._runnerState.isFailed();
         var stage = this._runnerState.getState().toString();
+        var runId = this._runnerState.getRunId();
         var completed = this._runnerState.isCompeted; // read this flag last
-        return new BenchmarkStatus(completed, failed, stage, result, this._runnerState.getRunId());
+
+        // Fill out Counterfeit benchmark
+        if(completed
+                && (this._counterfeitRunner.getCurrentSettings() == null
+                || !this._counterfeitRunner.getCurrentSettings().getRunId().equals(runId))){
+            this._counterfeitRunner.setCurrentSettings(new CounterfeitBenchSettings(result, runId));
+        }
+
+        return new BenchmarkStatus(completed, failed, stage, result, runId);
     }
 
     /**
@@ -221,9 +235,36 @@ public class BenchmarkRunner {
         return new TupleLocation(result);
     }
 
+    /**
+     * Notify the read operation on a specific node was finished (for capacity counters).
+     * @param nodeId Node ID where the operation was performed.
+     * @throws KeyNotFoundException Thrown if the specified Node ID is not found.
+     */
     public void notifyNodeAccessFinished(String nodeId) throws KeyNotFoundException {
         verifyState();
         _tmpTupleLocator.notifyReadFinished(nodeId);
+    }
+
+    /**
+     * Get estimation of the benchmark instead of running it over the real data distribution.
+     * @return Estimated benchmark result based on the previous real benchmark run.
+     */
+    public BenchmarkStatus getCounterfeitStatus(){
+        BenchmarkRunResult result = null;
+        boolean failed = false;
+        String stage = EBenchmarkRunStage.DONE.toString();
+        String runId = null;
+        var completed = this._counterfeitRunner.isReady();
+        if(completed){
+            runId = this._counterfeitRunner.getCurrentSettings().getRunId();
+            result = this._counterfeitRunner.estimateBenchmarkRun();
+        }
+        else{
+            stage = EBenchmarkRunStage.READY.toString();
+            failed = true;
+        }
+
+        return new BenchmarkStatus(completed, failed, stage, result, runId);
     }
 
     /**
