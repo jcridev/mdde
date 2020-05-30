@@ -28,7 +28,7 @@ setup(
                       'tabulate==0.8.6',
                       'requests==2.22.0',
                       'opencv-python==4.1.1.26',
-                      'psutil==5.6.3',
+                      'psutil==5.6.6',
                       'lz4==2.2.1',
                       'setproctitle==1.1.10',
                       'pandas==1.0.3',
