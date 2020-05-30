@@ -46,6 +46,10 @@ class PRegistryControlClient(Protocol):
         """Get the latest benchmark run state"""
         raise NotImplementedError()
 
+    def ctrl_get_benchmark_counterfeit(self) -> RegistryResponse[BenchmarkStatus]:
+        """Get a benchmark estimation based on the latest benchmark run and current allocation state"""
+        raise NotImplementedError()
+
     @abstractmethod
     def ctrl_reset(self) -> RegistryResponse[bool]:
         """Reset the environment to the latest snapshot"""

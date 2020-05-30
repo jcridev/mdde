@@ -15,7 +15,7 @@ public enum  EStateControlCommand implements ICommand {
      */
     SET_BENCHMARK("PREPBENCHMARK"),
     /**
-     * Execute benchmark and return the resulted metrics
+     * Execute benchmark and return the resulted metrics.
      */
     RUN_BENCHMARK("RUNBENCH", new ArrayList<ExpectedCommandArgument>(){
         {
@@ -23,15 +23,18 @@ public enum  EStateControlCommand implements ICommand {
             add(ARG_WORKLOAD_WORKERS);
         }
     }),
-
     /**
-     * Get the status of the benchmark. If the benchmark run was finished, returns the results
+     * Get the status of the benchmark. If the benchmark run was finished, returns the results.
      */
     GET_BENCHMARK("BENCHSTATE"),
     /**
-     * Generate data for the benchmark
+     * Generate data for the benchmark.
      */
     LOAD_DATA("BENCHLOAD", new ArrayList<ExpectedCommandArgument>(){{add(ARG_WORKLOAD_ID); }}),
+    /**
+     * Counterfeit benchmark run.
+     */
+    COUNTERFEIT_BENCHMARK("RUNCNTFTBENCH"),
     /**
      * Set Registry into the data shuffle mode.
      * Benchmark interface is disabled.
@@ -45,11 +48,11 @@ public enum  EStateControlCommand implements ICommand {
      */
     RUN_SHUFFLE("RUNSHUFFLE"),
     /**
-     * Get the current state of the registry (Benchmark or Shuffle)
+     * Get the current state of the registry (Benchmark or Shuffle).
      */
     GET_REGISTRY_MODE("REGMODE"),
     /**
-     * Initialize *default* nodes from the registry configuration file. Fails if the default nodes were already populated
+     * Initialize *default* nodes from the registry configuration file. Fails if the default nodes were already populated.
      */
     INIT_NODES("INITNODES"),
     /**
