@@ -5,7 +5,6 @@ import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.Benchm
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.utility.MapTools;
-import dev.jcri.mdde.registry.utility.MutableCounter;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,7 +47,6 @@ public class CounterfeitRunner {
         var fragmentCatalog = _storeReader.getFragmentCatalog(null, null);
         // Retrieve exact node contents
         Map<String, List<String>> nodeContents = new HashMap<>();
-        //Map<String, MutableCounter> fragmentReplicas = new HashMap<>();
 
         Map<Integer, String> catalogNodeId = MapTools.invert(fragmentCatalog.getNodes());
         Map<Integer, String> catalogFragmentId = MapTools.invert(fragmentCatalog.getFragments());
@@ -61,14 +59,6 @@ public class CounterfeitRunner {
                 // Fill out the map
                 var fragId = catalogFragmentId.get(frag);
                 nodeFrags.add(fragId);
-                /*
-                // Increment total fragment replicas counter
-                var fragRCounter = fragmentReplicas.get(fragId);
-                if (fragRCounter != null) {
-                    fragRCounter.increment();
-                } else {
-                    fragmentReplicas.put(fragId, new MutableCounter(1));
-                } */
             }
             nodeContents.put(nodeId, nodeFrags);
         }
@@ -80,11 +70,9 @@ public class CounterfeitRunner {
             nodeContentsToIndexes.add(nodeCnt, nodeContents.get(nodeId));
             nodeIndexes.put(nodeId, nodeCnt++);
         }
-        int test = 0;
+
         // Pre-calculate fragment read distribution
         Map<String, int[]> fragmentReadDistribution = new HashMap<>();
-
-        var fragsTest = fragmentCatalog.getFragments().keySet();
 
         for (var fragReplicaId: fragmentCatalog.getFragments().keySet()){
             var expectedReadsTotal = this._currentSettings.getReads().get(fragReplicaId);
@@ -122,11 +110,10 @@ public class CounterfeitRunner {
                     remainingReads = remainingReads - chunk;
                 }
             }
-            test += IntStream.of(reads).sum();
+
             fragmentReadDistribution.put(fragReplicaId, reads);
         }
-        var t = this._currentSettings.getTotalReads();
-        var s = test;
+
         // Calculate
         List<BenchmarkNodeStats> nodeStats = new ArrayList<>();
         for(var nodeId: nodeContents.keySet()){
@@ -140,23 +127,72 @@ public class CounterfeitRunner {
             }
             nodeStats.add(resultNodeStats);
         }
-        // Throughput
+        // Throughput estimation
         // We make a naive assumption that if the reads are spread equally across the nodes, the better is throughput.
-        var readSums = new int[nodeStats.size()];
-        for (int i = 0; i < nodeStats.size(); i++) {
-            BenchmarkNodeStats readDistNode = nodeStats.get(i);
-            readSums[i] = readDistNode.getTotalNumberOfReads();
+        var readSums = new int[nodeContents.size()];
+        double[] readNodeParticipationBaseline = new double[readSums.length];
+        for(var nodeId: nodeContents.keySet()) {
+            // Current reads
+            var nodeIdx = nodeIndexes.get(nodeId);
+            for(var nodeStat: nodeStats.stream().filter(i -> i.getNodeId().equals(nodeId)).collect(Collectors.toList())){
+                readSums[nodeIdx] = readSums[nodeIdx] + nodeStat.getTotalNumberOfReads();
+            }
+            // Baseline participation values
+            readNodeParticipationBaseline[nodeIdx] = this._currentSettings.getNodeReadBalance().get(nodeId);
         }
 
-        float totalReads = (float)IntStream.of(readSums).sum();
-        float[] participationPercents = new float[readSums.length];
+        double totalReads = (double)IntStream.of(readSums).sum();
+        double[] currentParticipation = new double[readSums.length];
         for(int i = 0; i < readSums.length; i++){
-            participationPercents[i] = readSums[i]/totalReads;
+            currentParticipation[i] = readSums[i]/totalReads;
         }
 
+        var baselineDisbalance = getParticipationDisbalance(readNodeParticipationBaseline);
+        var currentDisbalance = getParticipationDisbalance(currentParticipation);
+        int changeDirection = baselineDisbalance >= currentDisbalance ? 1 : -1;
+
+        double baselineThroughput = this._currentSettings.getBaselineThroughput();
+        double maxDisbalance = getParticipationTotalDisbalance(currentParticipation.length);
+
+        double estimatedThroughput = baselineThroughput
+                + (baselineThroughput
+                    * (Math.abs(baselineDisbalance - currentDisbalance) / maxDisbalance)
+                        / ((double) currentParticipation.length / 2)  // Make changes less drastic
+                    * changeDirection);
+
+        // Fill out the result
         var result = new BenchmarkRunResult();
-        result.setThroughput(this._currentSettings.getBaselineThroughput());
+        result.setThroughput(estimatedThroughput);
         result.setNodes(nodeStats);
         return result;
+    }
+
+    /**
+     * Calculate the participation disbalance value across the nodes
+     * @param partP Participation percentages for all nodes.
+     * @return 0 - perfect balance, the higher the  value, the higher is total disbalance.
+     */
+    private double getParticipationDisbalance(double[] partP){
+        double disbalance = 0;
+        for(double x: partP){
+            for(double y: partP){
+                disbalance += Math.abs(x - y);
+            }
+        }
+        return disbalance;
+    }
+
+    /**
+     * Get the edge-case value of total disbalance (all reads are from the same node). This is going to be the highest
+     * degree of disbalance possible in this setup.
+     * @param numOfNodes Total number of nodes.
+     * @return Maximum disbalance value.
+     */
+    private double getParticipationTotalDisbalance(int numOfNodes){
+        if (numOfNodes < 1){
+            throw new IllegalArgumentException("numOfNodes must be > 0");
+        }
+
+        return (numOfNodes - 1) * 2;
     }
 }

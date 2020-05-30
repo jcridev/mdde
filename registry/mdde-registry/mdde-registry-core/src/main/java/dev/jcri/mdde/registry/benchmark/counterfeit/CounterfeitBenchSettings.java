@@ -1,11 +1,11 @@
 package dev.jcri.mdde.registry.benchmark.counterfeit;
 
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
+import dev.jcri.mdde.registry.utility.MutableCounter;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Settings for the 'simulated' benchmark.
@@ -15,37 +15,20 @@ public class CounterfeitBenchSettings {
      * Number of reads associated with the fragment ID.
      */
     private final Map<String, Integer> _readsPerFragment;
+
+    /**
+     * Percentage of of reads served by each node.
+     */
+    private final Map<String, Double> _nodeReadBalance;
+
     /**
      * Baseline throughput value.
      */
     private final double _baselineThroughput;
-
     /**
      * If these settings are based on the benchmark run, save this as property.
      */
     private final String _runId;
-    /**
-     * Settings for the simulated benchmark.
-     * @param readsPerFragment Number of reads associated with the fragment ID.
-     * @param baselineThroughput Baseline throughput value.
-     */
-    private CounterfeitBenchSettings(Map<String, Integer> readsPerFragment,
-                                     double baselineThroughput,
-                                     String runId){
-        _baselineThroughput = baselineThroughput;
-        Objects.requireNonNull(readsPerFragment);
-        if(readsPerFragment.isEmpty()){
-            throw new IllegalArgumentException("Simulated benchmark settings can't be empty");
-        }
-        // Validate the reads map
-        for (Integer value : readsPerFragment.values()) {
-            if (value == null ||  value < 0){
-                throw new IllegalArgumentException("Read parameters contain invalid values");
-            }
-        }
-        _runId = runId;
-        _readsPerFragment = Collections.unmodifiableMap(readsPerFragment);
-    }
 
     /**
      * Settings for the simulated benchmark.
@@ -53,19 +36,41 @@ public class CounterfeitBenchSettings {
      */
     public CounterfeitBenchSettings(BenchmarkRunResult benchStats, String runId){
         _baselineThroughput = benchStats.getThroughput();
-
-        Map<String, Integer> readCounters = new HashMap<>();
+        int totalReads = 0;
+        // Total reads per node
+        Map<String, MutableCounter> readNodeCounters = new HashMap<>();
+        // Total reads per fragment
+        Map<String, Integer> readFragCounters = new HashMap<>();
         for (var node : benchStats.getNodes()){
+            // Sum up total reads
+            totalReads += node.getTotalNumberOfReads();
+            // Sum up total reads per node
+            var nodeCounter = readNodeCounters.get(node.getNodeId());
+            if(nodeCounter == null){
+                readNodeCounters.put(node.getNodeId(), new MutableCounter(node.getTotalNumberOfReads()));
+            }
+            else{
+                nodeCounter.add(node.getTotalNumberOfReads());
+            }
+            // Sum up total reads per fragment
             for (var fragmentId : node.getFragments().keySet()){
-                if (!readCounters.containsKey(fragmentId)){
-                    readCounters.put(fragmentId, 0);
+                if (!readFragCounters.containsKey(fragmentId)){
+                    readFragCounters.put(fragmentId, 0);
                 }
-                var cValue = readCounters.get(fragmentId);
-                readCounters.put(fragmentId, cValue + node.getFragments().get(fragmentId).getReadCount());
+                var cValue = readFragCounters.get(fragmentId);
+                readFragCounters.put(fragmentId, cValue + node.getFragments().get(fragmentId).getReadCount());
             }
         }
         _runId = runId;
-        _readsPerFragment = Collections.unmodifiableMap(readCounters);
+        _readsPerFragment = Collections.unmodifiableMap(readFragCounters);
+
+        // Get participation percentage
+        Map<String, Double> nodeParticipation = new HashMap<>();
+        for (var rNodeCntId: readNodeCounters.keySet()){
+            var cNCounter = readNodeCounters.get(rNodeCntId).get();
+            nodeParticipation.put(rNodeCntId, (double)cNCounter / totalReads);
+        }
+        _nodeReadBalance = nodeParticipation;
     }
 
     /**
@@ -102,5 +107,13 @@ public class CounterfeitBenchSettings {
             result += _readsPerFragment.get(fragId);
         }
         return result;
+    }
+
+    /**
+     * Percentage of of reads served by each node.
+     * @return Percentage of of reads served by each node.
+     */
+    public Map<String, Double> getNodeReadBalance() {
+        return _nodeReadBalance;
     }
 }

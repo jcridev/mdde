@@ -10,7 +10,7 @@ import java.util.Map;
 
 
 public class BenchmarkNodeStats {
-    public static final String CLIENT_ID_FIELD = "";
+    public static final String CLIENT_ID_FIELD = "client";
     public static final String NODE_ID_FIELD = "nodeId";
     public static final String FRAGMENTS_FIELD = "frags";
 

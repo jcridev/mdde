@@ -32,6 +32,14 @@ public class MutableCounter {
     }
 
     /**
+     * Add value to the current counter.
+     * @param val Value to add.
+     */
+    public void add(long val){
+        this._cnt = this._cnt + val;
+    }
+
+    /**
      * Decrement the current value by 1.
      */
     public void decrement(){
