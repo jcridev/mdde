@@ -105,7 +105,8 @@ class MDDEGreedyAgents:
                                        agents=agents,
                                        data_gen_workload=self.WORKLOAD,
                                        bench_workload=self.WORKLOAD,
-                                       benchmark_clients=config.bench_clients)  # Number of YCSB threads
+                                       benchmark_clients=config.bench_clients,
+                                       write_stats=write_stats)  # Number of YCSB threads
 
             # Create environment
             environment = Environment(config=env_config,

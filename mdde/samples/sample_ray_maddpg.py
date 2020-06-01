@@ -146,7 +146,8 @@ class MADDPGSample:
             scenario = DefaultScenario(num_fragments=20,
                                        num_steps_before_bench=config.bench_psteps,
                                        agents=agents,
-                                       benchmark_clients=config.bench_clients)  # Number of YCSB threads
+                                       benchmark_clients=config.bench_clients,
+                                       write_stats=write_stats)  # Number of YCSB threads
 
             # Create environment
             environment = Environment(config=env_config,
