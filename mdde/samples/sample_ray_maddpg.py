@@ -194,6 +194,10 @@ class MADDPGSample:
                                                       do_nothing=config.do_nothing),
                                          observation_shaper=sample_selected_shaper)
 
+        input_size = env_instance.observation_space_dict[0].shape[0]
+        output_size = env_instance.action_space_dict[0].n
+        maddpg_network = [int((input_size + output_size) * 0.7)] * 2  # [64] * 2
+
         def env_creator(kvargs):
             env = make_env(**kvargs)
             return MddeMultiAgentEnv(env=env,
@@ -248,9 +252,9 @@ class MADDPGSample:
             # --- Model ---
             "good_policy": self.GOOD_POLICY,
             "adv_policy": self.ADV_POLICY,
-            "actor_hiddens": [64] * 2,
+            "actor_hiddens": maddpg_network,
             "actor_hidden_activation": "relu",
-            "critic_hiddens": [64] * 2,
+            "critic_hiddens": maddpg_network,
             "critic_hidden_activation": "relu",
             "n_step": 1,
             "gamma": config.gamma,
