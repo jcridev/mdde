@@ -65,7 +65,23 @@ public enum EYCSBWorkloadCatalog {
     /**
      * Generate 10000 records and READ 1000000 records with 'Latest' distribution
      */
-    READ_10000_1000000_LATEST("read10000o1000000latest", "/benchmark/ycsb/workload_read_10000_1000000_latest");
+    READ_10000_1000000_LATEST("read10000o1000000latest", "/benchmark/ycsb/workload_read_10000_1000000_latest"),
+    /**
+     * Generate 1000 records and READ 10000 records with 'Zipfian' distribution
+     */
+    READ_1000_10000_ZIPFIAN("read1000o10000zipfian", "/benchmark/ycsb/workload_read_1000_10000_zipfian"),
+    /**
+     * Generate 1000 records and READ 100000 records with 'Zipfian' distribution
+     */
+    READ_1000_100000_ZIPFIAN("read1000o100000zipfian", "/benchmark/ycsb/workload_read_1000_100000_zipfian"),
+    /**
+     * Generate 10000 records and READ 100000 records with 'Zipfian' distribution
+     */
+    READ_10000_100000_ZIPFIAN("read10000o100000zipfian", "/benchmark/ycsb/workload_read_10000_100000_zipfian"),
+    /**
+     * Generate 10000 records and READ 1000000 records with 'Zipfian' distribution
+     */
+    READ_10000_1000000_ZIPFIAN("read10000o1000000zipfian", "/benchmark/ycsb/workload_read_10000_1000000_zipfian");
 
     private final String _tag;
     private final String _resourceFile;

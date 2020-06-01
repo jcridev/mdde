@@ -91,3 +91,26 @@ class EDefaultYCSBWorkload(Enum):
                                                  read_all_fields=True,
                                                  record_count=10000,
                                                  operation_count=1000000)
+    READ_1000_10000_ZIPFIAN = YCSBWorkloadInfo(tag='read1000o10000zipfian',
+                                               request_distribution=EYCSBWorkloadRequestDistribution.LATEST,
+                                               read_all_fields=True,
+                                               record_count=1000,
+                                               operation_count=10000)
+
+    READ_1000_100000_ZIPFIAN = YCSBWorkloadInfo(tag='read1000o100000zipfian',
+                                                request_distribution=EYCSBWorkloadRequestDistribution.LATEST,
+                                                read_all_fields=True,
+                                                record_count=1000,
+                                                operation_count=100000)
+
+    READ_10000_100000_ZIPFIAN = YCSBWorkloadInfo(tag='read10000o100000zipfian',
+                                                 request_distribution=EYCSBWorkloadRequestDistribution.LATEST,
+                                                 read_all_fields=True,
+                                                 record_count=10000,
+                                                 operation_count=100000)
+
+    READ_10000_1000000_ZIPFIAN = YCSBWorkloadInfo(tag='read10000o1000000zipfian',
+                                                  request_distribution=EYCSBWorkloadRequestDistribution.LATEST,
+                                                  read_all_fields=True,
+                                                  record_count=10000,
+                                                  operation_count=1000000)
