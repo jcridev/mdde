@@ -1,0 +1,23 @@
+version: '3.7'
+services:
+  maddpg:
+  # MADDPG Environment (build an appropriate image in ../../images/environment/)
+    image: mdde/env/ray-maddpg-am:latest
+    depends_on:
+      - registry
+    networks:
+      back:
+        aliases:
+          - maddpg
+    volumes:
+      - mdde_shared:/mdde/shared
+      - mdde_results:/mdde/results
+    environment:
+      - REG_HOST=registry
+      - REG_PORT=8942
+#      - LAUNCH_ARGS=--num_episodes 10
+    env_file:
+      - ./args.env
+volumes:
+  mdde_results: # MDDE results
+

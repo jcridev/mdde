@@ -19,5 +19,5 @@ done
 if [ $SKIPBASE -eq 0 ];then
   docker build -t mdde/env/ray-base:latest -f ../base-ray.Dockerfile ../../../../mdde --no-cache
 fi
-# Build MDDE-RAY-MADDPG image
-docker build -t mdde/env/ray-maddpg:latest -f ../maddpg-ray.Dockerfile ../../../../mdde --no-cache
+# Build MDDE-RAY-MADDPG (with action mask enabled) image
+docker build -t mdde/env/ray-maddpg-am:latest -f ../maddpg-actmask-ray.Dockerfile ../../../../mdde --no-cache

@@ -116,7 +116,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         return obs_n, reward, done_dict, info_dict
 
     @property
-    def observation_space_dict(self) -> Dict[int, Box]:
+    def observation_space_dict(self) -> Dict[int, Union[Box, Dict]]:
         """
         Environment observation space shape.
         :return: Dictionary containing the shape of the observation space per agent.
