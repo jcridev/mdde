@@ -14,7 +14,7 @@ from mdde.fragmentation.protocol import PFragmentSorter, PFragmenter
 from mdde.registry.container import BenchmarkStatus
 from mdde.registry.protocol import PRegistryReadClient
 from mdde.registry.workload import EDefaultYCSBWorkload, YCSBWorkloadInfo
-from mdde.scenario.abc import ABCScenario
+from mdde.scenario.abc import ABCScenario, EBenchmark
 
 
 class DefaultScenario(ABCScenario):
@@ -151,7 +151,7 @@ class DefaultScenario(ABCScenario):
             step_action_res[agent_id] = aa_val
         self._action_history[self._current_step] = step_action_res
 
-    def do_run_benchmark(self) -> bool:
+    def do_run_benchmark(self) -> EBenchmark:
         """
         Decide if a benchmark run should be executed.
         Benchmark should be executed at the specified step frequency and only when agents are performing the amount of
@@ -159,7 +159,8 @@ class DefaultScenario(ABCScenario):
         :return: True - benchmark should be executed before the reward is calculated.
         """
         if self.__benchmark_data_ready:
-            return False  # Don't run benchmark multiple times in a row if the previous results were not processed
+            # Don't run benchmark multiple times in a row if the previous results were not processed
+            return EBenchmark.NO_BENCHMARK
         if self._current_step == self._num_steps_before_bench - 1:
             self._current_step = 0
             # Check the quality of the steps
@@ -175,16 +176,16 @@ class DefaultScenario(ABCScenario):
             a_act_fail = np.sum(agent_fails, 0)
             if a_act_fail[0] == 0:
                 # None of the agents participated
-                return False
+                return EBenchmark.NO_BENCHMARK
 
             if a_act_fail[1] == 0:
                 # All actions were correct
-                return True
+                return EBenchmark.DEFAULT
 
             # If agents participated (even if did nothing) compare to the threshold
             return a_act_fail[1] / a_act_fail[0] + self._corr_act_threshold <= 1.
         self._current_step += 1
-        return False
+        return EBenchmark.NO_BENCHMARK
 
     def process_benchmark_stats(self, registry_read: PRegistryReadClient,  bench_end_result: BenchmarkStatus) -> None:
         if bench_end_result.failed or not bench_end_result.completed:

@@ -66,8 +66,7 @@ class EnvironmentTestCase(unittest.TestCase):
                                   registry_ctrl=ctrl_client,
                                   registry_write=write_client,
                                   registry_read=read_client,
-                                  write_stats=True,
-                                  counterfeit_bench_until=0)
+                                  write_stats=True)
         # Re-generate data
         environment.initialize_registry(with_benchmark=True)
 

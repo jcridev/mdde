@@ -9,6 +9,7 @@ from mdde.config import ConfigEnvironment
 from mdde.fragmentation.protocol import PFragmenter, PFragmentSorter
 from mdde.registry.container import BenchmarkStatus
 from mdde.registry.protocol import PRegistryReadClient
+from mdde.scenario.abc import EBenchmark
 
 
 class ABCScenario(ABC):
@@ -161,18 +162,23 @@ class ABCScenario(ABC):
         """
         raise NotImplementedError
 
+    @property
+    def get_counterfeit_required(self) -> bool:
+        """Return true if the scenario is capable of running counterfeit benchmark"""
+        return True
+
     @abstractmethod
-    def do_run_benchmark(self) -> bool:
+    def do_run_benchmark(self) -> EBenchmark:
         """
         Running a benchmark is an expensive operation, so it's reasonable not to run it every step. However, the exact
         frequency of benchmark execution must be decided by the specific scenario.
         Override this method to return True when it's necessary for your scenario to request new statistics from the
         database cluster.
 
-        If this method returns True, after the benchmark run is done, self.process_benchmark_stats() will be invoked, to
-        pass the result values of the benchmark to the scenario.
+        If this method returns EBenchmark.BENCHMARK, after the benchmark run is done, self.process_benchmark_stats()
+        will be invoked, to pass the result values of the benchmark to the scenario.
 
-        :return: True - execute benchmark run.
+        :return: EBenchmark.
         """
         raise NotImplementedError
 
