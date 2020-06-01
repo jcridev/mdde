@@ -1,6 +1,9 @@
 import logging
-from typing import Tuple, Union, Sequence, Dict, List
 import pathlib
+import csv
+
+from typing import Tuple, Union, Sequence, Dict, List
+from pathlib import Path
 
 import numpy as np
 import tiledb
@@ -29,7 +32,8 @@ class DefaultScenario(ABCScenario):
                  benchmark_clients: int = 1,
                  data_gen_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST,
                  bench_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST,
-                 corr_act_threshold: float = 0.7):
+                 corr_act_threshold: float = 0.7,
+                 write_stats: bool = False):
         """
         Constructor of the default scenario.
         :param num_fragments: Target number of fragments to be generated out of data record present in data nodes
@@ -96,6 +100,22 @@ class DefaultScenario(ABCScenario):
         self.__benchmark_data_ready: bool = False
         """Flag: Set to true after the benchmark run was executed and the results passed to the scenario"""
 
+        self.__file_csv_writer = None
+        self.__mdde_result_folder_root: Union[None, str] = None
+        """Folder where all of the statistical data should be dumped."""
+
+        self._dump_stats = write_stats
+        """True - write additional statistics to the results folder."""
+        self.__step_count = 0
+
+    def __del__(self):
+        self._logger.info('Shutting down')
+        if self.__file_csv_writer:
+            # Close a CSV writer if there's one
+            self._logger.info('Closing CSV writer')
+            file = self.__file_csv_writer[0]
+            file.close()
+
     def inject_config(self, env_config: ConfigEnvironment) -> None:
         super(DefaultScenario, self).inject_config(env_config)
         # Initialize TileDB storage needed for the scenario specific data
@@ -112,6 +132,8 @@ class DefaultScenario(ABCScenario):
             tiledb.remove(self.__tiledb_group_name)  # Remove the array
             tiledb.group_create(self.__tiledb_group_name)  # Create a group instead
         self._clear_arrays()
+
+        self.__mdde_result_folder_root = env_config.result_dir(self, get_root=True)
 
     def get_benchmark_workload(self) -> str:
         return self.__workload_data_gen_info.tag
@@ -138,6 +160,7 @@ class DefaultScenario(ABCScenario):
         return None
 
     def make_collective_step(self, actions: Dict[int, int]) -> None:
+        self.__step_count += 1
         # Default values for the initial step in the row
         if self._current_step == 0:
             self._action_history.fill(-1)
@@ -187,7 +210,7 @@ class DefaultScenario(ABCScenario):
         self._current_step += 1
         return EBenchmark.NO_BENCHMARK
 
-    def process_benchmark_stats(self, registry_read: PRegistryReadClient,  bench_end_result: BenchmarkStatus) -> None:
+    def process_benchmark_stats(self, registry_read: PRegistryReadClient, bench_end_result: BenchmarkStatus) -> None:
         if bench_end_result.failed or not bench_end_result.completed:
             raise RuntimeError("Scenario should receive a completed non failed benchmark only")
 
@@ -232,6 +255,10 @@ class DefaultScenario(ABCScenario):
             nodes = self.get_ordered_nodes()
             stats = self._retrieve_stats()
             total_reads = np.sum(stats)
+
+            stat_agent_reads = {}
+            stat_agent_correct = {}
+
             for agent_idx in range(0, len(self.get_agents())):
                 # Calculate individual reward for each agent based on the throughput and results of actions taken
                 agent_obj = self.get_agents()[agent_idx]
@@ -260,7 +287,18 @@ class DefaultScenario(ABCScenario):
                                                                             agent_reads,
                                                                             total_reads,
                                                                             agent_correctness_multiplier))
+                if self._dump_stats:
+                    stat_agent_reads[agent_obj.id] = agent_reads
+                    stat_agent_correct[agent_obj.id] = agent_correctness_multiplier
                 reward_n[agent_obj.id] = current_throughput * (agent_reads / total_reads) * agent_correctness_multiplier
+
+            if self._dump_stats:
+                self._dump_scenario_stats_at_bench(step_idx=self.__step_count,
+                                                   agent_read_n=stat_agent_reads,
+                                                   agent_corr_n=stat_agent_correct,
+                                                   throughput=current_throughput,
+                                                   total_reads=total_reads)
+
             return reward_n
         else:
             # In between benchmark runs, return  pseudo-reward that indicates only the correctness of the action
@@ -286,7 +324,48 @@ class DefaultScenario(ABCScenario):
                 i += 1
             return reward_n
 
-    def get_observation(self, registry_read: PRegistryReadClient)\
+    def _dump_scenario_stats_at_bench(self,
+                                      step_idx: int,
+                                      agent_read_n: Dict[int, int],
+                                      agent_corr_n: Dict[int, float],
+                                      total_reads: int,
+                                      throughput: float) -> None:
+        """
+        Write statistics data to a CSV file.
+        Opens a CSV writer that remains open for the duration of the run.
+        :param step_idx: Current step.
+        :param agent_read_n: {agent_id: reads since last benchmark}.
+        :param agent_corr_n: {agent_correctnessness since last benchmark}.
+        :param total_reads: Total number of reads since last benchmark.
+        :param throughput: Throughput.
+        """
+        active_agents = self._agents
+        if not self.__file_csv_writer:
+            file_path = Path(self.__mdde_result_folder_root).joinpath('default_scenario.csv')
+            csv_file = open(file_path, 'w', newline='')
+            csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            self.__file_csv_writer = (csv_file, csv_writer)
+            # Generate a header
+            header = ['step']
+            for agent in active_agents:
+                header.append("agent_reads_{}".format(agent.id))
+                header.append("correctness_{}".format(agent.id))
+            header.append('total_reads')
+            header.append('throughput')
+            csv_writer.writerow(header)
+        csv_writer = self.__file_csv_writer[1]
+        row = [step_idx]
+        for agent in active_agents:
+            row.extend([agent_read_n.get(agent.id),
+                        agent_corr_n.get(agent.id)])
+        row.append(total_reads)
+        row.append(throughput)
+        csv_writer.writerow(row)
+        # Force flush
+        file = self.__file_csv_writer[0]
+        file.flush()
+
+    def get_observation(self, registry_read: PRegistryReadClient) \
             -> Tuple[Dict[int, np.ndarray], Dict[int, np.ndarray]]:
         agent_nodes, fragments, obs = self.get_full_allocation_observation(registry_read=registry_read)
         # Expand observation space per agent to include read frequencies from the latest benchmark run or with
