@@ -154,9 +154,11 @@ class ABCScenario(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_reward(self) -> Dict[int, float]:
+    def get_reward(self, reg_read: PRegistryReadClient) -> Dict[int, float]:
         """
         Override to return a dictionary of rewards per agent.
+
+        :param reg_read: Read client for the registry, in case additional statistics required for forming a reward.
 
         :return: Dict['agent_id', floating point reward]
         """

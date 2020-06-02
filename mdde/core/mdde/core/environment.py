@@ -266,7 +266,7 @@ class Environment:
         # Observe
         obs_n, legal_act_n = self.observation_space
         # Get the reward
-        reward_n = self._scenario.get_reward()
+        reward_n = self._scenario.get_reward(self._registry_read)
         # Get the done flag
         done_n = {a.id: a.done for a in self._scenario.get_agents()}
 
