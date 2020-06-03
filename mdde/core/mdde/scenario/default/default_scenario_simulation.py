@@ -64,65 +64,24 @@ class DefaultScenarioSimulation(DefaultScenario):
                          write_stats=write_stats)
 
         self._benchmark_mode = EBenchmark.COUNTERFEIT
+        self._fresh_start: bool = False
+        """Flag for the fresh start of the scenario, set to false after the real benchmark is executed first time."""
 
-        self._throughput_history_len = throughput_history_relevance
+        #self._throughput_history_len = throughput_history_relevance
         """Length of the throughput history. Benchmark history is not used in the reward calculation until it's filled
         (all values are non-zero)."""
-        self._throughput_history = collections.deque(maxlen=self._throughput_history_len)
+        #self._throughput_history = collections.deque(maxlen=self._throughput_history_len)
         """Array  storing history for the last 10 benchmark runs."""
 
-        self._storage_multiplier: float = 0.0
-        """Emphasis on storage related term in the reward function."""
+    def do_run_benchmark(self) -> EBenchmark:
+        """
+        Decide if a benchmark run should be executed.
+        Benchmark should be executed at the specified step frequency and only when agents are performing the amount of
+        valid steps above the specified threshold.
+        :return: EBenchmark.
+        """
+        if self._fresh_start:
+            self._fresh_start = False
+            return EBenchmark.DEFAULT
 
-    def _reward_bench(self, contents_n):
-        """Calculate the reward based on the statistics collected during the latest benchmark run execution"""
-        reward_n = {}  # agent_id : float reward
-        current_throughput = self._throughput  # latest throughput value, same for all agents
-        if current_throughput is not None:
-            self._throughput_history.append(current_throughput)
-
-        nodes = self.get_ordered_nodes()
-        stats = self._retrieve_stats()
-        total_reads = np.sum(stats)
-        stat_agent_reads = {}
-        stat_agent_correct = {}
-        for agent_idx in range(0, len(self.get_agents())):
-            # Calculate individual reward for each agent based on the throughput and results of actions taken
-            agent_obj = self.get_agents()[agent_idx]
-            agent_node_idx = []
-            for node_idx in range(0, len(nodes)):
-                if nodes[node_idx].agent_id == agent_obj.id:
-                    agent_node_idx.append(node_idx)
-            # Summarize all reads for the run for all of the nodes mapped to the agent
-            agent_reads = 0
-            for a_node_idx in agent_node_idx:
-                a_node_stats = stats[a_node_idx]
-                agent_reads = np.sum(a_node_stats)
-            # Get the summarized result of actions correctness
-            agent_correctness_multiplier = 0.0
-            for a_act_history_step in range(0, self._num_steps_before_bench):
-                a_act = self._action_history[a_act_history_step][agent_idx]
-                # Increase the multiplier for each correct action taken, if no correct actions were taken,
-                # the final agent reward will be 0
-                if a_act[0] == 1 and a_act[1] == EActionResult.ok.value:
-                    # Only give rewards for the actions that were success and not "do nothing" or "done"
-                    agent_correctness_multiplier += 1.0 / self._num_steps_before_bench
-            # Agent reward
-
-            self._logger.debug("Real reward: current_throughput={};agent_reads={};total_reads={};"
-                               "agent_correctness_multiplier={}".format(current_throughput,
-                                                                        agent_reads,
-                                                                        total_reads,
-                                                                        agent_correctness_multiplier))
-            if self._dump_stats:
-                stat_agent_reads[agent_obj.id] = agent_reads
-                stat_agent_correct[agent_obj.id] = agent_correctness_multiplier
-            reward_n[agent_obj.id] = current_throughput * (agent_reads / total_reads) * agent_correctness_multiplier \
-                                     + (current_throughput / contents_n[agent_obj.id] * self._storage_multiplier)
-        if self._dump_stats:
-            self._dump_scenario_stats_at_bench(step_idx=self._step_count,
-                                               agent_read_n=stat_agent_reads,
-                                               agent_corr_n=stat_agent_correct,
-                                               throughput=current_throughput,
-                                               total_reads=total_reads)
-        return reward_n
+        return super().do_run_benchmark()

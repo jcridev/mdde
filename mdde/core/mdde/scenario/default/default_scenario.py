@@ -111,6 +111,17 @@ class DefaultScenario(ABCScenario):
         self._benchmark_mode = EBenchmark.DEFAULT
         """Default benchmark mode"""
 
+        self._storage_multiplier: float = 0.0
+        """Emphasis on storage related term in the reward function."""
+
+    def set_storage_importance(self, importance: float):
+        """Adjust the multiplier for the storage importance > 0 (Recommended range [0, 1.0])"""
+
+        if importance < 0:
+            raise ValueError("Importance of the storage can't be negative. ")
+
+        self._storage_multiplier = importance
+
     def __del__(self):
         self._logger.info('Shutting down')
         if self.__file_csv_writer:
@@ -182,7 +193,7 @@ class DefaultScenario(ABCScenario):
         Decide if a benchmark run should be executed.
         Benchmark should be executed at the specified step frequency and only when agents are performing the amount of
         valid steps above the specified threshold.
-        :return: True - benchmark should be executed before the reward is calculated.
+        :return: EBenchmark.
         """
         if self._benchmark_data_ready:
             # Don't run benchmark multiple times in a row if the previous results were not processed
@@ -209,7 +220,10 @@ class DefaultScenario(ABCScenario):
                 return self._benchmark_mode
 
             # If agents participated (even if did nothing) compare to the threshold
-            return a_act_fail[1] / a_act_fail[0] + self._corr_act_threshold <= 1.
+            if a_act_fail[1] / a_act_fail[0] + self._corr_act_threshold <= 1:
+                return self._benchmark_mode
+            else:
+                return EBenchmark.NO_BENCHMARK
         self._current_step += 1
         return EBenchmark.NO_BENCHMARK
 
@@ -270,6 +284,7 @@ class DefaultScenario(ABCScenario):
         """Calculate the reward based on the statistics collected during the latest benchmark run execution"""
         reward_n = {}  # agent_id : float reward
         current_throughput = self._throughput  # latest throughput value, same for all agents
+
         nodes = self.get_ordered_nodes()
         stats = self._retrieve_stats()
         total_reads = np.sum(stats)
@@ -306,7 +321,8 @@ class DefaultScenario(ABCScenario):
             if self._dump_stats:
                 stat_agent_reads[agent_obj.id] = agent_reads
                 stat_agent_correct[agent_obj.id] = agent_correctness_multiplier
-            reward_n[agent_obj.id] = current_throughput * (agent_reads / total_reads) * agent_correctness_multiplier
+            reward_n[agent_obj.id] = current_throughput * (agent_reads / total_reads) * agent_correctness_multiplier \
+                                     + (current_throughput / contents_n[agent_obj.id] * self._storage_multiplier)
         if self._dump_stats:
             self._dump_scenario_stats_at_bench(step_idx=self._step_count,
                                                agent_read_n=stat_agent_reads,
