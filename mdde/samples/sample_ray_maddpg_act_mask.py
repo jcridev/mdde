@@ -13,7 +13,7 @@ from ray.rllib.contrib.maddpg.maddpg import MADDPGTrainer
 from mdde.core import Environment
 from mdde.agent.default import SingleNodeDefaultAgent
 from mdde.integration.ray import MddeMultiAgentEnvActionMask
-from mdde.scenario.default import DefaultScenario
+from mdde.scenario.default import DefaultScenario, DefaultScenarioSimulation
 from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.registry.tcp import RegistryClientTCP
@@ -148,11 +148,22 @@ class MADDPGSampleActMask:
                 idx += 1
 
             # Create scenario
-            scenario = DefaultScenario(num_fragments=20,
-                                       num_steps_before_bench=config.bench_psteps,
-                                       agents=agents,
-                                       benchmark_clients=config.bench_clients,
-                                       write_stats=write_stats)  # Number of YCSB threads
+            num_fragments: int = 20
+            if config.sim:
+                scenario = DefaultScenarioSimulation(num_fragments=num_fragments,
+                                                     num_steps_before_bench=config.bench_psteps,
+                                                     agents=agents,
+                                                     benchmark_clients=config.bench_clients,
+                                                     write_stats=write_stats)  # Number of YCSB threads
+            else:
+                scenario = DefaultScenario(num_fragments=num_fragments,
+                                           num_steps_before_bench=config.bench_psteps,
+                                           agents=agents,
+                                           benchmark_clients=config.bench_clients,
+                                           write_stats=write_stats)  # Number of YCSB threads
+
+            # Set multiplier to the sore related term of the default reward function
+            scenario.set_storage_importance(config.store_m)
 
             # Create environment
             environment = Environment(config=env_config,
@@ -342,6 +353,10 @@ if __name__ == '__main__':
                         help='Debug flag. If set, the agents are executed within the same process (without Tune).',
                         action='store_true')
 
+    parser.add_argument('--sim',
+                        help='Simulated benchmark (except the first run).',
+                        action='store_true')
+
     # MADDPG params
     # Descriptions source: https://docs.ray.io/en/master/rllib-algorithms.html#maddpg
     # Note: We omit parameters that make no sense as experimental variables in this sample.
@@ -410,6 +425,12 @@ if __name__ == '__main__':
                         help='Frequency of benchmark execution (execute every N steps).',
                         type=int,
                         default=25)
+
+    parser.add_argument('--store-m',
+                        help='Importance multiplier for the storage term of the default reward function.'
+                             '0.0 - ignore (agents are allowed to hoard everything with no repercussions)',
+                        type=float,
+                        default=0.5)
 
     parser.add_argument('--bench-clients',
                         help='Number of benchmark clients.',
