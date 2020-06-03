@@ -29,7 +29,7 @@ class DefaultScenario(ABCScenario):
                  num_fragments: int,
                  num_steps_before_bench: int,
                  agents: Sequence[ABCAgent],
-                 benchmark_clients: int = 1,
+                 benchmark_clients: int = 5,
                  data_gen_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST,
                  bench_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST,
                  corr_act_threshold: float = 0.7,
@@ -93,20 +93,34 @@ class DefaultScenario(ABCScenario):
         """Tile DB group of arrays where all scenario arrays are located"""
         self.__tiledb_stats_array: Union[None, str] = None
         """Array of statistics received from the previous benchmark run"""
-        self.__throughput: float = -0.1
+        self._throughput: Union[float, None] = None
         """Raw throughput value received from the previous benchmark run"""
         self.__selected_actions: Union[None, np.ndarray] = None
 
-        self.__benchmark_data_ready: bool = False
+        self._benchmark_data_ready: bool = False
         """Flag: Set to true after the benchmark run was executed and the results passed to the scenario"""
 
         self.__file_csv_writer = None
-        self.__mdde_result_folder_root: Union[None, str] = None
+        self._mdde_result_folder_root: Union[None, str] = None
         """Folder where all of the statistical data should be dumped."""
 
         self._dump_stats = write_stats
         """True - write additional statistics to the results folder."""
-        self.__step_count = 0
+        self._step_count = 0
+
+        self._benchmark_mode = EBenchmark.DEFAULT
+        """Default benchmark mode"""
+
+        self._storage_multiplier: float = 0.0
+        """Emphasis on storage related term in the reward function."""
+
+    def set_storage_importance(self, importance: float):
+        """Adjust the multiplier for the storage importance > 0 (Recommended range [0, 1.0])"""
+
+        if importance < 0:
+            raise ValueError("Importance of the storage can't be negative. ")
+
+        self._storage_multiplier = importance
 
     def __del__(self):
         self._logger.info('Shutting down')
@@ -133,7 +147,7 @@ class DefaultScenario(ABCScenario):
             tiledb.group_create(self.__tiledb_group_name)  # Create a group instead
         self._clear_arrays()
 
-        self.__mdde_result_folder_root = env_config.result_dir(self, get_root=True)
+        self._mdde_result_folder_root = env_config.result_dir(self, get_root=True)
 
     def get_benchmark_workload(self) -> str:
         return self.__workload_data_gen_info.tag
@@ -160,7 +174,7 @@ class DefaultScenario(ABCScenario):
         return None
 
     def make_collective_step(self, actions: Dict[int, int]) -> None:
-        self.__step_count += 1
+        self._step_count += 1
         # Default values for the initial step in the row
         if self._current_step == 0:
             self._action_history.fill(-1)
@@ -179,9 +193,9 @@ class DefaultScenario(ABCScenario):
         Decide if a benchmark run should be executed.
         Benchmark should be executed at the specified step frequency and only when agents are performing the amount of
         valid steps above the specified threshold.
-        :return: True - benchmark should be executed before the reward is calculated.
+        :return: EBenchmark.
         """
-        if self.__benchmark_data_ready:
+        if self._benchmark_data_ready:
             # Don't run benchmark multiple times in a row if the previous results were not processed
             return EBenchmark.NO_BENCHMARK
         if self._current_step == self._num_steps_before_bench - 1:
@@ -203,10 +217,13 @@ class DefaultScenario(ABCScenario):
 
             if a_act_fail[1] == 0:
                 # All actions were correct
-                return EBenchmark.DEFAULT
+                return self._benchmark_mode
 
             # If agents participated (even if did nothing) compare to the threshold
-            return a_act_fail[1] / a_act_fail[0] + self._corr_act_threshold <= 1.
+            if a_act_fail[1] / a_act_fail[0] + self._corr_act_threshold <= 1:
+                return self._benchmark_mode
+            else:
+                return EBenchmark.NO_BENCHMARK
         self._current_step += 1
         return EBenchmark.NO_BENCHMARK
 
@@ -243,86 +260,100 @@ class DefaultScenario(ABCScenario):
 
         self._initialize_stat_values_store_if_needed_read_obs_space(registry_read=registry_read)
         self._write_stats(result)
-        self.__throughput = bench_stats.throughput
-        self.__benchmark_data_ready = True
+        self._throughput = bench_stats.throughput
+        self._benchmark_data_ready = True
 
-    def get_reward(self) -> Dict[int, float]:
-        if self.__benchmark_data_ready:
-            self.__benchmark_data_ready = False
+    def get_reward(self, reg_read: PRegistryReadClient) -> Dict[int, float]:
+        if self._benchmark_data_ready:
+            nodes, sorted_fragments, obs_full = self.get_full_allocation_observation(registry_read=reg_read)
+            num_frags_per_agent = {a.id: 0 for a in self._agents}
+
+            for node in nodes:
+                a_id = node.agent_id
+                n_idx = nodes.index(node)
+                num_frags_per_agent[a_id] = num_frags_per_agent[a_id] + np.sum(obs_full[n_idx])
+
             # Return the reward taking in account the latest benchmark run
-            reward_n = {}  # agent_id : float reward
-            current_throughput = self.__throughput  # latest throughput value, same for all agents
-            nodes = self.get_ordered_nodes()
-            stats = self._retrieve_stats()
-            total_reads = np.sum(stats)
-
-            stat_agent_reads = {}
-            stat_agent_correct = {}
-
-            for agent_idx in range(0, len(self.get_agents())):
-                # Calculate individual reward for each agent based on the throughput and results of actions taken
-                agent_obj = self.get_agents()[agent_idx]
-                agent_node_idx = []
-                for node_idx in range(0, len(nodes)):
-                    if nodes[node_idx].agent_id == agent_obj.id:
-                        agent_node_idx.append(node_idx)
-                # Summarize all reads for the run for all of the nodes mapped to the agent
-                agent_reads = 0
-                for a_node_idx in agent_node_idx:
-                    a_node_stats = stats[a_node_idx]
-                    agent_reads = np.sum(a_node_stats)
-                # Get the summarized result of actions correctness
-                agent_correctness_multiplier = 0.0
-                for a_act_history_step in range(0, self._num_steps_before_bench):
-                    a_act = self._action_history[a_act_history_step][agent_idx]
-                    # Increase the multiplier for each correct action taken, if no correct actions were taken,
-                    # the final agent reward will be 0
-                    if a_act[0] == 1 and a_act[1] == EActionResult.ok.value:
-                        # Only give rewards for the actions that were success and not "do nothing" or "done"
-                        agent_correctness_multiplier += 1.0 / self._num_steps_before_bench
-                # Agent reward
-
-                self._logger.debug("Real reward: current_throughput={};agent_reads={};total_reads={};"
-                                   "agent_correctness_multiplier={}".format(current_throughput,
-                                                                            agent_reads,
-                                                                            total_reads,
-                                                                            agent_correctness_multiplier))
-                if self._dump_stats:
-                    stat_agent_reads[agent_obj.id] = agent_reads
-                    stat_agent_correct[agent_obj.id] = agent_correctness_multiplier
-                reward_n[agent_obj.id] = current_throughput * (agent_reads / total_reads) * agent_correctness_multiplier
-
-            if self._dump_stats:
-                self._dump_scenario_stats_at_bench(step_idx=self.__step_count,
-                                                   agent_read_n=stat_agent_reads,
-                                                   agent_corr_n=stat_agent_correct,
-                                                   throughput=current_throughput,
-                                                   total_reads=total_reads)
-
-            return reward_n
+            self._benchmark_data_ready = False
+            return self._reward_bench(num_frags_per_agent)
         else:
             # In between benchmark runs, return  pseudo-reward that indicates only the correctness of the action
-            step = self._action_history[self._current_step - 1]
-            reward_n = {}
-            i = 0
-            agents = self.get_agents()
-            while i < len(agents):
-                aid = agents[i].id
-                a_step = step[i]
-                if a_step[0] != 1:
+            return self._reward_no_bench()
+
+    def _reward_bench(self, contents_n):
+        """Calculate the reward based on the statistics collected during the latest benchmark run execution"""
+        reward_n = {}  # agent_id : float reward
+        current_throughput = self._throughput  # latest throughput value, same for all agents
+
+        nodes = self.get_ordered_nodes()
+        stats = self._retrieve_stats()
+        total_reads = np.sum(stats)
+        stat_agent_reads = {}
+        stat_agent_correct = {}
+        for agent_idx in range(0, len(self.get_agents())):
+            # Calculate individual reward for each agent based on the throughput and results of actions taken
+            agent_obj = self.get_agents()[agent_idx]
+            agent_node_idx = []
+            for node_idx in range(0, len(nodes)):
+                if nodes[node_idx].agent_id == agent_obj.id:
+                    agent_node_idx.append(node_idx)
+            # Summarize all reads for the run for all of the nodes mapped to the agent
+            agent_reads = 0
+            for a_node_idx in agent_node_idx:
+                a_node_stats = stats[a_node_idx]
+                agent_reads = np.sum(a_node_stats)
+            # Get the summarized result of actions correctness
+            agent_correctness_multiplier = 0.0
+            for a_act_history_step in range(0, self._num_steps_before_bench):
+                a_act = self._action_history[a_act_history_step][agent_idx]
+                # Increase the multiplier for each correct action taken, if no correct actions were taken,
+                # the final agent reward will be 0
+                if a_act[0] == 1 and a_act[1] == EActionResult.ok.value:
+                    # Only give rewards for the actions that were success and not "do nothing" or "done"
+                    agent_correctness_multiplier += 1.0 / self._num_steps_before_bench
+            # Agent reward
+
+            self._logger.debug("Real reward: current_throughput={};agent_reads={};total_reads={};"
+                               "agent_correctness_multiplier={}".format(current_throughput,
+                                                                        agent_reads,
+                                                                        total_reads,
+                                                                        agent_correctness_multiplier))
+            if self._dump_stats:
+                stat_agent_reads[agent_obj.id] = agent_reads
+                stat_agent_correct[agent_obj.id] = agent_correctness_multiplier
+            reward_n[agent_obj.id] = current_throughput * (agent_reads / total_reads) * agent_correctness_multiplier \
+                                     + (current_throughput / contents_n[agent_obj.id] * self._storage_multiplier)
+        if self._dump_stats:
+            self._dump_scenario_stats_at_bench(step_idx=self._step_count,
+                                               agent_read_n=stat_agent_reads,
+                                               agent_corr_n=stat_agent_correct,
+                                               throughput=current_throughput,
+                                               total_reads=total_reads)
+        return reward_n
+
+    def _reward_no_bench(self):
+        """Calculate current reward in between benchmark runs based on the allocation only"""
+        step = self._action_history[self._current_step - 1]
+        reward_n = {}
+        i = 0
+        agents = self.get_agents()
+        while i < len(agents):
+            aid = agents[i].id
+            a_step = step[i]
+            if a_step[0] != 1:
+                reward_n[aid] = 0.
+            else:
+                if a_step[1] == EActionResult.denied.value:
+                    # Negative reward for an incorrect action
+                    reward_n[aid] = -1.
+                elif a_step[1] == EActionResult.did_nothing.value:
+                    # Zero reward for doing nothing
                     reward_n[aid] = 0.
                 else:
-                    if a_step[1] == EActionResult.denied.value:
-                        # Negative reward for an incorrect action
-                        reward_n[aid] = -1.
-                    elif a_step[1] == EActionResult.did_nothing.value:
-                        # Zero reward for doing nothing
-                        reward_n[aid] = 0.
-                    else:
-                        # 1.0 for doing something which is correct
-                        reward_n[aid] = 1.
-                i += 1
-            return reward_n
+                    # 1.0 for doing something which is correct
+                    reward_n[aid] = 1.
+            i += 1
+        return reward_n
 
     def _dump_scenario_stats_at_bench(self,
                                       step_idx: int,
@@ -341,7 +372,7 @@ class DefaultScenario(ABCScenario):
         """
         active_agents = self._agents
         if not self.__file_csv_writer:
-            file_path = Path(self.__mdde_result_folder_root).joinpath('default_scenario.csv')
+            file_path = Path(self._mdde_result_folder_root).joinpath('default_scenario.csv')
             csv_file = open(file_path, 'w', newline='')
             csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             self.__file_csv_writer = (csv_file, csv_writer)
