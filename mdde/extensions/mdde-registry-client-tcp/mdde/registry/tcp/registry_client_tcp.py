@@ -1,6 +1,6 @@
 import socket
 import logging
-from typing import Set, Dict, List, Union
+from typing import Set, Dict, List, Union, AnyStr
 
 from mdde.registry.protocol import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient
 from mdde.registry.container import RegistryResponse, BenchmarkStatus, BenchmarkResult
@@ -201,6 +201,7 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
                 throughput: float = -1.0
                 error: Union[None, str] = None
                 nodes: Union[None, List[Dict]] = None
+                info: Union[None, Dict[str, AnyStr]] = None
                 rr_error = r_result.get('error')
                 if rr_error:
                     error = rr_error
@@ -210,7 +211,10 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
                 rr_nodes = r_result.get('nodes')
                 if rr_nodes != None:
                     nodes = rr_nodes
-                result = BenchmarkResult(throughput, error, nodes)
+                rr_info = r_result.get('info')
+                if rr_info != None:
+                    nodes = rr_info
+                result = BenchmarkResult(throughput, error, nodes, info)
             benchmark_get_result = BenchmarkStatus(stage, run_id, failed, completed, result)
         return RegistryResponse[BenchmarkStatus](benchmark_get_result,
                                                  response[RegistryResponseJson.R_ERR],
