@@ -17,13 +17,8 @@ from mdde.registry.tcp import RegistryClientTCP
 logging.basicConfig(level=logging.DEBUG)
 
 
-class MDDEGreedyAgents:
-    """Each node contains each fragment. Measure the performance.
-
-    Suitable for the Default Scenario with Single Node Default Agents.
-
-    Note: This code is relying on using protected methods and properties. It's not an example of RL, but a mere
-    validation core based on predefined (naive) heuristics."""
+class MDDEStarvingAgents:
+    """Single agent contains all of the fragments, rest are empty."""
 
     # Note: in this sample Readability > Efficiency
 
@@ -155,39 +150,59 @@ class MDDEGreedyAgents:
 
     def select_actions(self, allocation, node_id_actions, nodes, sorted_fragments):
         act_n = {}
-        for idx, node in enumerate(nodes):
-            node_allocation = allocation[idx]
-            not_allocated = np.where(node_allocation == 0)[0]
-            if len(not_allocated) == 0:
-                act_n[idx] = 0  # do-nothing
-                continue  # this node already has all of the fragments
+        satiated_node = nodes[-1]  # last node is the one having all of the fragments
+        satiated_node_allocation = allocation[nodes.index(satiated_node)]
+        for idx, node in enumerate(nodes):  # greedy node
+            if satiated_node is node:
+                not_allocated = np.where(satiated_node_allocation == 0)[0]
+                if len(not_allocated) == 0:
+                    act_n[idx] = 0  # do-nothing
+                    continue  # this node already has all of the fragments
 
-            first_not_allocated = not_allocated[0]
-            # find the node that has the fragment
-            source_node_idx = None
-            for f_idx, foreign_node_allocation in enumerate(allocation):
-                if foreign_node_allocation[first_not_allocated] == 1:
-                    source_node_idx = f_idx
+                first_not_allocated = not_allocated[0]
+                # find the node that has the fragment
+                source_node_idx = None
+                for f_idx, foreign_node_allocation in enumerate(allocation):
+                    if foreign_node_allocation[first_not_allocated] == 1:
+                        source_node_idx = f_idx
 
-            not_allocated_fragment = sorted_fragments[first_not_allocated]
-            if source_node_idx is None:
-                raise RuntimeError("Failed to locate a fragment")
+                not_allocated_fragment = sorted_fragments[first_not_allocated]
+                if source_node_idx is None:
+                    raise RuntimeError("Failed to locate a fragment")
 
-            # get the corresponding copy action
-            c_actions = node_id_actions[node.node_id]
-            copy_action_idx = None
-            for own_act_idx, own_action in enumerate(c_actions):
-                if own_action.node_source_id == nodes[source_node_idx].node_id \
-                        and own_action.node_destination_id == node.node_id \
-                        and own_action.fragment_id == not_allocated_fragment \
-                        and own_action.is_del is False:
-                    copy_action_idx = own_act_idx
-                    break
+                # get the corresponding copy action
+                c_actions = node_id_actions[node.node_id]
+                copy_action_idx = None
+                for own_act_idx, own_action in enumerate(c_actions):
+                    if own_action.node_source_id == nodes[source_node_idx].node_id \
+                            and own_action.node_destination_id == node.node_id \
+                            and own_action.fragment_id == not_allocated_fragment \
+                            and own_action.is_del is False:
+                        copy_action_idx = own_act_idx
+                        break
 
-            if copy_action_idx is None:
-                raise RuntimeError("Failed to locate an appropriate copy action")
+                if copy_action_idx is None:
+                    raise RuntimeError("Failed to locate an appropriate copy action")
 
-            act_n[idx] = copy_action_idx
+                act_n[idx] = copy_action_idx
+            else:  # starving nodes
+                # Remove fragment as soon as greedy node has it
+                starving_node_allocation = allocation[idx]
+                allocated_fragments = np.where(starving_node_allocation == 1)
+                del_action_idx = None
+                c_actions = node_id_actions[node.node_id]
+                for allocated_fragment in allocated_fragments[0]:
+                    if satiated_node_allocation[allocated_fragment] == 1:
+                        allocated_fragment = sorted_fragments[allocated_fragment]
+                        for own_act_idx, own_action in enumerate(c_actions):
+                            if own_action.is_del is True and own_action.fragment_id == allocated_fragment:
+                                del_action_idx = own_act_idx
+                                break
+
+                if del_action_idx is None:
+                    act_n[idx] = 0  # do-nothing
+                else:
+                    act_n[idx] = del_action_idx
         return act_n
 
 
@@ -230,14 +245,14 @@ if __name__ == '__main__':
 
     config = parser.parse_args()
 
-    MDDEGreedyAgents.run_result_dir = config.result_dir
-    MDDEGreedyAgents.ray_temp_dir = config.temp_dir
+    MDDEStarvingAgents.run_result_dir = config.result_dir
+    MDDEStarvingAgents.ray_temp_dir = config.temp_dir
 
-    MDDEGreedyAgents.mdde_registry_host = config.reg_host
-    MDDEGreedyAgents.mdde_registry_port = config.reg_port
-    MDDEGreedyAgents.mdde_registry_config = config.config
+    MDDEStarvingAgents.mdde_registry_host = config.reg_host
+    MDDEStarvingAgents.mdde_registry_port = config.reg_port
+    MDDEStarvingAgents.mdde_registry_config = config.config
 
-    MDDEGreedyAgents.env_temp_dir = config.env_temp_dir
+    MDDEStarvingAgents.env_temp_dir = config.env_temp_dir
 
-    runner = MDDEGreedyAgents()
+    runner = MDDEStarvingAgents()
     runner.run(config)
