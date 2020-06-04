@@ -213,7 +213,7 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
                     nodes = rr_nodes
                 rr_info = r_result.get('info')
                 if rr_info != None:
-                    nodes = rr_info
+                    info = rr_info
                 result = BenchmarkResult(throughput, error, nodes, info)
             benchmark_get_result = BenchmarkStatus(stage, run_id, failed, completed, result)
         return RegistryResponse[BenchmarkStatus](benchmark_get_result,
