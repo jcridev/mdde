@@ -40,7 +40,7 @@ class MDDEGreedyAgents:
     """Path to directory for temporary files created by the scenario or agents."""
 
     NUM_FRAGMENTS = 20
-    WORKLOAD = EDefaultYCSBWorkload.READ_10000_100000_LATEST
+    WORKLOAD = EDefaultYCSBWorkload.READ_10000_100000_LATEST_LARGE
 
     def run(self, config):
         # Result paths
@@ -144,7 +144,7 @@ class MDDEGreedyAgents:
                 break
             obs_s, reward, done, act_l_s = env.step(act_n)
 
-            throughput_history.append(env._scenario._throughput)
+            throughput_history.append(env._scenario._throughput)  # Addressing protected property of the Default scenario
 
             for idx_r, agent_reward in reward.items():
                 logging.info("Reward at step {} for agent {}: {}".format(step, idx_r, agent_reward))
