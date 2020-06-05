@@ -35,7 +35,7 @@ class MDDEStarvingAgents:
     """Path to directory for temporary files created by the scenario or agents."""
 
     NUM_FRAGMENTS = 20
-    WORKLOAD = EDefaultYCSBWorkload.READ_10000_100000_LATEST
+    WORKLOAD = EDefaultYCSBWorkload.READ_10000_100000_UNIFORM_LARGE
 
     def run(self, config):
         # Result paths
