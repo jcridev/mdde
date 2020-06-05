@@ -132,6 +132,7 @@ class MDDEGreedyAgents:
                            env._scenario.get_agents()}
         """Data node id as a key. Actions of the agent managing the node as values"""
         step = 0
+        throughput_history = []
         while True:
             # Get full initial allocation
             nodes, sorted_fragments, allocation = env._scenario.get_full_allocation_observation(
@@ -143,12 +144,15 @@ class MDDEGreedyAgents:
                 break
             obs_s, reward, done, act_l_s = env.step(act_n)
 
+            throughput_history.append(env._scenario._throughput)
+
             for idx_r, agent_reward in reward.items():
                 logging.info("Reward at step {} for agent {}: {}".format(step, idx_r, agent_reward))
             logging.info("Sum of rewards: %d", sum(reward.values()))
             step += 1
 
         logging.debug("Done after %d steps", step)
+        print(throughput_history)
         # Get described actions
         agents = env._scenario.get_agents()
         node_agents = {agent.data_node_ids[0]: agent for agent in agents}
