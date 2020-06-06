@@ -40,7 +40,8 @@ public enum  EStateControlCommand implements ICommand {
      */
     COUNTERFEIT_BENCHMARK("RUNCNTFTBENCH", new ArrayList<ExpectedCommandArgument>(){
         {
-            add(ARG_BENCH_COUNTERFEIT_ADJUSTER);
+            add(ARG_BENCH_COUNTERFEIT_ADJUSTER_START);
+            add(ARG_BENCH_COUNTERFEIT_ADJUSTER_END);
         }
     }),
     /**

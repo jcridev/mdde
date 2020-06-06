@@ -229,8 +229,8 @@ public final class RegistryStateCommandHandler {
      * Retrieve the status of the estimate benchmark based on the latest executed real benchmark run.
      * @return Estimate benchmark status. Empty if there was no benchmark run executed prior to this call.
      */
-    public synchronized BenchmarkStatus retrieveCounterfeitBenchmarkStatus(double adjustmentFactor){
-        return _benchmarkRunner.getCounterfeitStatus(adjustmentFactor);
+    public synchronized BenchmarkStatus retrieveCounterfeitBenchmarkStatus(double adjustRangeStart, double adjustRangeEnd){
+        return _benchmarkRunner.getCounterfeitStatus(adjustRangeStart, adjustRangeEnd);
     }
 
     /**
