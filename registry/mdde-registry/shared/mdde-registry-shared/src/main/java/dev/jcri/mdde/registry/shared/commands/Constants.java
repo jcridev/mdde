@@ -36,5 +36,6 @@ public final class Constants {
     public static final String ResultError = "error";
     public static final String ResultErrorCode = "errcode";
 
-    public static final String ArgBenchmarkCounterfeitMagnitude = "bcmag";
+    public static final String ArgBenchmarkCounterfeitMagnitudeStart = "bcmagst";
+    public static final String ArgBenchmarkCounterfeitMagnitudeEnd = "bcmagen";
 }

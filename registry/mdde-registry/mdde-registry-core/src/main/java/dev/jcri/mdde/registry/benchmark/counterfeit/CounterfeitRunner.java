@@ -37,10 +37,15 @@ public class CounterfeitRunner {
         return _currentSettings != null;
     }
 
-    public BenchmarkRunResult estimateBenchmarkRun(double adjustmentFactor){
+    public BenchmarkRunResult estimateBenchmarkRun(double adjustRangeStart, double adjustRangeEnd){
         if(this._currentSettings == null){
             throw new IllegalStateException("Counterfeit benchmark runner was not initialized with the benchmark " +
                     "parameters.");
+        }
+
+        if(adjustRangeStart > adjustRangeEnd || adjustRangeEnd < 0 || adjustRangeStart < 0){
+            throw new IllegalArgumentException("Adjustment range start must be > 0, " +
+                    "adjustment range end must be > adjustment range end.");
         }
 
         // TODO: Refactor (inefficient runner)
@@ -154,25 +159,27 @@ public class CounterfeitRunner {
         double baselineThroughput = this._currentSettings.getBaselineThroughput();
         double maxDisbalance = getParticipationTotalDisbalance(currentParticipation.length);
 
-        double valueDiminisher = adjustmentFactor;
+        double valueDiminisher = Math.abs(baselineDisbalance - currentDisbalance)
+                * ((adjustRangeEnd - adjustRangeStart) / maxDisbalance) + adjustRangeStart;
 
+        // Estimate throughput
         double estimatedThroughput = baselineThroughput
                 + (baselineThroughput
                     * (Math.abs(baselineDisbalance - currentDisbalance) / maxDisbalance)
-                        *  valueDiminisher  // Make changes less drastic
+                        *  valueDiminisher
                     * changeDirection);
 
         // Get theoretical highest
         double estimatedBestThroughput = baselineThroughput
                 + (baselineThroughput
                     * (Math.abs(baselineDisbalance - 0) / maxDisbalance)
-                        * valueDiminisher  // Make changes less drastic
+                        * valueDiminisher
                     * 1);
         // Get theoretical lowest
         double estimatedWorstThroughput = baselineThroughput
                 + (baselineThroughput
                     * (Math.abs(baselineDisbalance - maxDisbalance) / maxDisbalance)
-                        * valueDiminisher  // Make changes less drastic
+                        * valueDiminisher
                     * baselineDisbalance >= maxDisbalance ? 1 : -1);
 
         // Fill out the result
