@@ -27,6 +27,7 @@ class ABCScenario(ABC):
 
         self._nodes_order: Union[None, Tuple[NodeAgentMapping, ...]] = None
         self._actual_fragments: Union[None, Tuple[str, ...]] = None
+        """Sorted list of the fragments existing in the environment after its initialization."""
 
         self._experiment_id: str = None
         """Experiment ID to which an instance of the scenario is attached to. Provided by the Environment. Guaranteed

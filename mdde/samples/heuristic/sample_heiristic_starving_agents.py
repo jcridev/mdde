@@ -14,10 +14,12 @@ from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.registry.tcp import RegistryClientTCP
 
+from samples.heuristic import ABCMDDEHeuristicSample
+
 logging.basicConfig(level=logging.DEBUG)
 
 
-class MDDEStarvingAgents:
+class MDDEStarvingAgents(ABCMDDEHeuristicSample):
     """Single agent contains all of the fragments, rest are empty."""
 
     # Note: in this sample Readability > Efficiency
@@ -35,9 +37,8 @@ class MDDEStarvingAgents:
     """Path to directory for temporary files created by the scenario or agents."""
 
     NUM_FRAGMENTS = 20
-    WORKLOAD = EDefaultYCSBWorkload.READ_10000_100000_UNIFORM_LARGE
 
-    def run(self, config):
+    def run(self, config, workload):
         # Result paths
         result_dir_path_root = Path(self.run_result_dir).resolve()
 
@@ -98,8 +99,8 @@ class MDDEStarvingAgents:
             scenario = DefaultScenario(num_fragments=self.NUM_FRAGMENTS,
                                        num_steps_before_bench=config.bench_psteps,
                                        agents=agents,
-                                       data_gen_workload=self.WORKLOAD,
-                                       bench_workload=self.WORKLOAD,
+                                       data_gen_workload=workload,
+                                       bench_workload=workload,
                                        benchmark_clients=config.bench_clients,
                                        write_stats=write_stats)  # Number of YCSB threads
 
@@ -139,11 +140,12 @@ class MDDEStarvingAgents:
                 break
             obs_s, reward, done, act_l_s = env.step(act_n)
 
-            throughput_history.append(env._scenario._throughput)  # Addressing protected property of the Default scenario
-
             for idx_r, agent_reward in reward.items():
                 logging.info("Reward at step {} for agent {}: {}".format(step, idx_r, agent_reward))
             logging.info("Sum of rewards: %d", sum(reward.values()))
+
+            self.tune_estimations(step_num=step, env=env)
+
             step += 1
 
         logging.debug("Done after %d steps", step)
@@ -240,12 +242,16 @@ if __name__ == '__main__':
     parser.add_argument('--bench-psteps',
                         help='Frequency of benchmark execution (execute every N steps).',
                         type=int,
-                        default=2)
+                        default=30)
 
     parser.add_argument('--bench-clients',
                         help='Number of benchmark clients.',
                         type=int,
                         default=50)
+
+    parser.add_argument('--light',
+                        help='Execute corresponding "light" workload.',
+                        action='store_true')
 
     config = parser.parse_args()
 
@@ -258,5 +264,9 @@ if __name__ == '__main__':
 
     MDDEStarvingAgents.env_temp_dir = config.env_temp_dir
 
+    workload = EDefaultYCSBWorkload.READ_10000_100000_UNIFORM_LARGE
+    if config.light:
+        workload = EDefaultYCSBWorkload.READ_10000_100000_UNIFORM
+
     runner = MDDEStarvingAgents()
-    runner.run(config)
+    runner.run(config, workload)

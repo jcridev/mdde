@@ -218,11 +218,19 @@ public final class RegistryStateCommandHandler {
     }
 
     /**
+     * Initialize counterfeit benchmark based on the latest YCSB benchamark run results.
+     * @return True - succesefully initialized
+     */
+    public synchronized boolean initializeCounterfeitBenchmark(){
+        return _benchmarkRunner.initCounterfeitBenchmark();
+    }
+
+    /**
      * Retrieve the status of the estimate benchmark based on the latest executed real benchmark run.
      * @return Estimate benchmark status. Empty if there was no benchmark run executed prior to this call.
      */
-    public synchronized BenchmarkStatus retrieveCounterfeitBenchmarkStatus(){
-        return _benchmarkRunner.getCounterfeitStatus();
+    public synchronized BenchmarkStatus retrieveCounterfeitBenchmarkStatus(double adjustmentFactor){
+        return _benchmarkRunner.getCounterfeitStatus(adjustmentFactor);
     }
 
     /**

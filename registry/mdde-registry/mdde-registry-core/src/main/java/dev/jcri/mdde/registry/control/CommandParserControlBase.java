@@ -56,8 +56,10 @@ public abstract class CommandParserControlBase<TOut, TArgs>
                     return _serializer.serialize(processLoadSnapshot(arguments));
                 case GET_BENCHMARK:
                     return _serializer.serialize(processGetBenchmarkState());
+                case COUNTERFEIT_INITIALIZE:
+                    return _serializer.serialize(processInitCounterfeitBenchmark());
                 case COUNTERFEIT_BENCHMARK:
-                    return _serializer.serialize(processGetCounterfeitBenchmark());
+                    return _serializer.serialize(processGetCounterfeitBenchmark(arguments));
                 default:
                     throw new UnknownRegistryCommandExceptions(command.toString());
             }
@@ -92,5 +94,7 @@ public abstract class CommandParserControlBase<TOut, TArgs>
 
     protected abstract BenchmarkStatus processGetBenchmarkState();
 
-    protected abstract BenchmarkStatus processGetCounterfeitBenchmark();
+    protected abstract boolean processInitCounterfeitBenchmark();
+
+    protected abstract BenchmarkStatus processGetCounterfeitBenchmark(TArgs arguments) throws CommandException;
 }
