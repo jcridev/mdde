@@ -113,7 +113,18 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
     }
 
     @Override
-    protected BenchmarkStatus processGetCounterfeitBenchmark() {
-        return _stateCommandHandler.retrieveCounterfeitBenchmarkStatus();
+    protected boolean processInitCounterfeitBenchmark() {
+        return _stateCommandHandler.initializeCounterfeitBenchmark();
+    }
+
+    @Override
+    protected BenchmarkStatus processGetCounterfeitBenchmark(List<Object> arguments) throws CommandException {
+        final EStateControlCommand thisCommand = EStateControlCommand.COUNTERFEIT_BENCHMARK;
+
+        CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
+
+        Double adjustmentFactor = CommandParserHelper.sharedInstance()
+                .getPositionalArgumentAsDouble(arguments, thisCommand, ARG_BENCH_COUNTERFEIT_ADJUSTER);
+        return _stateCommandHandler.retrieveCounterfeitBenchmarkStatus(adjustmentFactor);
     }
 }

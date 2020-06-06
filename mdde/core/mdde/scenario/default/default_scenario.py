@@ -275,12 +275,12 @@ class DefaultScenario(ABCScenario):
 
             # Return the reward taking in account the latest benchmark run
             self._benchmark_data_ready = False
-            return self._reward_bench(num_frags_per_agent)
+            return self._reward_bench(num_frags_per_agent, len(sorted_fragments))
         else:
             # In between benchmark runs, return  pseudo-reward that indicates only the correctness of the action
             return self._reward_no_bench()
 
-    def _reward_bench(self, contents_n):
+    def _reward_bench(self, contents_n, num_fragments):
         """Calculate the reward based on the statistics collected during the latest benchmark run execution"""
         reward_n = {}  # agent_id : float reward
         current_throughput = self._throughput  # latest throughput value, same for all agents
@@ -322,7 +322,8 @@ class DefaultScenario(ABCScenario):
                 stat_agent_reads[agent_obj.id] = agent_reads
                 stat_agent_correct[agent_obj.id] = agent_correctness_multiplier
             reward_n[agent_obj.id] = current_throughput * (agent_reads / total_reads) * agent_correctness_multiplier \
-                                     + (current_throughput / contents_n[agent_obj.id] * self._storage_multiplier)
+                                     + (current_throughput * (contents_n[agent_obj.id] / num_fragments)
+                                        * self._storage_multiplier)
         if self._dump_stats:
             self._dump_scenario_stats_at_bench(step_idx=self._step_count,
                                                agent_read_n=stat_agent_reads,

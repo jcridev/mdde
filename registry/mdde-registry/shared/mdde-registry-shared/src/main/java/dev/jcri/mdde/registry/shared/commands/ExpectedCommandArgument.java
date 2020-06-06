@@ -35,7 +35,10 @@ public enum ExpectedCommandArgument{
     ARG_DEFAULT_SNAPSHOT_FLAG("Snapshot ID assigned as default",
             Constants.ArgSnapshotDefaultField, ArgumentType.BOOLEAN),
     ARG_SNAPSHOT_ID("Snapshot ID",
-            Constants.ArgSnapshotIdField, ArgumentType.STRING);
+            Constants.ArgSnapshotIdField, ArgumentType.STRING),
+
+    ARG_BENCH_COUNTERFEIT_ADJUSTER("Adjustment of magnitude for the estimated benchmark",
+            Constants.ArgBenchmarkCounterfeitMagnitude, ArgumentType.DOUBLE);
 
     private final String _title;
     private final ArgumentType _argumentType;
@@ -66,6 +69,7 @@ public enum ExpectedCommandArgument{
     public enum ArgumentType{
         STRING("String"),
         INTEGER("Integer"),
+        DOUBLE("Double"),
         SET_STRINGS("Set of strings"),
         BOOLEAN("Boolean");
 

@@ -1,6 +1,6 @@
 import socket
 import logging
-from typing import Set, Dict, List, Union
+from typing import Set, Dict, List, Union, AnyStr
 
 from mdde.registry.protocol import PRegistryWriteClient, PRegistryControlClient, PRegistryReadClient
 from mdde.registry.container import RegistryResponse, BenchmarkStatus, BenchmarkResult
@@ -166,8 +166,12 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
         response = self._serialize_and_run_command('BENCHSTATE')
         return self.__process_benchmark_response(response)
 
-    def ctrl_get_benchmark_counterfeit(self) -> RegistryResponse[BenchmarkStatus]:
-        response = self._serialize_and_run_command('RUNCNTFTBENCH')
+    def ctrl_init_benchmark_counterfeit(self) -> RegistryResponse[bool]:
+        response = self._serialize_and_run_command('INITCNTFTBENCH')
+        return RegistryResponseJson[bool](response)
+
+    def ctrl_get_benchmark_counterfeit(self, magnitude_adjuster: float) -> RegistryResponse[BenchmarkStatus]:
+        response = self._serialize_and_run_command('RUNCNTFTBENCH', bcmag=magnitude_adjuster)
         return self.__process_benchmark_response(response)
 
     def __process_benchmark_response(self, response) -> RegistryResponse[BenchmarkStatus]:
@@ -201,6 +205,7 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
                 throughput: float = -1.0
                 error: Union[None, str] = None
                 nodes: Union[None, List[Dict]] = None
+                info: Union[None, Dict[str, AnyStr]] = None
                 rr_error = r_result.get('error')
                 if rr_error:
                     error = rr_error
@@ -210,7 +215,10 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
                 rr_nodes = r_result.get('nodes')
                 if rr_nodes != None:
                     nodes = rr_nodes
-                result = BenchmarkResult(throughput, error, nodes)
+                rr_info = r_result.get('info')
+                if rr_info != None:
+                    info = rr_info
+                result = BenchmarkResult(throughput, error, nodes, info)
             benchmark_get_result = BenchmarkStatus(stage, run_id, failed, completed, result)
         return RegistryResponse[BenchmarkStatus](benchmark_get_result,
                                                  response[RegistryResponseJson.R_ERR],

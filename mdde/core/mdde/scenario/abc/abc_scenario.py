@@ -27,6 +27,7 @@ class ABCScenario(ABC):
 
         self._nodes_order: Union[None, Tuple[NodeAgentMapping, ...]] = None
         self._actual_fragments: Union[None, Tuple[str, ...]] = None
+        """Sorted list of the fragments existing in the environment after its initialization."""
 
         self._experiment_id: str = None
         """Experiment ID to which an instance of the scenario is attached to. Provided by the Environment. Guaranteed
@@ -284,7 +285,8 @@ class ABCScenario(ABC):
                 obs_node_frag_id = obs_frags.get(obs_node_frag)
                 obs_node_frag_id_x = sorted_fragments.index(obs_node_frag_id)
                 n_exists_pos.append((n_y, obs_node_frag_id_x))
-            rows, cols = zip(*n_exists_pos)
-            obs_full[rows, cols] = n_exist_val
+            if len(n_exists_pos) > 0:
+                rows, cols = zip(*n_exists_pos)
+                obs_full[rows, cols] = n_exist_val
 
         return nodes, sorted_fragments, obs_full

@@ -88,6 +88,9 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
                 resultNodes.put(nodeFragments.getKey(), nodeIdMappingKey++);
                 List<Integer> nodeFragmentLocalKeyMap = new ArrayList<>();
                 var fragments = nodeFragments.getValue().get();
+
+                resultNodesFragments.put(currentNodeIde, nodeFragmentLocalKeyMap);
+
                 if(fragments.size() == 0){
                     continue;
                 }
@@ -99,7 +102,7 @@ public class ReadCommandHandlerRedis extends ReadCommandHandler {
                     }
                     nodeFragmentLocalKeyMap.add(localId);
                 }
-                resultNodesFragments.put(currentNodeIde, nodeFragmentLocalKeyMap);
+
                 // <Fragment local id, Meta values>
                 HashMap<Integer, List<String>> fragmentMeta = new HashMap<>();
                 resultLocalFragmentTagValues.put(currentNodeIde, fragmentMeta);

@@ -52,6 +52,12 @@ public abstract class JsonCommandParserBase {
                     var content = mapper.convertValue(jsonNode, Integer.class);
                     result.add(content);
                 }
+                else if(arg.getArgumentType() == ExpectedCommandArgument.ArgumentType.DOUBLE){
+                    // Double value
+                    var jsonNode = parent.get(arg.getTag());
+                    var content = mapper.convertValue(jsonNode, Double.class);
+                    result.add(content);
+                }
             }
         } catch (JsonProcessingException e) {
             throw new MalformedCommandStatementException("Failed to parse arguments", e);

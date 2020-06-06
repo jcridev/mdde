@@ -32,9 +32,17 @@ public enum  EStateControlCommand implements ICommand {
      */
     LOAD_DATA("BENCHLOAD", new ArrayList<ExpectedCommandArgument>(){{add(ARG_WORKLOAD_ID); }}),
     /**
-     * Counterfeit benchmark run.
+     * Counterfeit benchmark: initialize based on the latest benchmark execution stats.
      */
-    COUNTERFEIT_BENCHMARK("RUNCNTFTBENCH"),
+    COUNTERFEIT_INITIALIZE("INITCNTFTBENCH"),
+    /**
+     * Counterfeit benchmark: run.
+     */
+    COUNTERFEIT_BENCHMARK("RUNCNTFTBENCH", new ArrayList<ExpectedCommandArgument>(){
+        {
+            add(ARG_BENCH_COUNTERFEIT_ADJUSTER);
+        }
+    }),
     /**
      * Set Registry into the data shuffle mode.
      * Benchmark interface is disabled.

@@ -37,7 +37,7 @@ public class CounterfeitRunner {
         return _currentSettings != null;
     }
 
-    public BenchmarkRunResult estimateBenchmarkRun(){
+    public BenchmarkRunResult estimateBenchmarkRun(double adjustmentFactor){
         if(this._currentSettings == null){
             throw new IllegalStateException("Counterfeit benchmark runner was not initialized with the benchmark " +
                     "parameters.");
@@ -154,14 +154,40 @@ public class CounterfeitRunner {
         double baselineThroughput = this._currentSettings.getBaselineThroughput();
         double maxDisbalance = getParticipationTotalDisbalance(currentParticipation.length);
 
+        double valueDiminisher = adjustmentFactor;
+
         double estimatedThroughput = baselineThroughput
                 + (baselineThroughput
                     * (Math.abs(baselineDisbalance - currentDisbalance) / maxDisbalance)
-                        / ((double) currentParticipation.length / 2)  // Make changes less drastic
+                        *  valueDiminisher  // Make changes less drastic
                     * changeDirection);
+
+        // Get theoretical highest
+        double estimatedBestThroughput = baselineThroughput
+                + (baselineThroughput
+                    * (Math.abs(baselineDisbalance - 0) / maxDisbalance)
+                        * valueDiminisher  // Make changes less drastic
+                    * 1);
+        // Get theoretical lowest
+        double estimatedWorstThroughput = baselineThroughput
+                + (baselineThroughput
+                    * (Math.abs(baselineDisbalance - maxDisbalance) / maxDisbalance)
+                        * valueDiminisher  // Make changes less drastic
+                    * baselineDisbalance >= maxDisbalance ? 1 : -1);
 
         // Fill out the result
         var result = new BenchmarkRunResult();
+
+        var infoDict = result.getInfo();
+        if (infoDict == null){
+            infoDict = new HashMap<>();
+            result.setInfo(infoDict);
+        }
+        // Add maximum throughput estimation
+        infoDict.put("max_e_t", String.valueOf(estimatedBestThroughput));
+        // Add worst throughput estimation
+        infoDict.put("min_e_t", String.valueOf(estimatedWorstThroughput));
+
         result.setThroughput(estimatedThroughput);
         result.setNodes(nodeStats);
         return result;

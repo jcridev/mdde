@@ -109,6 +109,21 @@ public class CommandParserHelper {
                                                 getPositionalArgumentError(command, argument, argIndex));
     }
 
+    public Double getPositionalArgumentAsDouble(List<Object> arguments,
+                                                  ICommand command,
+                                                  ExpectedCommandArgument argument)
+            throws CommandException {
+        var argIndex = command.getExpectedArguments().indexOf(argument);
+        if(argIndex < 0){
+            throw new IllegalCommandArgumentException(getIllegalArgumentError(command, argument));
+        }
+        if(arguments.size() -1 < argIndex){
+            throw new MalformedCommandStatementException(getPositionalArgumentError(command, argument, argIndex));
+        }
+        return (Double) Objects.requireNonNull(arguments.get(argIndex),
+                getPositionalArgumentError(command, argument, argIndex));
+    }
+
     /**
      * Read argument as a Boolean value from the position as specified in the corresponding ICommands
      * @param arguments List of arguments
