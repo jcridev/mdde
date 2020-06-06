@@ -170,8 +170,10 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
         response = self._serialize_and_run_command('INITCNTFTBENCH')
         return RegistryResponseJson[bool](response)
 
-    def ctrl_get_benchmark_counterfeit(self, magnitude_adjuster: float) -> RegistryResponse[BenchmarkStatus]:
-        response = self._serialize_and_run_command('RUNCNTFTBENCH', bcmag=magnitude_adjuster)
+    def ctrl_get_benchmark_counterfeit(self, magnitude_range_start: float, magnitude_range_end: float) -> RegistryResponse[BenchmarkStatus]:
+        response = self._serialize_and_run_command('RUNCNTFTBENCH',
+                                                   bcmagst=magnitude_range_start,
+                                                   bcmagen=magnitude_range_end)
         return self.__process_benchmark_response(response)
 
     def __process_benchmark_response(self, response) -> RegistryResponse[BenchmarkStatus]:

@@ -37,8 +37,10 @@ public enum ExpectedCommandArgument{
     ARG_SNAPSHOT_ID("Snapshot ID",
             Constants.ArgSnapshotIdField, ArgumentType.STRING),
 
-    ARG_BENCH_COUNTERFEIT_ADJUSTER("Adjustment of magnitude for the estimated benchmark",
-            Constants.ArgBenchmarkCounterfeitMagnitude, ArgumentType.DOUBLE);
+    ARG_BENCH_COUNTERFEIT_ADJUSTER_START("Adjustment range start of magnitude for the estimated benchmark",
+            Constants.ArgBenchmarkCounterfeitMagnitudeStart, ArgumentType.DOUBLE),
+    ARG_BENCH_COUNTERFEIT_ADJUSTER_END("Adjustment range end of magnitude for the estimated benchmark",
+            Constants.ArgBenchmarkCounterfeitMagnitudeEnd, ArgumentType.DOUBLE);
 
     private final String _title;
     private final ArgumentType _argumentType;

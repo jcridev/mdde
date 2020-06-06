@@ -91,7 +91,9 @@ class Environment:
         if self._write_stats and not self.__mdde_result_folder_root:
             raise AssertionError("Stats can't be writen, results folder is not configured.")
 
-        self._benchmark_estimation_magnitude: float = 1.0
+        self._benchmark_estimation_magnitude_start: float = 1.0
+        """Magnitude of changes in estimated throughput according to the estimated benchmark allocation."""
+        self._benchmark_estimation_magnitude_end: float = 1.0
         """Magnitude of changes in estimated throughput according to the estimated benchmark allocation."""
 
         self.__file_csv_writer = None
@@ -463,20 +465,30 @@ class Environment:
             raise RuntimeError(bench_status.error)
         return bench_status.result
 
-    def _bench_request_stats_counterfeit(self, magnitude_override: Union[None, float] = None) -> Union[None, BenchmarkStatus]:
+    def _bench_request_stats_counterfeit(self,
+                                         magnitude_start_override: Union[None, float] = None,
+                                         magnitude_end_override: Union[None, float] = None) -> Union[None, BenchmarkStatus]:
         """
         Request reads and stats estimation from the registry.
 
-        :param magnitude_override: Override value for the adjustment of the magnitude of changes in allocation for
-        throughput. If None, default value self.bench_estimation_magnitude is used.
+        :param magnitude_start_override: Override value for the adjustment range start of the magnitude of changes in
+        allocation for throughput. If None, default value self.bench_estimation_magnitude_start is used.
+        :param magnitude_end_override: Override value for the adjustment range end of the magnitude of changes in
+        allocation for throughput. If None, default value self.bench_estimation_magnitude_end is used.
         :return: BenchmarkStatus.
         """
-        if magnitude_override is not None:
-            magnitude_adjustment = magnitude_override
+        if magnitude_start_override is not None:
+            magnitude_adjustment_start = magnitude_start_override
         else:
-            magnitude_adjustment = self.bench_estimation_magnitude
+            magnitude_adjustment_start = self.bench_estimation_magnitude_start
 
-        bench_status_response = self._registry_ctrl.ctrl_get_benchmark_counterfeit(magnitude_adjustment)
+        if magnitude_end_override is not None:
+            magnitude_adjustment_end = magnitude_end_override
+        else:
+            magnitude_adjustment_end = self.bench_estimation_magnitude_end
+
+        bench_status_response = self._registry_ctrl.ctrl_get_benchmark_counterfeit(magnitude_adjustment_start,
+                                                                                   magnitude_adjustment_end)
         if bench_status_response.failed:
             raise RuntimeError(bench_status_response.error)
         return bench_status_response.result
@@ -522,11 +534,21 @@ class Environment:
                 raise RuntimeError(set_bench_result.error)
 
     @property
-    def bench_estimation_magnitude(self) -> float:
-        """Magnitude of changes in estimated throughput according to the estimated benchmark allocation."""
-        return self._benchmark_estimation_magnitude
+    def bench_estimation_magnitude_start(self) -> float:
+        """Magnitude of changes range start in estimated throughput according to the estimated benchmark allocation."""
+        return self._benchmark_estimation_magnitude_start
 
-    @bench_estimation_magnitude.setter
-    def bench_estimation_magnitude(self, value: float) -> None:
-        """Magnitude of changes in estimated throughput according to the estimated benchmark allocation."""
-        self._benchmark_estimation_magnitude = value
+    @bench_estimation_magnitude_start.setter
+    def bench_estimation_magnitude_start(self, value: float) -> None:
+        """Magnitude of changes range start in estimated throughput according to the estimated benchmark allocation."""
+        self._benchmark_estimation_magnitude_start = value
+
+    @property
+    def bench_estimation_magnitude_end(self) -> float:
+        """Magnitude of changes range end in estimated throughput according to the estimated benchmark allocation."""
+        return self._benchmark_estimation_magnitude_end
+
+    @bench_estimation_magnitude_end.setter
+    def bench_estimation_magnitude_end(self, value: float) -> None:
+        """Magnitude of changes range end in estimated throughput according to the estimated benchmark allocation."""
+        self._benchmark_estimation_magnitude_end = value

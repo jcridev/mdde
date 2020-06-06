@@ -52,10 +52,11 @@ class PRegistryControlClient(Protocol):
         raise NotImplementedError()
 
     @abstractmethod
-    def ctrl_get_benchmark_counterfeit(self, magnitude_adjuster: float) -> RegistryResponse[BenchmarkStatus]:
+    def ctrl_get_benchmark_counterfeit(self, magnitude_range_start: float, magnitude_range_end: float) -> RegistryResponse[BenchmarkStatus]:
         """
         Get a benchmark estimation based on the latest benchmark run and current allocation state.
-        :param magnitude_adjuster: Magnitude of adjustment for the change in benchmark estimation.
+        :param magnitude_range_start: Magnitude range start of adjustment for the change in benchmark estimation.
+        :param magnitude_range_end: Magnitude range end of adjustment for the change in benchmark estimation.
         """
         raise NotImplementedError()
 

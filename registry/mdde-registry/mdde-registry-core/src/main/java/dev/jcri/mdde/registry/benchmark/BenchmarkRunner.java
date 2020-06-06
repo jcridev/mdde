@@ -263,7 +263,7 @@ public class BenchmarkRunner {
      * Get estimation of the benchmark instead of running it over the real data distribution.
      * @return Estimated benchmark result based on the previous real benchmark run.
      */
-    public BenchmarkStatus getCounterfeitStatus(double adjustmentFactor){
+    public BenchmarkStatus getCounterfeitStatus(double adjustRangeStart, double adjustRangeEnd){
         BenchmarkRunResult result = null;
         boolean failed = false;
         String stage = EBenchmarkRunStage.DONE.toString();
@@ -271,7 +271,7 @@ public class BenchmarkRunner {
         var completed = this._counterfeitRunner.isReady();
         if(completed){
             runId = this._counterfeitRunner.getCurrentSettings().getRunId();
-            result = this._counterfeitRunner.estimateBenchmarkRun(adjustmentFactor);
+            result = this._counterfeitRunner.estimateBenchmarkRun(adjustRangeStart, adjustRangeEnd);
         }
         else{
             stage = EBenchmarkRunStage.READY.toString();

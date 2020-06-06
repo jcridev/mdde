@@ -123,8 +123,12 @@ public class SequentialControlCommandParser<T> extends CommandParserControlBase<
 
         CommandParserHelper.sharedInstance().validateNotNullArguments(arguments, thisCommand.toString());
 
-        Double adjustmentFactor = CommandParserHelper.sharedInstance()
-                .getPositionalArgumentAsDouble(arguments, thisCommand, ARG_BENCH_COUNTERFEIT_ADJUSTER);
-        return _stateCommandHandler.retrieveCounterfeitBenchmarkStatus(adjustmentFactor);
+        Double adjustRangeStart = CommandParserHelper.sharedInstance()
+                .getPositionalArgumentAsDouble(arguments, thisCommand, ARG_BENCH_COUNTERFEIT_ADJUSTER_START);
+
+        Double adjustRangeEnd = CommandParserHelper.sharedInstance()
+                .getPositionalArgumentAsDouble(arguments, thisCommand, ARG_BENCH_COUNTERFEIT_ADJUSTER_END);
+
+        return _stateCommandHandler.retrieveCounterfeitBenchmarkStatus(adjustRangeStart, adjustRangeEnd);
     }
 }
