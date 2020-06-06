@@ -159,14 +159,17 @@ public class CounterfeitRunner {
         double baselineThroughput = this._currentSettings.getBaselineThroughput();
         double maxDisbalance = getParticipationTotalDisbalance(currentParticipation.length);
 
+        double degreeOfChange = (Math.abs(baselineDisbalance - currentDisbalance) / maxDisbalance);
+
         double valueDiminisher = Math.abs(baselineDisbalance - currentDisbalance)
                 * ((adjustRangeEnd - adjustRangeStart) / maxDisbalance) + adjustRangeStart;
 
         // Estimate throughput
         double estimatedThroughput = baselineThroughput
                 + (baselineThroughput
-                    * (Math.abs(baselineDisbalance - currentDisbalance) / maxDisbalance)
+                    * degreeOfChange
                         *  valueDiminisher
+                            * (1 + changeDirection + degreeOfChange)
                     * changeDirection);
 
         // Get theoretical highest
