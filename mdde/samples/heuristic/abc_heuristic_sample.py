@@ -68,7 +68,7 @@ class ABCMDDEHeuristicSample(ABC):
         throughput_all: Dict = {}
         real_reads, real_throughput = self.processBenchmarkStatsInEnv(env._bench_request_stats(), env)
         throughput_all[-1] = real_throughput
-        magnitude_variations = [0.1, 0.5, 1, 1.5, 1.75, 2.0, 2.3, 2.5]
+        magnitude_variations = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
 
         for magnitude in magnitude_variations:
             bench_response = env._bench_request_stats_counterfeit(magnitude_override=magnitude)
