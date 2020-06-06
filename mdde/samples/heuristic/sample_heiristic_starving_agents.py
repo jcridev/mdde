@@ -14,12 +14,12 @@ from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.registry.tcp import RegistryClientTCP
 
-from samples.heuristic import ABCMDDEHeuristicSample
+import abc_heuristic_sample
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-class MDDEStarvingAgents(ABCMDDEHeuristicSample):
+class MDDEStarvingAgents(abc_heuristic_sample.ABCMDDEHeuristicSample):
     """Single agent contains all of the fragments, rest are empty."""
 
     # Note: in this sample Readability > Efficiency

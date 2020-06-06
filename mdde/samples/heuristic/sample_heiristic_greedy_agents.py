@@ -14,12 +14,12 @@ from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.registry.tcp import RegistryClientTCP
 
-from samples.heuristic import ABCMDDEHeuristicSample
+import abc_heuristic_sample
 
 logging.basicConfig(level=logging.DEBUG)
 
 
-class MDDEGreedyAgents(ABCMDDEHeuristicSample):
+class MDDEGreedyAgents(abc_heuristic_sample.ABCMDDEHeuristicSample):
     """Each node contains each fragment. Measure the performance.
 
     Suitable for the Default Scenario with Single Node Default Agents.
