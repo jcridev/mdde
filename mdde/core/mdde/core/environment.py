@@ -91,6 +91,9 @@ class Environment:
         if self._write_stats and not self.__mdde_result_folder_root:
             raise AssertionError("Stats can't be writen, results folder is not configured.")
 
+        self._benchmark_estimation_magnitude: float = 1.0
+        """Magnitude of changes in estimated throughput according to the estimated benchmark allocation."""
+
         self.__file_csv_writer = None
         self.activate_scenario()
 
@@ -213,6 +216,9 @@ class Environment:
         # Run the initial benchmark to establish a baseline
         if with_benchmark or self._scenario.get_counterfeit_required:
             self.benchmark()
+            counterfeit_init_response = self._registry_ctrl.ctrl_init_benchmark_counterfeit()
+            if counterfeit_init_response.result is False:
+                raise RuntimeError("Failed to initialize counterfeit benchmark.")
         self._logger.info("Environment initialization is complete")
 
     def reset(self) -> Tuple[Dict[int, np.ndarray], Dict[int, np.ndarray]]:
@@ -236,6 +242,9 @@ class Environment:
         self.__next_episode()
         # Execute the initial benchmark
         self.benchmark()
+        counterfeit_init_response = self._registry_ctrl.ctrl_init_benchmark_counterfeit()
+        if counterfeit_init_response.result is False:
+            raise RuntimeError("Failed to initialize counterfeit benchmark.")
         # Retrieve the observations
         return self.observation_space
 
@@ -398,8 +407,8 @@ class Environment:
             act_n[agent.id] = agent.get_actions()
         return act_n
 
-    def benchmark(self, without_waiting: bool = False) -> Union[None, BenchmarkStatus]:
-        """Execute benchmark run"""
+    def _bench_request_stats(self, without_waiting: bool = False) -> Union[None, BenchmarkStatus]:
+        """Initialize and execute benchmark runner against the real data nodes."""
         # Execute the shuffle queue
         self._set_registry_mode(target_mode=ERegistryMode.shuffle)
         self._logger.info('Executing the shuffle queue')
@@ -436,22 +445,46 @@ class Environment:
                 break
         # Switch back to shuffle
         self._set_registry_mode(target_mode=ERegistryMode.shuffle)
+
+        return bench_status_response
+
+    def benchmark(self, without_waiting: bool = False) -> Union[None, BenchmarkStatus]:
+        """Execute benchmark run and pass the results to the active scenario."""
+        bench_status_response = self._bench_request_stats(without_waiting=without_waiting)
         # Return the result
         self._scenario.process_benchmark_stats(registry_read=self._registry_read,
                                                bench_end_result=bench_status_response)
         return bench_status_response
 
     def benchmark_status(self) -> BenchmarkStatus:
+        """Request status of the running benchmark."""
         bench_status = self._registry_ctrl.ctrl_get_benchmark()
         if bench_status.failed:
             raise RuntimeError(bench_status.error)
         return bench_status.result
 
-    def benchmark_counterfeit(self) -> Union[None, BenchmarkStatus]:
-        bench_status_response = self._registry_ctrl.ctrl_get_benchmark_counterfeit()
+    def _bench_request_stats_counterfeit(self, magnitude_override: Union[None, float] = None) -> Union[None, BenchmarkStatus]:
+        """
+        Request reads and stats estimation from the registry.
+
+        :param magnitude_override: Override value for the adjustment of the magnitude of changes in allocation for
+        throughput. If None, default value self.bench_estimation_magnitude is used.
+        :return: BenchmarkStatus.
+        """
+        if magnitude_override is not None:
+            magnitude_adjustment = magnitude_override
+        else:
+            magnitude_adjustment = self.bench_estimation_magnitude
+
+        bench_status_response = self._registry_ctrl.ctrl_get_benchmark_counterfeit(magnitude_adjustment)
         if bench_status_response.failed:
             raise RuntimeError(bench_status_response.error)
-        bench_status = bench_status_response.result
+        return bench_status_response.result
+
+    def benchmark_counterfeit(self) -> BenchmarkStatus:
+        """Request reads and stats estimation from the registry, then pass it for processing into the active
+        scenario."""
+        bench_status = self._bench_request_stats_counterfeit()
         self._scenario.process_benchmark_stats(registry_read=self._registry_read,
                                                bench_end_result=bench_status)
         return bench_status
@@ -487,3 +520,13 @@ class Environment:
                 raise RuntimeError("Illegal registry mode switch attempt")
             if set_bench_result.failed:
                 raise RuntimeError(set_bench_result.error)
+
+    @property
+    def bench_estimation_magnitude(self) -> float:
+        """Magnitude of changes in estimated throughput according to the estimated benchmark allocation."""
+        return self._benchmark_estimation_magnitude
+
+    @bench_estimation_magnitude.setter
+    def bench_estimation_magnitude(self, value: float) -> None:
+        """Magnitude of changes in estimated throughput according to the estimated benchmark allocation."""
+        self._benchmark_estimation_magnitude = value

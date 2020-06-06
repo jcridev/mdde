@@ -46,8 +46,17 @@ class PRegistryControlClient(Protocol):
         """Get the latest benchmark run state"""
         raise NotImplementedError()
 
-    def ctrl_get_benchmark_counterfeit(self) -> RegistryResponse[BenchmarkStatus]:
-        """Get a benchmark estimation based on the latest benchmark run and current allocation state"""
+    @abstractmethod
+    def ctrl_init_benchmark_counterfeit(self) -> RegistryResponse[bool]:
+        """Estimation benchmark: initialize based on the latest benchmark execution stats."""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def ctrl_get_benchmark_counterfeit(self, magnitude_adjuster: float) -> RegistryResponse[BenchmarkStatus]:
+        """
+        Get a benchmark estimation based on the latest benchmark run and current allocation state.
+        :param magnitude_adjuster: Magnitude of adjustment for the change in benchmark estimation.
+        """
         raise NotImplementedError()
 
     @abstractmethod

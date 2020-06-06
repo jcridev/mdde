@@ -166,8 +166,12 @@ class RegistryClientTCP(PRegistryWriteClient, PRegistryReadClient, PRegistryCont
         response = self._serialize_and_run_command('BENCHSTATE')
         return self.__process_benchmark_response(response)
 
-    def ctrl_get_benchmark_counterfeit(self) -> RegistryResponse[BenchmarkStatus]:
-        response = self._serialize_and_run_command('RUNCNTFTBENCH')
+    def ctrl_init_benchmark_counterfeit(self) -> RegistryResponse[bool]:
+        response = self._serialize_and_run_command('INITCNTFTBENCH')
+        return RegistryResponseJson[bool](response)
+
+    def ctrl_get_benchmark_counterfeit(self, magnitude_adjuster: float) -> RegistryResponse[BenchmarkStatus]:
+        response = self._serialize_and_run_command('RUNCNTFTBENCH', bcmag=magnitude_adjuster)
         return self.__process_benchmark_response(response)
 
     def __process_benchmark_response(self, response) -> RegistryResponse[BenchmarkStatus]:

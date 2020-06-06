@@ -35,6 +35,10 @@ public class BenchmarkRunner {
     private final YCSBRunner _ycsbRunner;
     private final CounterfeitRunner _counterfeitRunner;
 
+    // TODO: Refactor counterfeit benchmark parametrisation (interface + factory)
+    private String _lastValidRunId = null;
+    private BenchmarkRunResult _lastValidResult = null;
+
     /**
      * State of the executing benchmark, results of the executed benchmark
      */
@@ -214,11 +218,9 @@ public class BenchmarkRunner {
         var runId = this._runnerState.getRunId();
         var completed = this._runnerState.isCompeted; // read this flag last
 
-        // Fill out Counterfeit benchmark
-        if(completed
-                && (this._counterfeitRunner.getCurrentSettings() == null
-                || !this._counterfeitRunner.getCurrentSettings().getRunId().equals(runId))){
-            this._counterfeitRunner.setCurrentSettings(new CounterfeitBenchSettings(result, runId));
+        if(completed){
+            _lastValidRunId = runId;
+            _lastValidResult = result;
         }
 
         return new BenchmarkStatus(completed, failed, stage, result, runId);
@@ -245,11 +247,23 @@ public class BenchmarkRunner {
         _tmpTupleLocator.notifyReadFinished(nodeId);
     }
 
+    public boolean initCounterfeitBenchmark(){
+        // Fill out Counterfeit benchmark
+        if(this._lastValidResult != null){
+            this._counterfeitRunner.setCurrentSettings(
+                    new CounterfeitBenchSettings(this._lastValidResult, this._lastValidRunId));
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
     /**
      * Get estimation of the benchmark instead of running it over the real data distribution.
      * @return Estimated benchmark result based on the previous real benchmark run.
      */
-    public BenchmarkStatus getCounterfeitStatus(){
+    public BenchmarkStatus getCounterfeitStatus(double adjustmentFactor){
         BenchmarkRunResult result = null;
         boolean failed = false;
         String stage = EBenchmarkRunStage.DONE.toString();
@@ -257,7 +271,7 @@ public class BenchmarkRunner {
         var completed = this._counterfeitRunner.isReady();
         if(completed){
             runId = this._counterfeitRunner.getCurrentSettings().getRunId();
-            result = this._counterfeitRunner.estimateBenchmarkRun();
+            result = this._counterfeitRunner.estimateBenchmarkRun(adjustmentFactor);
         }
         else{
             stage = EBenchmarkRunStage.READY.toString();
