@@ -154,7 +154,7 @@ public class CounterfeitRunner {
 
         var baselineDisbalance = getParticipationDisbalance(readNodeParticipationBaseline);
         var currentDisbalance = getParticipationDisbalance(currentParticipation);
-        int changeDirection = baselineDisbalance >= currentDisbalance ? 1 : -1;
+        int changeDirection = baselineDisbalance >= currentDisbalance ? -1 : 1;
 
         double baselineThroughput = this._currentSettings.getBaselineThroughput();
         double maxDisbalance = getParticipationTotalDisbalance(currentParticipation.length);
@@ -165,13 +165,18 @@ public class CounterfeitRunner {
                 * ((adjustRangeEnd - adjustRangeStart) / maxDisbalance) + adjustRangeStart;
 
         // Estimate throughput
+
+        double estimatedThroughput = Math.pow(10, Math.log10(baselineThroughput)
+                -(changeDirection) * Math.log10(1 + degreeOfChange + valueDiminisher));
+
+/*
         double estimatedThroughput = baselineThroughput
                 + (baselineThroughput
                     * degreeOfChange
                         *  valueDiminisher
                             * (1 + changeDirection + degreeOfChange)
                     * changeDirection);
-
+*/
         // Get theoretical highest
         double estimatedBestThroughput = baselineThroughput
                 + (baselineThroughput
