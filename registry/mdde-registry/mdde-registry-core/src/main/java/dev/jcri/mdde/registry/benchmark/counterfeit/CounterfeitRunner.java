@@ -5,6 +5,7 @@ import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.Benchm
 import dev.jcri.mdde.registry.shared.commands.containers.result.benchmark.BenchmarkRunResult;
 import dev.jcri.mdde.registry.store.IReadCommandHandler;
 import dev.jcri.mdde.registry.utility.MapTools;
+import org.apache.kafka.common.protocol.types.Field;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -79,45 +80,97 @@ public class CounterfeitRunner {
         // Pre-calculate fragment read distribution
         Map<String, int[]> fragmentReadDistribution = new HashMap<>();
 
-        for (var fragReplicaId: fragmentCatalog.getFragments().keySet()){
+        List<FragmentStats> listOfFragments = new ArrayList<>();
+
+        for (var fragReplicaId: fragmentCatalog.getFragments().keySet()) {
             var expectedReadsTotal = this._currentSettings.getReads().get(fragReplicaId);
-            //var replicaCounter = fragmentReplicas.get(fragReplicaId);
+
+            var cFragmentStats = new FragmentStats(fragReplicaId);
+            cFragmentStats.totalExpectedReads = expectedReadsTotal;
 
             List<Integer> fragNodeIdx = IntStream.range(0, nodeContentsToIndexes.size())
-                                        .filter(i -> nodeContentsToIndexes.get(i).contains(fragReplicaId))
-                                        .collect(ArrayList<Integer>::new, ArrayList::add, ArrayList::addAll);
-            var replicaCounter = fragNodeIdx.size();
+                    .filter(i -> nodeContentsToIndexes.get(i).contains(fragReplicaId))
+                    .collect(ArrayList<Integer>::new, ArrayList::add, ArrayList::addAll);
+
+            cFragmentStats.setAllocationNodeIdx(fragNodeIdx);
+
+            listOfFragments.add(cFragmentStats);
+        }
+        // Sort by Number of replicas (ascending) then by Number of reads (descending)
+        Collections.sort(listOfFragments);
+
+        int[] totalNodeReadCounter = new int[nodeIndexes.size()];
+        for (var fragReplicaInfo: listOfFragments){
+            var fragmentExpectedReadsTotal = fragReplicaInfo.totalExpectedReads;
+            var fragmentReplicaCounter = fragReplicaInfo.getNumberOfReplicas();
+            var fragmentReplicasAllocation = fragReplicaInfo.getAllocationNodeIdx();
 
             int[] reads = new int[nodeIndexes.size()];
             // *Naive*, spread read equally among the nodes that have the fragments.
             // To be more realistic, would need to take a temporal aspect of the benchmark reads as well into account,
             // but that's for the future versions.
-            if (replicaCounter == 1){
-                // A single replica
-                reads[fragNodeIdx.get(0)] = expectedReadsTotal;
+            if (fragmentReplicaCounter == 1){
+                // A single replica (no choice where to put it)
+                var nodeIdx = fragmentReplicasAllocation.get(0);
+                totalNodeReadCounter[nodeIdx] = totalNodeReadCounter[nodeIdx] + fragmentExpectedReadsTotal;
+                reads[nodeIdx] = fragmentExpectedReadsTotal;
             }
-            else if (expectedReadsTotal <= replicaCounter){
+            else if (fragmentExpectedReadsTotal <= fragmentReplicaCounter){
                 // Multiple replicas but less reads than replicas, or equal number of reads and replicas.
-                for(int i = 0; i < expectedReadsTotal; i++){
-                    reads[fragNodeIdx.get(i)] = 1;
+                // Pointless to implement any complex calculations for such a small number.
+                for(int i = 0; i < fragmentExpectedReadsTotal; i++){
+                    var nodeIdx = fragmentReplicasAllocation.get(i);
+                    totalNodeReadCounter[nodeIdx] = totalNodeReadCounter[nodeIdx] + 1;
+                    reads[nodeIdx] = 1;
                 }
             }
             else{
-                // Multiple replicas, more reads than replicas
-                int remainingReads = expectedReadsTotal;
-                for(int i = 0; i < replicaCounter; i++){
-                    int cDiv = replicaCounter - i;
-                    int chunk = remainingReads / cDiv;
-                    if (remainingReads % cDiv != 0){
-                        chunk += 1;
+                // Multiple replicas, more reads than replicas.
+                // TODO: Refactor
+                // Get total current number of reads for nodes where fragment replicas are allocated
+                int currentTotalReadsForFragAllocNodes = 0;
+                for(var allocationNodeIdx: fragmentReplicasAllocation){
+                    currentTotalReadsForFragAllocNodes += totalNodeReadCounter[allocationNodeIdx];
+                }
+                // Calculate the current degree of participation per selected node
+                List<SelectedNodeRead> currentAllocatedNodeParticipation = new ArrayList<>();
+                for(var allocationNodeIdx: fragmentReplicasAllocation){
+                    currentAllocatedNodeParticipation.add(
+                            new SelectedNodeRead(
+                                allocationNodeIdx,
+                                    currentTotalReadsForFragAllocNodes > 0 ?
+                                            (double)totalNodeReadCounter[allocationNodeIdx] / currentTotalReadsForFragAllocNodes
+                                            : 1.0 / fragmentReplicaCounter
+                            ));
+                }
+
+                Collections.sort(currentAllocatedNodeParticipation);
+                var reversed = new ArrayList<>(currentAllocatedNodeParticipation);
+                Collections.reverse(reversed);
+                // Distribute reads among the nodes taking into account their current participation degree
+                int remainingReads = fragmentExpectedReadsTotal;
+                int processedNodes = 0;
+                int lastNode = currentAllocatedNodeParticipation.size() - 1;
+                for (int i = 0; i < currentAllocatedNodeParticipation.size(); i++) {
+                    SelectedNodeRead nodeParticipation = currentAllocatedNodeParticipation.get(i);
+                    SelectedNodeRead oppositeNodeParticipation = reversed.get(i);
+                    if (processedNodes < lastNode) {
+                        int chunk = (int) Math.ceil(fragmentExpectedReadsTotal * oppositeNodeParticipation.getParticipation());
+                        totalNodeReadCounter[nodeParticipation.getNodeIdx()] = totalNodeReadCounter[nodeParticipation.getNodeIdx()] + chunk;
+                        reads[nodeParticipation.getNodeIdx()] = chunk;
+                        remainingReads = remainingReads - chunk;
+                    } else {
+                        totalNodeReadCounter[nodeParticipation.getNodeIdx()] = totalNodeReadCounter[nodeParticipation.getNodeIdx()] + remainingReads;
+                        reads[nodeParticipation.getNodeIdx()] = remainingReads;
                     }
-                    reads[fragNodeIdx.get(i)] = chunk;
-                    remainingReads = remainingReads - chunk;
+                    processedNodes++;
                 }
             }
 
-            fragmentReadDistribution.put(fragReplicaId, reads);
+            fragmentReadDistribution.put(fragReplicaInfo.getFragmentId(), reads);
         }
+
+        // Attempt to redistribute reads
 
         // Calculate
         List<BenchmarkNodeStats> nodeStats = new ArrayList<>();
@@ -154,7 +207,7 @@ public class CounterfeitRunner {
 
         var baselineDisbalance = getParticipationDisbalance(readNodeParticipationBaseline);
         var currentDisbalance = getParticipationDisbalance(currentParticipation);
-        int changeDirection = baselineDisbalance >= currentDisbalance ? -1 : 1;
+        int changeDirection = baselineDisbalance > currentDisbalance ? -1 : 1;
 
         double baselineThroughput = this._currentSettings.getBaselineThroughput();
         double maxDisbalance = getParticipationTotalDisbalance(currentParticipation.length);
@@ -169,26 +222,14 @@ public class CounterfeitRunner {
         double estimatedThroughput = Math.pow(10, Math.log10(baselineThroughput)
                 -(changeDirection) * Math.log10(1 + degreeOfChange + valueDiminisher));
 
-/*
-        double estimatedThroughput = baselineThroughput
-                + (baselineThroughput
-                    * degreeOfChange
-                        *  valueDiminisher
-                            * (1 + changeDirection + degreeOfChange)
-                    * changeDirection);
-*/
         // Get theoretical highest
-        double estimatedBestThroughput = baselineThroughput
-                + (baselineThroughput
-                    * (Math.abs(baselineDisbalance - 0) / maxDisbalance)
-                        * valueDiminisher
-                    * 1);
+        double estimatedBestThroughput = Math.pow(10, Math.log10(baselineThroughput)
+                -(changeDirection) * Math.log10(1 + (baselineDisbalance / maxDisbalance) + valueDiminisher));
+
         // Get theoretical lowest
-        double estimatedWorstThroughput = baselineThroughput
-                + (baselineThroughput
-                    * (Math.abs(baselineDisbalance - maxDisbalance) / maxDisbalance)
-                        * valueDiminisher
-                    * baselineDisbalance >= maxDisbalance ? 1 : -1);
+        double estimatedWorstThroughput = Math.pow(10, Math.log10(baselineThroughput)
+                -(baselineDisbalance >= maxDisbalance ? 1 : -1)
+                    * Math.log10(1 + (Math.abs(baselineDisbalance - maxDisbalance) / maxDisbalance) + valueDiminisher));
 
         // Fill out the result
         var result = new BenchmarkRunResult();
@@ -235,5 +276,78 @@ public class CounterfeitRunner {
         }
 
         return (numOfNodes - 1) * 2;
+    }
+
+    private class FragmentStats implements Comparable<FragmentStats>{
+        private List<Integer> _allocationNodeIdx;
+        private int _numberOfReplicas = 0;
+
+        private final String _fragmentId;
+        public int totalExpectedReads = 0;
+
+        public FragmentStats(String fragmentId){
+            Objects.requireNonNull(fragmentId);
+            _fragmentId = fragmentId;
+        }
+
+        public String getFragmentId(){
+            return _fragmentId;
+        }
+
+        public int getNumberOfReplicas(){
+            return _numberOfReplicas;
+        }
+
+        public List<Integer> getAllocationNodeIdx() {
+            return _allocationNodeIdx;
+        }
+
+        public void setAllocationNodeIdx(List<Integer> value) {
+            this._allocationNodeIdx = value;
+
+            if(this._allocationNodeIdx != null){
+                _numberOfReplicas = this._allocationNodeIdx.size();
+            }
+            else{
+                _numberOfReplicas = 0;
+            }
+        }
+
+        @Override
+        public int compareTo(CounterfeitRunner.FragmentStats o2) {
+            var o1 = this;
+            // Ascending replicas order
+            int numOfReplicasRes = Integer.compare(o1.getNumberOfReplicas(), o2.getNumberOfReplicas());
+            if (numOfReplicasRes != 0)
+            {
+                return numOfReplicasRes;
+            }
+            // Descending reads order
+            return Integer.compare(o2.totalExpectedReads, o1.totalExpectedReads);
+        }
+    }
+
+    private class SelectedNodeRead implements Comparable<SelectedNodeRead>{
+        private int _nodeIdx = -1;
+        private double _participation = -1.0;
+
+        public SelectedNodeRead(int nodeIdx, double participation){
+            _nodeIdx = nodeIdx;
+            _participation = participation;
+        }
+
+        public int getNodeIdx(){
+            return _nodeIdx;
+        }
+
+        public double getParticipation(){
+            return _participation;
+        }
+
+        @Override
+        public int compareTo(CounterfeitRunner.SelectedNodeRead o2) {
+            var o1 = this;
+            return Double.compare(o2.getParticipation(), o1.getParticipation());
+        }
     }
 }

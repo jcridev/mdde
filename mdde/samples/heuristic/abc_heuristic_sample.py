@@ -66,21 +66,20 @@ class ABCMDDEHeuristicSample(ABC):
 
     def tune_estimations(self, step_num: int, env: Environment):
         throughput_all: Dict = {}
-        real_reads, real_throughput = self.processBenchmarkStatsInEnv(env._bench_request_stats(), env)
-        throughput_all[-1] = real_throughput
-        magnitude_variations = [(0.1, 0.2),
-                                (0.2, 0.3),
-                                (0.3, 0.4),
-                                (0.3, 0.5),
-                                (0.5, 0.6),
-                                (0.5, 0.7),
-                                (0.6, 0.7),
-                                (0.6, 0.8)]
+        #real_reads, real_throughput = self.processBenchmarkStatsInEnv(env._bench_request_stats(), env)
+        #throughput_all[-1] = real_throughput
+        magnitude_variations = [(0, 0.7)]
 
         for magnitude in magnitude_variations:
             bench_response = env._bench_request_stats_counterfeit(magnitude_start_override=magnitude[0],
                                                                   magnitude_end_override=magnitude[1])
             estimated_reads, estimated_throughput = self.processBenchmarkStatsInEnv(bench_response, env)
             throughput_all[magnitude] = estimated_throughput
+            logging.debug(estimated_throughput)
+
+            for idx, estimation_node_reads in enumerate(estimated_reads):
+                logging.debug("Node {}: {}".format(idx, estimation_node_reads))
+
+                logging.debug("Node {} sum reads: {}".format(idx, np.sum(estimation_node_reads)))
 
         logging.info("Step: {}; Throughput: {}".format(step_num, throughput_all))
