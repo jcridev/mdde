@@ -322,7 +322,7 @@ class DefaultScenario(ABCScenario):
                 stat_agent_reads[agent_obj.id] = agent_reads
                 stat_agent_correct[agent_obj.id] = agent_correctness_multiplier
             reward_n[agent_obj.id] = current_throughput * (agent_reads / total_reads) * agent_correctness_multiplier \
-                                     + (current_throughput * (contents_n[agent_obj.id] / num_fragments)
+                                     + (current_throughput * ((num_fragments - contents_n[agent_obj.id]) / num_fragments)
                                         * self._storage_multiplier)
         if self._dump_stats:
             self._dump_scenario_stats_at_bench(step_idx=self._step_count,
