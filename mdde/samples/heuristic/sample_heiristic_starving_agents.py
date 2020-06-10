@@ -154,6 +154,8 @@ class MDDEStarvingAgents(abc_heuristic_sample.ABCMDDEHeuristicSample):
         agents = env._scenario.get_agents()
         node_agents = {agent.data_node_ids[0]: agent for agent in agents}
 
+        print(self.throughput_all)
+
     def select_actions(self, allocation, node_id_actions, nodes, sorted_fragments):
         act_n = {}
         satiated_node = nodes[-1]  # last node is the one having all of the fragments

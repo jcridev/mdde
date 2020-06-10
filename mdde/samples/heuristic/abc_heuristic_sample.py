@@ -16,6 +16,7 @@ from mdde.registry.container import BenchmarkStatus
 
 class ABCMDDEHeuristicSample(ABC):
     """Base class containing common methods for the heuristic samples."""
+    throughput_all = {}
 
     def processBenchmarkStatsInEnv(self, bench_response: BenchmarkStatus, env: Environment):
         nodes_sorted = env._scenario.get_ordered_nodes()
@@ -65,15 +66,15 @@ class ABCMDDEHeuristicSample(ABC):
         return fragment_reads_map, bench_stats.throughput
 
     def tune_estimations(self, step_num: int, env: Environment):
-        throughput_all: Dict = {}
+        throughput_step: Dict = {}
+        self.throughput_all[step_num] = throughput_step
         real_reads, real_throughput = self.processBenchmarkStatsInEnv(env._bench_request_stats(), env)
-        throughput_all[-1] = real_throughput
+        throughput_step[-1] = real_throughput
 
         for idx, real_node_reads in enumerate(real_reads):
             logging.debug("Node[r] {}: {}".format(idx, real_node_reads))
 
             logging.debug("Node[r] {} sum reads: {}".format(idx, np.sum(real_node_reads)))
-
 
         magnitude_variations = [(0, 0.7)]
 
@@ -81,7 +82,7 @@ class ABCMDDEHeuristicSample(ABC):
             bench_response = env._bench_request_stats_counterfeit(magnitude_start_override=magnitude[0],
                                                                   magnitude_end_override=magnitude[1])
             estimated_reads, estimated_throughput = self.processBenchmarkStatsInEnv(bench_response, env)
-            throughput_all[magnitude] = estimated_throughput
+            throughput_step[magnitude] = estimated_throughput
             logging.debug(estimated_throughput)
 
             for idx, estimation_node_reads in enumerate(estimated_reads):
@@ -89,4 +90,4 @@ class ABCMDDEHeuristicSample(ABC):
 
                 logging.debug("Node[e] {} sum reads: {}".format(idx, np.sum(estimation_node_reads)))
 
-        logging.info("Step: {}; Throughput: {}".format(step_num, throughput_all))
+        logging.info("Step: {}; Throughput: {}".format(step_num, throughput_step))
