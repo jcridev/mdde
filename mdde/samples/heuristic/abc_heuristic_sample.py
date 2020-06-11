@@ -112,7 +112,7 @@ class ABCMDDEHeuristicSample(ABC):
                 logging.debug("Node[e] {} sum reads: {}".format(idx, sum_reads))
                 estimate_reads[idx] = sum_reads
 
-            estimate_reads_list = self.reads_all.get(-1)
+            estimate_reads_list = self.reads_all.get(magnitude)
             if estimate_reads_list is None:
                 estimate_reads_list = []
                 self.reads_all[-1] = estimate_reads_list
