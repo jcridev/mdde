@@ -16,6 +16,8 @@ from mdde.registry.container import BenchmarkStatus
 
 class ABCMDDEHeuristicSample(ABC):
     """Base class containing common methods for the heuristic samples."""
+    throughput_all = {}
+    reads_all = {}
 
     def processBenchmarkStatsInEnv(self, bench_response: BenchmarkStatus, env: Environment):
         nodes_sorted = env._scenario.get_ordered_nodes()
@@ -65,15 +67,30 @@ class ABCMDDEHeuristicSample(ABC):
         return fragment_reads_map, bench_stats.throughput
 
     def tune_estimations(self, step_num: int, env: Environment):
-        throughput_all: Dict = {}
+        # throughput_step: Dict = {}
         real_reads, real_throughput = self.processBenchmarkStatsInEnv(env._bench_request_stats(), env)
-        throughput_all[-1] = real_throughput
 
+        bench_throughput_list = self.throughput_all.get(-1)
+        if bench_throughput_list is None:
+            bench_throughput_list = []
+            self.throughput_all[-1] = bench_throughput_list
+        bench_throughput_list.append(real_throughput)
+
+        bench_reads = [0] * 4
         for idx, real_node_reads in enumerate(real_reads):
-            logging.debug("Node[r] {}: {}".format(idx, real_node_reads))
+            logging.debug("Node[r] {}: {}".format(idx, np.array2string(real_node_reads,
+                                                                       precision=0,
+                                                                       separator=',',
+                                                                       suppress_small=False)))
+            sum_reads = np.sum(real_node_reads)
+            logging.debug("Node[r] {} sum reads: {}".format(idx, sum_reads))
+            bench_reads[idx] = sum_reads
 
-            logging.debug("Node[r] {} sum reads: {}".format(idx, np.sum(real_node_reads)))
-
+        bench_reads_list = self.reads_all.get(-1)
+        if bench_reads_list is None:
+            bench_reads_list = []
+            self.reads_all[-1] = bench_reads_list
+        bench_reads_list.append(bench_reads)
 
         magnitude_variations = [(0, 0.7)]
 
@@ -81,12 +98,40 @@ class ABCMDDEHeuristicSample(ABC):
             bench_response = env._bench_request_stats_counterfeit(magnitude_start_override=magnitude[0],
                                                                   magnitude_end_override=magnitude[1])
             estimated_reads, estimated_throughput = self.processBenchmarkStatsInEnv(bench_response, env)
-            throughput_all[magnitude] = estimated_throughput
+
+            magnitude_list = self.throughput_all.get(magnitude)
+            if magnitude_list is None:
+                magnitude_list = []
+                self.throughput_all[magnitude] = magnitude_list
+            magnitude_list.append(estimated_throughput)
+
             logging.debug(estimated_throughput)
 
+            estimate_reads = [0] * 4
             for idx, estimation_node_reads in enumerate(estimated_reads):
-                logging.debug("Node[e] {}: {}".format(idx, estimation_node_reads))
+                logging.debug("Node[e] {}: {}".format(idx, np.array2string(estimation_node_reads,
+                                                                           precision=0,
+                                                                           separator=',',
+                                                                           suppress_small=False)))
+                sum_reads = np.sum(estimation_node_reads)
+                logging.debug("Node[e] {} sum reads: {}".format(idx, sum_reads))
+                estimate_reads[idx] = sum_reads
 
-                logging.debug("Node[e] {} sum reads: {}".format(idx, np.sum(estimation_node_reads)))
+            estimate_reads_list = self.reads_all.get(magnitude)
+            if estimate_reads_list is None:
+                estimate_reads_list = []
+                self.reads_all[magnitude] = estimate_reads_list
+            estimate_reads_list.append(estimate_reads)
 
-        logging.info("Step: {}; Throughput: {}".format(step_num, throughput_all))
+    def out_final_results(self):
+        logging.info("END")
+        logging.info("THROUGHPUT")
+        for set_e, v in self.throughput_all.items():
+            logging.info("Throughput history for '{}': [{}]".format(set_e, ','.join(map(str, v))))
+
+        logging.info("READS")
+        for set_e, v in self.reads_all.items():
+            for step_idx, step_reads in enumerate(v):
+                logging.info("[{}] Reads at step '{}': {}".format(set_e,
+                                                                  step_idx,
+                                                                  ','.join(map(str, step_reads))))
