@@ -1,5 +1,6 @@
 import argparse
 import logging
+import sys
 
 from typing import List
 from pathlib import Path
@@ -156,13 +157,12 @@ class MDDEGreedyAgents(abc_heuristic_sample.ABCMDDEHeuristicSample):
             step += 1
 
         logging.debug("Done after %d steps", step)
-        print(throughput_history)
+        logging.info("Throughput history: {}".format(", ".join(throughput_history)))
         # Get described actions
         agents = env._scenario.get_agents()
         node_agents = {agent.data_node_ids[0]: agent for agent in agents}
 
-        print(self.throughput_all)
-        print(self.reads_all)
+        self.out_final_results()
 
     def select_actions(self, allocation, node_id_actions, nodes, sorted_fragments):
         act_n = {}
@@ -243,7 +243,16 @@ if __name__ == '__main__':
                         help='Execute corresponding "light" workload.',
                         action='store_true')
 
+    parser.add_argument('--out-file',
+                        help='Dump all output to the specificed file',
+                        type=str,
+                        default=None)
+
     config = parser.parse_args()
+
+    if config.out_file:
+        fileHandler = logging.FileHandler(config.out_file)
+        logging.getLogger().addHandler(fileHandler)
 
     MDDEGreedyAgents.run_result_dir = config.result_dir
     MDDEGreedyAgents.ray_temp_dir = config.temp_dir

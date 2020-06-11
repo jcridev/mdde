@@ -67,7 +67,7 @@ class ABCMDDEHeuristicSample(ABC):
         return fragment_reads_map, bench_stats.throughput
 
     def tune_estimations(self, step_num: int, env: Environment):
-        #throughput_step: Dict = {}
+        # throughput_step: Dict = {}
         real_reads, real_throughput = self.processBenchmarkStatsInEnv(env._bench_request_stats(), env)
 
         bench_throughput_list = self.throughput_all.get(-1)
@@ -78,7 +78,10 @@ class ABCMDDEHeuristicSample(ABC):
 
         bench_reads = [0] * 4
         for idx, real_node_reads in enumerate(real_reads):
-            logging.debug("Node[r] {}: {}".format(idx, real_node_reads))
+            logging.debug("Node[r] {}: {}".format(idx, np.array2string(real_node_reads,
+                                                                       precision=0,
+                                                                       separator=',',
+                                                                       suppress_small=False)))
             sum_reads = np.sum(real_node_reads)
             logging.debug("Node[r] {} sum reads: {}".format(idx, sum_reads))
             bench_reads[idx] = sum_reads
@@ -88,7 +91,6 @@ class ABCMDDEHeuristicSample(ABC):
             bench_reads_list = []
             self.reads_all[-1] = bench_reads_list
         bench_reads_list.append(bench_reads)
-
 
         magnitude_variations = [(0, 0.7)]
 
@@ -107,7 +109,10 @@ class ABCMDDEHeuristicSample(ABC):
 
             estimate_reads = [0] * 4
             for idx, estimation_node_reads in enumerate(estimated_reads):
-                logging.debug("Node[e] {}: {}".format(idx, estimation_node_reads))
+                logging.debug("Node[e] {}: {}".format(idx, np.array2string(estimation_node_reads,
+                                                                           precision=0,
+                                                                           separator=',',
+                                                                           suppress_small=False)))
                 sum_reads = np.sum(estimation_node_reads)
                 logging.debug("Node[e] {} sum reads: {}".format(idx, sum_reads))
                 estimate_reads[idx] = sum_reads
@@ -115,5 +120,18 @@ class ABCMDDEHeuristicSample(ABC):
             estimate_reads_list = self.reads_all.get(magnitude)
             if estimate_reads_list is None:
                 estimate_reads_list = []
-                self.reads_all[-1] = estimate_reads_list
+                self.reads_all[magnitude] = estimate_reads_list
             estimate_reads_list.append(estimate_reads)
+
+    def out_final_results(self):
+        logging.info("END")
+        logging.info("THROUGHPUT")
+        for set_e, v in self.throughput_all.items():
+            logging.info("Throughput history for '{}': [{}]".format(set_e, ','.join(map(str, v))))
+
+        logging.info("READS")
+        for set_e, v in self.reads_all.items():
+            for step_idx, step_reads in enumerate(v):
+                logging.info("[{}] Reads at step '{}': {}".format(set_e,
+                                                                  step_idx,
+                                                                  ','.join(map(str, step_reads))))

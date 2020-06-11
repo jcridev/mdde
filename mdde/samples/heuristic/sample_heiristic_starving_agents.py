@@ -154,8 +154,7 @@ class MDDEStarvingAgents(abc_heuristic_sample.ABCMDDEHeuristicSample):
         agents = env._scenario.get_agents()
         node_agents = {agent.data_node_ids[0]: agent for agent in agents}
 
-        print(self.throughput_all)
-        print(self.reads_all)
+        self.out_final_results()
 
     def select_actions(self, allocation, node_id_actions, nodes, sorted_fragments):
         act_n = {}
@@ -256,7 +255,16 @@ if __name__ == '__main__':
                         help='Execute corresponding "light" workload.',
                         action='store_true')
 
+    parser.add_argument('--out-file',
+                        help='Dump all output to the specificed file',
+                        type=str,
+                        default=None)
+
     config = parser.parse_args()
+
+    if config.out_file:
+        fileHandler = logging.FileHandler(config.out_file)
+        logging.getLogger().addHandler(fileHandler)
 
     MDDEStarvingAgents.run_result_dir = config.result_dir
     MDDEStarvingAgents.ray_temp_dir = config.temp_dir
