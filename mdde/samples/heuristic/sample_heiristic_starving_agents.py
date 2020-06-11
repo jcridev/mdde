@@ -155,6 +155,7 @@ class MDDEStarvingAgents(abc_heuristic_sample.ABCMDDEHeuristicSample):
         node_agents = {agent.data_node_ids[0]: agent for agent in agents}
 
         print(self.throughput_all)
+        print(self.reads_all)
 
     def select_actions(self, allocation, node_id_actions, nodes, sorted_fragments):
         act_n = {}

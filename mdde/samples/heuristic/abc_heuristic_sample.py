@@ -17,6 +17,7 @@ from mdde.registry.container import BenchmarkStatus
 class ABCMDDEHeuristicSample(ABC):
     """Base class containing common methods for the heuristic samples."""
     throughput_all = {}
+    reads_all = {}
 
     def processBenchmarkStatsInEnv(self, bench_response: BenchmarkStatus, env: Environment):
         nodes_sorted = env._scenario.get_ordered_nodes()
@@ -68,16 +69,26 @@ class ABCMDDEHeuristicSample(ABC):
     def tune_estimations(self, step_num: int, env: Environment):
         #throughput_step: Dict = {}
         real_reads, real_throughput = self.processBenchmarkStatsInEnv(env._bench_request_stats(), env)
-        bench_list = self.throughput_all.get(-1)
-        if bench_list is None:
-            bench_list = []
-            self.throughput_all[-1] = bench_list
-        bench_list.append(real_throughput)
 
+        bench_throughput_list = self.throughput_all.get(-1)
+        if bench_throughput_list is None:
+            bench_throughput_list = []
+            self.throughput_all[-1] = bench_throughput_list
+        bench_throughput_list.append(real_throughput)
+
+        bench_reads = [0] * 4
         for idx, real_node_reads in enumerate(real_reads):
             logging.debug("Node[r] {}: {}".format(idx, real_node_reads))
+            sum_reads = np.sum(real_node_reads)
+            logging.debug("Node[r] {} sum reads: {}".format(idx, sum_reads))
+            bench_reads[idx] = sum_reads
 
-            logging.debug("Node[r] {} sum reads: {}".format(idx, np.sum(real_node_reads)))
+        bench_reads_list = self.reads_all.get(-1)
+        if bench_reads_list is None:
+            bench_reads_list = []
+            self.reads_all[-1] = bench_reads_list
+        bench_reads_list.append(bench_reads)
+
 
         magnitude_variations = [(0, 0.7)]
 
@@ -94,7 +105,15 @@ class ABCMDDEHeuristicSample(ABC):
 
             logging.debug(estimated_throughput)
 
+            estimate_reads = [0] * 4
             for idx, estimation_node_reads in enumerate(estimated_reads):
                 logging.debug("Node[e] {}: {}".format(idx, estimation_node_reads))
+                sum_reads = np.sum(estimation_node_reads)
+                logging.debug("Node[e] {} sum reads: {}".format(idx, sum_reads))
+                estimate_reads[idx] = sum_reads
 
-                logging.debug("Node[e] {} sum reads: {}".format(idx, np.sum(estimation_node_reads)))
+            estimate_reads_list = self.reads_all.get(-1)
+            if estimate_reads_list is None:
+                estimate_reads_list = []
+                self.reads_all[-1] = estimate_reads_list
+            estimate_reads_list.append(estimate_reads)
