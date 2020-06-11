@@ -66,10 +66,13 @@ class ABCMDDEHeuristicSample(ABC):
         return fragment_reads_map, bench_stats.throughput
 
     def tune_estimations(self, step_num: int, env: Environment):
-        throughput_step: Dict = {}
-        self.throughput_all[step_num] = throughput_step
+        #throughput_step: Dict = {}
         real_reads, real_throughput = self.processBenchmarkStatsInEnv(env._bench_request_stats(), env)
-        throughput_step[-1] = real_throughput
+        bench_list = self.throughput_all.get(-1)
+        if bench_list is None:
+            bench_list = []
+            self.throughput_all[-1] = bench_list
+        bench_list.append(real_throughput)
 
         for idx, real_node_reads in enumerate(real_reads):
             logging.debug("Node[r] {}: {}".format(idx, real_node_reads))
@@ -82,12 +85,16 @@ class ABCMDDEHeuristicSample(ABC):
             bench_response = env._bench_request_stats_counterfeit(magnitude_start_override=magnitude[0],
                                                                   magnitude_end_override=magnitude[1])
             estimated_reads, estimated_throughput = self.processBenchmarkStatsInEnv(bench_response, env)
-            throughput_step[magnitude] = estimated_throughput
+
+            magnitude_list = self.throughput_all.get(magnitude)
+            if magnitude_list is None:
+                magnitude_list = []
+                self.throughput_all[magnitude] = magnitude_list
+            magnitude_list.append(estimated_throughput)
+
             logging.debug(estimated_throughput)
 
             for idx, estimation_node_reads in enumerate(estimated_reads):
                 logging.debug("Node[e] {}: {}".format(idx, estimation_node_reads))
 
                 logging.debug("Node[e] {} sum reads: {}".format(idx, np.sum(estimation_node_reads)))
-
-        logging.info("Step: {}; Throughput: {}".format(step_num, throughput_step))
