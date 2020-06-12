@@ -22,6 +22,14 @@ mkdir -p ${WORK_DIR}/res_maddpg/maddpg_dn_sm0
 mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_sm0
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results.sh ${PFX}maddpg_wdn_sm0 ${WORK_DIR}/res_maddpg/maddpg_wdn_sm0)
 
+# With do-nothing, disregard storage
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_dn_sm0_b1
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results.sh ${PFX}maddpg_dn_sm0_b1 ${WORK_DIR}/res_maddpg/maddpg_dn_sm0_b1)
+
+# Without do-nothing, disregard storage
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_sm0_b1
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results.sh ${PFX}maddpg_wdn_sm0_b1 ${WORK_DIR}/res_maddpg/maddpg_wdn_sm0_b1)
+
 # With do-nothing, gamma=0.5
 #mkdir -p ${WORK_DIR}/res_maddpg/maddpg_dn_g05
 #(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results.sh_g05 ${PFX}maddpg_dn_g05 ${WORK_DIR}/res_maddpg/maddpg_dn_g05)
