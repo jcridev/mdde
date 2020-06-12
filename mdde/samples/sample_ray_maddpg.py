@@ -12,6 +12,7 @@ from ray.rllib.contrib.maddpg.maddpg import MADDPGTrainer
 
 from mdde.core import Environment
 from mdde.agent.default import SingleNodeDefaultAgent
+from mdde.registry.workload import EDefaultYCSBWorkload
 from mdde.scenario.default import DefaultScenario, DefaultScenarioSimulation
 from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
@@ -64,6 +65,11 @@ class MADDPGSample:
                 self.cur_time = result["time_total_s"]
 
     def run_maddpg(self, config):
+        # Workload
+        selected_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST_LARGE
+        if config.light:
+            selected_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST
+
         # RAY tmp
         temp_dir_full_path_obj = Path(self.ray_temp_dir).resolve()
         temp_dir_full_path_obj.mkdir(parents=True, exist_ok=True)
@@ -155,6 +161,8 @@ class MADDPGSample:
                                            num_steps_before_bench=config.bench_psteps,
                                            agents=agents,
                                            benchmark_clients=config.bench_clients,
+                                           data_gen_workload=selected_workload,
+                                           bench_workload=selected_workload,
                                            write_stats=write_stats)  # Number of YCSB threads
 
             # Set multiplier to the sore related term of the default reward function
@@ -431,6 +439,10 @@ if __name__ == '__main__':
                         help='Number of benchmark clients.',
                         type=int,
                         default=50)
+
+    parser.add_argument('--light',
+                        help='Execute corresponding "light" workload.',
+                        action='store_true')
 
     config = parser.parse_args()
 
