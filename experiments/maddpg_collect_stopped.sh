@@ -14,10 +14,18 @@ mkdir -p ${WORK_DIR}/res_maddpg/maddpg_dn
 mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn ${WORK_DIR}/res_maddpg/maddpg_wdn)
 
+# With do-nothing, disregard storage
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_dn_sm0
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_dn_sm0 ${WORK_DIR}/res_maddpg/maddpg_dn_sm0)
+
+# Without do-nothing, disregard storage
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_sm0
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn_sm0 ${WORK_DIR}/res_maddpg/maddpg_wdn_sm0)
+
 # With do-nothing, gamma=0.5
-mkdir -p ${WORK_DIR}/res_maddpg/maddpg_dn_g05
-(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_dn_g05 ${WORK_DIR}/res_maddpg/maddpg_dn_g05)
+#mkdir -p ${WORK_DIR}/res_maddpg/maddpg_dn_g05
+#(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_dn_g05 ${WORK_DIR}/res_maddpg/maddpg_dn_g05)
 
 # Without do-nothing, gamma=0.5
-mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_g05
-(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn_g05 ${WORK_DIR}/res_maddpg/maddpg_wdn_g05)
+#mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_g05
+#(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn_g05 ${WORK_DIR}/res_maddpg/maddpg_wdn_g05)
