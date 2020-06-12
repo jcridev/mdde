@@ -19,6 +19,12 @@ COMPOSE_DIR=../docker/compositions/redis
 # With do-nothing, disregard storage
 (cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_stop.sh ${PFX}maddpg_am_wdn_sm0)
 
+# With do-nothing, disregard storage
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_stop.sh ${PFX}maddpg_am_dn_sm0_b1)
+
+# With do-nothing, disregard storage
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_stop.sh ${PFX}maddpg_am_wdn_sm0_b1)
+
 
 # With do-nothing, gamma=0.5
 #rm ${COMPOSE_DIR}/${ARGS_FILE}
