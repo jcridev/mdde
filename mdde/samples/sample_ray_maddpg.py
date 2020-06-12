@@ -155,6 +155,8 @@ class MADDPGSample:
                                                      num_steps_before_bench=config.bench_psteps,
                                                      agents=agents,
                                                      benchmark_clients=config.bench_clients,
+                                                     data_gen_workload=selected_workload,
+                                                     bench_workload=selected_workload,
                                                      write_stats=write_stats)  # Number of YCSB threads
             else:
                 scenario = DefaultScenario(num_fragments=num_fragments,
