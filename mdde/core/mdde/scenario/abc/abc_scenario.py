@@ -203,13 +203,17 @@ class ABCScenario(ABC):
         """
         pass
 
-    def reset(self) -> None:
+    def reset(self) -> EBenchmark:
         """
         Method is called by the Environment when it's being reset. By default, sets the agents done flag to False.
         Override this method if additional cleanup is required.
+
+        :return Type of benchmark (or lack of it) after reset.
         """
         for agent in self.get_agents():
             agent.reset()
+
+        return EBenchmark.DEFAULT
 
     def get_observation(self, registry_read: PRegistryReadClient)\
             -> Tuple[Dict[int, np.ndarray], Dict[int, np.ndarray]]:

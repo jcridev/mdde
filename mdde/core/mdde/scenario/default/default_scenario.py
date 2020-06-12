@@ -422,11 +422,12 @@ class DefaultScenario(ABCScenario):
         # Delete arrays when finished
         self._clear_arrays()
 
-    def reset(self) -> None:
+    def reset(self) -> EBenchmark:
         # Reset agents
         super().reset()
         # Flush arrays, no point to store these between episodes
         self.flush()
+        return self._benchmark_mode
 
     def _initialize_stat_values_store_if_needed_read_obs_space(self, registry_read: PRegistryReadClient) -> None:
         """

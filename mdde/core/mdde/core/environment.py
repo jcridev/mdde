@@ -240,13 +240,16 @@ class Environment:
         if reset_call_response.failed:
             raise RuntimeError(reset_call_response.error)
         # Reset agents state
-        self._scenario.reset()
+        benchmark_mode = self._scenario.reset()
         self.__next_episode()
         # Execute the initial benchmark
-        self.benchmark()
-        counterfeit_init_response = self._registry_ctrl.ctrl_init_benchmark_counterfeit()
-        if counterfeit_init_response.result is False:
-            raise RuntimeError("Failed to initialize counterfeit benchmark.")
+        if benchmark_mode == EBenchmark.DEFAULT:
+            self.benchmark()
+            counterfeit_init_response = self._registry_ctrl.ctrl_init_benchmark_counterfeit()
+            if counterfeit_init_response.result is False:
+                raise RuntimeError("Failed to initialize counterfeit benchmark.")
+        elif benchmark_mode == EBenchmark.COUNTERFEIT:
+            self.benchmark_counterfeit()
         # Retrieve the observations
         return self.observation_space
 
