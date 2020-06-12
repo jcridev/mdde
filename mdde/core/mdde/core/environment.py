@@ -29,7 +29,8 @@ class Environment:
                  registry_write: PRegistryWriteClient,
                  registry_read: PRegistryReadClient,
                  experiment_id: Union[None, str] = None,
-                 write_stats: bool = False):
+                 write_stats: bool = False,
+                 write_obs_at_bench: bool = False):
         """
         Environment constructor
         :param config: (optional) MDDE configuration object
@@ -40,6 +41,7 @@ class Environment:
         :param experiment_id: (optional) Id of the current experiment. Used for identification of the environment
         instance. If not explicitly specified a random id is generated. Id is an alphanumeric string with the max length
         of 8. Symbols beyond 8 will be ignored, special characters and spaces will be removed.
+        :param write_obs_at_bench: Save current observations at every benchmark run
         """
         if not isinstance(scenario, ABCScenario):
             raise TypeError("scenario must extend ABCScenario")
@@ -53,6 +55,8 @@ class Environment:
 
         if scenario is None:
             raise TypeError("scenario can't be None")
+
+        self._write_obs_at_bench = write_obs_at_bench
 
         self._experiment_id = self.__generate_exp_id(experiment_id)
         # Attach scenario and agents to this experiment
@@ -296,7 +300,8 @@ class Environment:
                                             after_reset=self.__did_reset_flag)
             if bench_execute_step:
                 # Dump observations after a benchmark run
-                self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n, reset=False)
+                if self._write_obs_at_bench:
+                    self._dump_observation_to_sqlite(self.__step_count, self.__episode_count, obs_n, reset=False)
         self.__did_reset_flag = False
         return obs_n, reward_n, done_n, legal_act_n
 
