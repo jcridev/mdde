@@ -8,7 +8,7 @@ ARGS_FILE=args.env
 COMPOSE_DIR=../docker/compositions/redis
 
 # Build required images 
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_build.sh)
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_build.sh)
 
 # With do-nothing
 rm ${COMPOSE_DIR}/${ARGS_FILE}
