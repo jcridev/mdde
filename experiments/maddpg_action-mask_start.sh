@@ -17,7 +17,11 @@ COMPOSE_DIR=../docker/compositions/redis
 
 # With do-nothing
 rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+if [ "$SIM" == " --sim" ]; then
+  echo "LAUNCH_ARGS=--sim" > ${COMPOSE_DIR}/${ARGS_FILE}
+else
+  echo "" > ${COMPOSE_DIR}/${ARGS_FILE}
+fi
 (cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_dn)
 
 if [ $SLEEP_BETWEEN == 1 ]; then sleep 5m; fi 
