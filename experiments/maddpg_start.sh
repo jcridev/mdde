@@ -31,7 +31,7 @@ if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
 # Without do-nothing
 rm ${COMPOSE_DIR}/${ARGS_FILE}
 echo "LAUNCH_ARGS=--no-do-nothing${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn).
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn)
 
 if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
