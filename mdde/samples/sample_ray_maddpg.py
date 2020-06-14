@@ -169,6 +169,8 @@ class MADDPGSample:
 
             # Set multiplier to the sore related term of the default reward function
             scenario.set_storage_importance(config.store_m)
+            # Set ho much do-nothing worth
+            scenario.set_do_nothing_worth(config.dn_worth)
 
             # Create environment
             environment = Environment(config=env_config,
@@ -436,6 +438,11 @@ if __name__ == '__main__':
                              '0.0 - ignore (agents are allowed to hoard everything with no repercussions)',
                         type=float,
                         default=0.5)
+
+    parser.add_argument('--dn-worth',
+                        help='How much reward should be given to the agent that decide to do nothing in the iteration.',
+                        type=float,
+                        default=1.0)
 
     parser.add_argument('--bench-clients',
                         help='Number of benchmark clients.',

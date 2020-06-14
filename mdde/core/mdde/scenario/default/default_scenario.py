@@ -113,14 +113,25 @@ class DefaultScenario(ABCScenario):
 
         self._storage_multiplier: float = 0.0
         """Emphasis on storage related term in the reward function."""
+        self._do_nothing_worth: float = 0.0
+        """Default (non-bench) reward for doing nothing"""
 
-    def set_storage_importance(self, importance: float):
-        """Adjust the multiplier for the storage importance > 0 (Recommended range [0, 1.0])"""
+    def set_storage_importance(self, importance: float) -> None:
+        """Adjust the multiplier for the storage importance > 0 (Recommended range [0.0, 1.0])"""
 
         if importance < 0:
             raise ValueError("Importance of the storage can't be negative. ")
 
         self._storage_multiplier = importance
+
+    def set_do_nothing_worth(self, worth: float) -> None:
+        """Adjust the importance of do-nothing value (Recommended range [0.0, 1.0])"""
+        if not isinstance(worth, float):
+            raise TypeError("Do-nothing worth must be a floating number.")
+        if worth < 0.0:
+            raise ValueError("Importance of the storage can't be negative. ")
+
+        self._do_nothing_worth: float = worth
 
     def __del__(self):
         self._logger.info('Shutting down')
@@ -308,9 +319,10 @@ class DefaultScenario(ABCScenario):
                 a_act = self._action_history[a_act_history_step][agent_idx]
                 # Increase the multiplier for each correct action taken, if no correct actions were taken,
                 # the final agent reward will be 0
-                if a_act[0] == 1 and a_act[1] == EActionResult.ok.value:
-                    # Only give rewards for the actions that were success and not "do nothing" or "done"
-                    agent_correctness_multiplier += 1.0 / self._num_steps_before_bench
+                if a_act[0] == 1:
+                    if a_act[1] == EActionResult.ok.value or a_act[1] == EActionResult.did_nothing.value:
+                        # Only give rewards for the actions that were success and not "done"
+                        agent_correctness_multiplier += 1.0 / self._num_steps_before_bench
             # Agent reward
 
             self._logger.debug("Real reward: current_throughput={};agent_reads={};total_reads={};"
@@ -349,7 +361,7 @@ class DefaultScenario(ABCScenario):
                     reward_n[aid] = -1.
                 elif a_step[1] == EActionResult.did_nothing.value:
                     # Zero reward for doing nothing
-                    reward_n[aid] = 0.
+                    reward_n[aid] = self._do_nothing_worth
                 else:
                     # 1.0 for doing something which is correct
                     reward_n[aid] = 1.
