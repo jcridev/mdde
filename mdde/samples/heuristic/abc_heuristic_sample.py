@@ -1,4 +1,5 @@
 from pathlib import Path
+from timeit import default_timer as timer
 
 from mdde.core import Environment
 
@@ -68,7 +69,11 @@ class ABCMDDEHeuristicSample(ABC):
 
     def tune_estimations(self, step_num: int, env: Environment):
         # throughput_step: Dict = {}
-        real_reads, real_throughput = self.processBenchmarkStatsInEnv(env._bench_request_stats(), env)
+        start_bench = timer()
+        real_bench_stats = env._bench_request_stats()
+        end_bench = timer()
+        logging.info("Real benchmark execution sec: {}".format(end_bench-start_bench))
+        real_reads, real_throughput = self.processBenchmarkStatsInEnv(real_bench_stats, env)
 
         bench_throughput_list = self.throughput_all.get(-1)
         if bench_throughput_list is None:
@@ -95,8 +100,13 @@ class ABCMDDEHeuristicSample(ABC):
         magnitude_variations = [(0, 0.7)]
 
         for magnitude in magnitude_variations:
+            start_counterfeit = timer()
             bench_response = env._bench_request_stats_counterfeit(magnitude_start_override=magnitude[0],
                                                                   magnitude_end_override=magnitude[1])
+            end_counterfeit = timer()
+            logging.info("Counterfeit benchmark estimation ({}) sec: {}".format(magnitude,
+                                                                                end_counterfeit - start_counterfeit))
+
             estimated_reads, estimated_throughput = self.processBenchmarkStatsInEnv(bench_response, env)
 
             magnitude_list = self.throughput_all.get(magnitude)
