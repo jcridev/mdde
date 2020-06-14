@@ -30,6 +30,14 @@ mkdir -p ${WORK_DIR}/res_maddpg/maddpg_dn_sm0_b1
 mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_sm0_b1
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn_sm0_b1 ${WORK_DIR}/res_maddpg/maddpg_wdn_sm0_b1)
 
+# With do-nothing, consider storage, 80 fragments
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_b1_f80
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_b1_f80 ${WORK_DIR}/res_maddpg/maddpg_b1_f80)
+
+# With do-nothing, consider storage, 80 fragments, bench at every step
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_b1_f80
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn_b1_f80 ${WORK_DIR}/res_maddpg/maddpg_wdn_b1_f80)
+
 # With do-nothing, gamma=0.5
 #mkdir -p ${WORK_DIR}/res_maddpg/maddpg_dn_g05
 #(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_dn_g05 ${WORK_DIR}/res_maddpg/maddpg_dn_g05)
