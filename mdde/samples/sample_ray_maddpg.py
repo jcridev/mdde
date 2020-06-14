@@ -149,7 +149,7 @@ class MADDPGSample:
                 idx += 1
 
             # Create scenario
-            num_fragments: int = 20
+            num_fragments: int = config.n_frags
             if config.sim:
                 scenario = DefaultScenarioSimulation(num_fragments=num_fragments,
                                                      num_steps_before_bench=config.bench_psteps,
@@ -443,6 +443,11 @@ if __name__ == '__main__':
                         help='How much reward should be given to the agent that decide to do nothing in the iteration.',
                         type=float,
                         default=1.0)
+
+    parser.add_argument('--n-frags',
+                        help='Number of fragments to generate.',
+                        type=int,
+                        default=20)
 
     parser.add_argument('--bench-clients',
                         help='Number of benchmark clients.',
