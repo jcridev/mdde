@@ -30,6 +30,18 @@ mkdir -p ${WORK_DIR}/res_maddpg/maddpg_am_dn_sm0_b1
 mkdir -p ${WORK_DIR}/res_maddpg/maddpg_am_wdn_sm0_b1
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results.sh ${PFX}maddpg_am_wdn_sm0_b1 ${WORK_DIR}/res_maddpg/maddpg_am_wdn_sm0_b1)
 
+# Without do-nothing, disregard storage, bench at every step, 1e7 replay buffer
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_am_wdn_sm0_b1_10mrb
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results.sh ${PFX}maddpg_am_wdn_sm0_b1_10mrb ${WORK_DIR}/res_maddpg/maddpg_am_wdn_sm0_b1_10mrb)
+
+# With do-nothing, consider storage, 80 fragments
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_am_wdn_f80
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results.sh ${PFX}maddpg_am_wdn_f80 ${WORK_DIR}/res_maddpg/maddpg_am_wdn_f80)
+
+# With do-nothing, consider storage, 80 fragments, bench at every step
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_am_wdn_b1_f80
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results.sh ${PFX}maddpg_am_wdn_b1_f80 ${WORK_DIR}/res_maddpg/maddpg_am_wdn_b1_f80)
+
 # With do-nothing, gamma=0.5
 #mkdir -p ${WORK_DIR}/res_maddpg/maddpg_am_dn_g05
 #(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results.sh_g05 ${PFX}maddpg_am_dn_g05 ${WORK_DIR}/res_maddpg/maddpg_am_dn_g05)
