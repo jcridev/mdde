@@ -42,6 +42,18 @@ mkdir -p ${WORK_DIR}/res_maddpg/maddpg_b1_f80
 mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_b1_f80
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results.sh ${PFX}maddpg_wdn_b1_f80 ${WORK_DIR}/res_maddpg/maddpg_wdn_b1_f80)
 
+# Without do-nothing, consider storage, 80 fragments, bench at every step, bench at every step, batch size 1000, train batch 4000
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_b1_f80_stm
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results.sh ${PFX}maddpg_wdn_b1_f80_stm ${WORK_DIR}/res_maddpg/maddpg_wdn_b1_f80_stm)
+
+# With do-nothing, consider storage, 20 fragments, bench at every step, bench at every step, batch size 1000, train batch 4000
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_dn_b1_stm
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results.sh ${PFX}maddpg_dn_b1_stm ${WORK_DIR}/res_maddpg/maddpg_dn_b1_stm)
+
+# Without do-nothing, consider storage, 20 fragments, bench at every step, bench at every step, batch size 1000, train batch 4000
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_b1_stm
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results.sh ${PFX}maddpg_wdn_b1_stm ${WORK_DIR}/res_maddpg/maddpg_wdn_b1_stm)
+
 # With do-nothing, gamma=0.5
 #mkdir -p ${WORK_DIR}/res_maddpg/maddpg_dn_g05
 #(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results.sh_g05 ${PFX}maddpg_dn_g05 ${WORK_DIR}/res_maddpg/maddpg_dn_g05)
