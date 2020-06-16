@@ -45,8 +45,6 @@ class MADDPGSampleActMask:
     """Path to directory for temporary files created by the scenario or agents."""
 
     NUM_ADVERSARIES = 0
-    SAMPLE_BATCH_SIZE = 25
-    TRAIN_BATCH_SIZE = 100
     ADV_POLICY = 'maddpg'
     GOOD_POLICY = 'maddpg'
 
@@ -154,7 +152,7 @@ class MADDPGSampleActMask:
                 idx += 1
 
             # Create scenario
-            num_fragments: int = 20
+            num_fragments: int = config.n_frags
             if config.sim:
                 scenario = DefaultScenarioSimulation(num_fragments=num_fragments,
                                                      num_steps_before_bench=config.bench_psteps,
@@ -174,6 +172,8 @@ class MADDPGSampleActMask:
 
             # Set multiplier to the sore related term of the default reward function
             scenario.set_storage_importance(config.store_m)
+            # Set ho much do-nothing worth
+            scenario.set_do_nothing_worth(config.dn_worth)
 
             # Create environment
             environment = Environment(config=env_config,
@@ -295,9 +295,9 @@ class MADDPGSampleActMask:
             # --- Optimization ---
             "actor_lr": config.actor_lr,
             "critic_lr": config.critic_lr,
-            "learning_starts": self.TRAIN_BATCH_SIZE * config.ep_len,
-            "sample_batch_size": self.SAMPLE_BATCH_SIZE,
-            "train_batch_size": self.TRAIN_BATCH_SIZE,
+            "learning_starts": config.learning_starts,
+            "sample_batch_size": config.smpl_batch_s,
+            "train_batch_size": config.trn_batch_s,
             "batch_mode": "truncate_episodes",
 
             # --- Parallelism ---
@@ -413,7 +413,17 @@ if __name__ == '__main__':
     parser.add_argument('--learning_starts',
                         help='How many steps of the model to sample before learning starts.',
                         type=int,
-                        default=1024 * 25)
+                        default=1001 * 25)
+
+    parser.add_argument('--smpl-batch-s)',
+                        help='Sample batch size.',
+                        type=int,
+                        default=25)
+
+    parser.add_argument('--trn-batch-s',
+                        help='Train batch size.',
+                        type=int,
+                        default=100)
     # - Q-learning
     parser.add_argument('--gamma',
                         help='Discount factor (Q-learning) ∈ [0, 1]. If closer to zero, the agent will give more '
@@ -445,6 +455,16 @@ if __name__ == '__main__':
                              '0.0 - ignore (agents are allowed to hoard everything with no repercussions)',
                         type=float,
                         default=0.5)
+
+    parser.add_argument('--dn-worth',
+                        help='How much reward should be given to the agent that decide to do nothing in the iteration.',
+                        type=float,
+                        default=1.0)
+
+    parser.add_argument('--n-frags',
+                        help='Number of fragments to generate.',
+                        type=int,
+                        default=20)
 
     parser.add_argument('--bench-clients',
                         help='Number of benchmark clients.',

@@ -33,6 +33,9 @@ COMPOSE_DIR=../docker/compositions/redis
 # Without do-nothing, consider storage, 80 fragments, bench at every step
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_dispose.sh ${PFX}maddpg_am_wdn_b1_f80)
 
+# With do-nothing, consider storage, 80 fragments, bench at every step, batch size 1000, train batch 4000
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_dispose.sh ${PFX}maddpg_am_wdn_b1_f80_stm)
+
 # With do-nothing, gamma=0.5
 #(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_dispose.sh ${PFX}maddpg_am_dn_g05)
 

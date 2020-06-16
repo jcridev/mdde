@@ -42,6 +42,10 @@ mkdir -p ${WORK_DIR}/res_maddpg/maddpg_am_wdn_f80
 mkdir -p ${WORK_DIR}/res_maddpg/maddpg_am_wdn_b1_f80
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results.sh ${PFX}maddpg_am_wdn_b1_f80 ${WORK_DIR}/res_maddpg/maddpg_am_wdn_b1_f80)
 
+# With do-nothing, consider storage, 80 fragments, bench at every step, batch size 1000, train batch 4000
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_am_wdn_b1_f80_stm
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results.sh ${PFX}maddpg_am_wdn_b1_f80_stm ${WORK_DIR}/res_maddpg/maddpg_am_wdn_b1_f80_stm)
+
 # With do-nothing, gamma=0.5
 #mkdir -p ${WORK_DIR}/res_maddpg/maddpg_am_dn_g05
 #(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results.sh_g05 ${PFX}maddpg_am_dn_g05 ${WORK_DIR}/res_maddpg/maddpg_am_dn_g05)

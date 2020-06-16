@@ -84,6 +84,13 @@ echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --n-frags 80${SIM}" > ${COMPO
 
 if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
+# Without do-nothing, consider storage, 80 fragments, bench at every step, batch size 1000, train batch 4000
+rm ${COMPOSE_DIR}/${ARGS_FILE}
+echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --n-frags 80 --smpl-batch-s 1000 --trn-batch-s 4000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_b1_f80_stm)
+
+if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+
 # With do-nothing, gamma=0.5
 #rm ${COMPOSE_DIR}/${ARGS_FILE}
 #echo "LAUNCH_ARGS=--gamma 0.5" > ${COMPOSE_DIR}/${ARGS_FILE}
