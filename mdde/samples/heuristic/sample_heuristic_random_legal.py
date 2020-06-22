@@ -144,7 +144,7 @@ class MDDERandomLegalAgents(abc_heuristic_sample.ABCMDDEHeuristicSample):
                 # self.tune_estimations(step_num=step, env=env)
                 step += 1
 
-            obs_s, act_l_s = self._env.reset()
+            obs_s, act_l_s = env.reset()
 
         # self.out_final_results()
 
