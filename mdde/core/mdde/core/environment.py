@@ -95,9 +95,9 @@ class Environment:
         if self._write_stats and not self.__mdde_result_folder_root:
             raise AssertionError("Stats can't be writen, results folder is not configured.")
 
-        self._benchmark_estimation_magnitude_start: float = 1.0
+        self._benchmark_estimation_magnitude_start: float = 0.0
         """Magnitude of changes in estimated throughput according to the estimated benchmark allocation."""
-        self._benchmark_estimation_magnitude_end: float = 1.0
+        self._benchmark_estimation_magnitude_end: float = 0.7
         """Magnitude of changes in estimated throughput according to the estimated benchmark allocation."""
 
         self.__file_csv_writer = None

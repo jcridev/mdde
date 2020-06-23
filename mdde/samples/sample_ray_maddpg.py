@@ -406,7 +406,7 @@ if __name__ == '__main__':
                         type=int,
                         default=1001 * 25)
 
-    parser.add_argument('--smpl-batch-s)',
+    parser.add_argument('--smpl-batch-s',
                         help='Sample batch size.',
                         type=int,
                         default=25)
