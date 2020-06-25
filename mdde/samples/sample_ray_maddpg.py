@@ -155,7 +155,8 @@ class MADDPGSample:
                                                      benchmark_clients=config.bench_clients,
                                                      data_gen_workload=selected_workload,
                                                      bench_workload=selected_workload,
-                                                     write_stats=write_stats)  # Number of YCSB threads
+                                                     write_stats=write_stats,
+                                                     ignore_conflicting_actions=config.ok_conf_a)  # Number of YCSB threads
             else:
                 scenario = DefaultScenario(num_fragments=num_fragments,
                                            num_steps_before_bench=config.bench_psteps,
@@ -163,7 +164,8 @@ class MADDPGSample:
                                            benchmark_clients=config.bench_clients,
                                            data_gen_workload=selected_workload,
                                            bench_workload=selected_workload,
-                                           write_stats=write_stats)  # Number of YCSB threads
+                                           write_stats=write_stats,
+                                           ignore_conflicting_actions=config.ok_conf_a)  # Number of YCSB threads
 
             # Set multiplier to the sore related term of the default reward function
             scenario.set_storage_importance(config.store_m)
@@ -477,6 +479,10 @@ if __name__ == '__main__':
                         help='Select the observation space shaper. "flatbox" or "2dbox"',
                         type=str,
                         default='flatbox')
+
+    parser.add_argument('--ok-conf-a',
+                        help='Ignore conflicting actions.',
+                        action='store_true')
 
     config = parser.parse_args()
 

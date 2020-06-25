@@ -38,7 +38,8 @@ class DefaultScenarioSimulation(DefaultScenario):
                  bench_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST,
                  corr_act_threshold: float = 0.7,
                  write_stats: bool = False,
-                 throughput_history_relevance: int = 25):
+                 throughput_history_relevance: int = 25,
+                 ignore_conflicting_actions: bool = False):
         """
         Constructor of the default scenario.
         :param num_fragments: Target number of fragments to be generated out of data record present in data nodes
@@ -61,7 +62,8 @@ class DefaultScenarioSimulation(DefaultScenario):
                          data_gen_workload=data_gen_workload,
                          bench_workload=bench_workload,
                          corr_act_threshold=corr_act_threshold,
-                         write_stats=write_stats)
+                         write_stats=write_stats,
+                         ignore_conflicting_actions=ignore_conflicting_actions)
 
         self._benchmark_mode = EBenchmark.COUNTERFEIT
         self._fresh_start: bool = False
