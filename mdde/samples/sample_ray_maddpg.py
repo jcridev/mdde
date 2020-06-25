@@ -200,8 +200,15 @@ class MADDPGSample:
             return obs.reshape((obs.shape[0], obs.shape[1] * obs.shape[2]), order='F') \
                 .reshape((obs.shape[0] * obs.shape[1] * obs.shape[2]), order='C')
 
-        sample_selected_shaper = obs_shaper_flat_box
+        sample_selected_shaper = None
         """Observation shaper selected. Set None if you want to use the default one in the wrapper."""
+        if config.o_shape == 'flatbox':
+            sample_selected_shaper = obs_shaper_flat_box
+        elif config.o_shape == '2dbox':
+            sample_selected_shaper = obs_shaper_2d_box
+
+        if sample_selected_shaper is None:
+            raise RuntimeError("Unknown observation shaper")
 
         # Create and initialize environment before passing it to Ray
         # This makes it impossible to run multiple instances of the environment, however it's intentional due to the
@@ -465,6 +472,11 @@ if __name__ == '__main__':
     parser.add_argument('--light',
                         help='Execute corresponding "light" workload.',
                         action='store_true')
+
+    parser.add_argument('--o-shape',
+                        help='Select the observation space shaper. "flatbox" or "2dbox"',
+                        type=str,
+                        default='flatbox')
 
     config = parser.parse_args()
 
