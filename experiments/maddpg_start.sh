@@ -84,25 +84,38 @@ echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --n-frags 80${SIM}" > ${COMPO
 
 if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
+# With do-nothing, consider storage, bench at every step, 10000 episodes per 101 step
+rm ${COMPOSE_DIR}/${ARGS_FILE}
+echo "LAUNCH_ARGS=--bench-psteps 1 --num_episodes 10000 --ep_len 101${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_dn_b1_e10k_s100)
+
+if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
+
+# Without do-nothing, consider storage, bench at every step, 10000 episodes per 101 step
+rm ${COMPOSE_DIR}/${ARGS_FILE}
+echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --num_episodes 10000 --ep_len 101${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_b1_e10k_s100)
+
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # Without do-nothing, consider storage, 80 fragments, bench at every step, bench at every step, batch size 1000, train batch 4000
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --n-frags 80 --smpl-batch-s 1000 --trn-batch-s 4000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_b1_f80_stm)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --n-frags 80 --smpl-batch-s 1000 --trn-batch-s 4000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_b1_f80_stm)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # With do-nothing, consider storage, 20 fragments, bench at every step, bench at every step, batch size 1000, train batch 4000
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--bench-psteps 1 --smpl-batch-s 1000 --trn-batch-s 4000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_dn_b1_stm)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--bench-psteps 1 --smpl-batch-s 1000 --trn-batch-s 4000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_dn_b1_stm)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # Without do-nothing, consider storage, 20 fragments, bench at every step, bench at every step, batch size 1000, train batch 4000
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --smpl-batch-s 1000 --trn-batch-s 4000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_b1_stm)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --smpl-batch-s 1000 --trn-batch-s 4000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_b1_stm)
 
 #if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
