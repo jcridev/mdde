@@ -111,7 +111,8 @@ class MDDERandomLegalAgents(abc_heuristic_sample.ABCMDDEHeuristicSample):
                                       registry_ctrl=ctrl_client,
                                       registry_write=write_client,
                                       registry_read=read_client,
-                                      write_stats=write_stats)
+                                      write_stats=write_stats,
+                                      write_obs_at_bench=False)
             # Re-generate data
             environment.initialize_registry(with_benchmark=initial_benchmark)
 
@@ -128,6 +129,7 @@ class MDDERandomLegalAgents(abc_heuristic_sample.ABCMDDEHeuristicSample):
         episode = 0
         while episode < config.num_episodes:
             episode += 1
+            logging.info("Episode: {}".format(episode))
             step = 0
             obs_s, act_l_s = env.observation_space
             while step < config.ep_len:
@@ -198,7 +200,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_episodes',
                         help='Total number of episodes.',
                         type=int,
-                        default=1000)
+                        default=100)
     parser.add_argument('--ep_len',
                         help='Number of steps per episode.',
                         type=int,
