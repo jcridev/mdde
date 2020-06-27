@@ -100,6 +100,11 @@ class Environment:
         self._benchmark_estimation_magnitude_end: float = 0.7
         """Magnitude of changes in estimated throughput according to the estimated benchmark allocation."""
 
+        self._throughput_c_range_max: float = float('inf')
+        """Maximum throughput (counterfeit)"""
+        self._throughput_c_range_min: float = 0.
+        """Minimum throughput (counterfeit)"""
+
         self.__file_csv_writer = None
         self.activate_scenario()
 
@@ -222,10 +227,29 @@ class Environment:
         # Run the initial benchmark to establish a baseline
         if with_benchmark or self._scenario.get_counterfeit_required:
             self.benchmark()
-            counterfeit_init_response = self._registry_ctrl.ctrl_init_benchmark_counterfeit()
-            if counterfeit_init_response.result is False:
-                raise RuntimeError("Failed to initialize counterfeit benchmark.")
-        self._logger.info("Environment initialization is complete")
+            self.__initialize_counterfeit_benchmark()
+
+    def __initialize_counterfeit_benchmark(self):
+        counterfeit_init_response = self._registry_ctrl.ctrl_init_benchmark_counterfeit()
+        if counterfeit_init_response.result is False:
+            raise RuntimeError("Failed to initialize counterfeit benchmark.")
+        counterfeit_get_response = self._bench_request_stats_counterfeit()
+        self.__assign_c_throughput_range(counterfeit_get_response)
+
+    def __assign_c_throughput_range(self, counterfeit_get_response: BenchmarkStatus):
+        """Assign values to the counterfeit range min and max values"""
+        self._throughput_c_range_max = float(counterfeit_get_response.result.info.get('max_e_t'))
+        self._throughput_c_range_min = float(counterfeit_get_response.result.info.get('min_e_t'))
+
+    @property
+    def counterfeit_throughput_max(self) -> float:
+        """Theoretical counterfeit throughput maximum"""
+        return self._throughput_c_range_max
+
+    @property
+    def counterfeit_throughput_min(self) -> float:
+        """Theoretical counterfeit throughput minimum"""
+        return self._throughput_c_range_min
 
     def reset(self) -> Tuple[Dict[int, np.ndarray], Dict[int, np.ndarray]]:
         """
@@ -249,9 +273,7 @@ class Environment:
         # Execute the initial benchmark
         if benchmark_mode == EBenchmark.DEFAULT:
             self.benchmark()
-            counterfeit_init_response = self._registry_ctrl.ctrl_init_benchmark_counterfeit()
-            if counterfeit_init_response.result is False:
-                raise RuntimeError("Failed to initialize counterfeit benchmark.")
+            self.__initialize_counterfeit_benchmark()
         elif benchmark_mode == EBenchmark.COUNTERFEIT:
             self.benchmark_counterfeit()
         # Retrieve the observations
