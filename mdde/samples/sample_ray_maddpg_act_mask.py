@@ -160,7 +160,8 @@ class MADDPGSampleActMask:
                                                      benchmark_clients=config.bench_clients,
                                                      data_gen_workload=selected_workload,
                                                      bench_workload=selected_workload,
-                                                     write_stats=write_stats)  # Number of YCSB threads
+                                                     write_stats=write_stats,
+                                                     ignore_conflicting_actions=config.ok_conf_a)  # Number of YCSB threads
             else:
                 scenario = DefaultScenario(num_fragments=num_fragments,
                                            num_steps_before_bench=config.bench_psteps,
@@ -168,7 +169,8 @@ class MADDPGSampleActMask:
                                            benchmark_clients=config.bench_clients,
                                            data_gen_workload=selected_workload,
                                            bench_workload=selected_workload,
-                                           write_stats=write_stats)  # Number of YCSB threads
+                                           write_stats=write_stats,
+                                           ignore_conflicting_actions=config.ok_conf_a)  # Number of YCSB threads
 
             # Set multiplier to the sore related term of the default reward function
             scenario.set_storage_importance(config.store_m)
@@ -205,8 +207,15 @@ class MADDPGSampleActMask:
             return obs.reshape((obs.shape[0], obs.shape[1] * obs.shape[2]), order='F') \
                 .reshape((obs.shape[0] * obs.shape[1] * obs.shape[2]), order='C')
 
-        sample_selected_shaper = obs_shaper_flat_box
+        sample_selected_shaper = None
         """Observation shaper selected. Set None if you want to use the default one in the wrapper."""
+        if config.o_shape == 'flatbox':
+            sample_selected_shaper = obs_shaper_flat_box
+        elif config.o_shape == '2dbox':
+            sample_selected_shaper = obs_shaper_2d_box
+
+        if sample_selected_shaper is None:
+            raise RuntimeError("Unknown observation shaper")
 
         # Create and initialize environment before passing it to Ray
         # This makes it impossible to run multiple instances of the environment, however it's intentional due to the
@@ -470,6 +479,15 @@ if __name__ == '__main__':
                         help='Number of benchmark clients.',
                         type=int,
                         default=50)
+
+    parser.add_argument('--o-shape',
+                        help='Select the observation space shaper. "flatbox" or "2dbox"',
+                        type=str,
+                        default='flatbox')
+
+    parser.add_argument('--ok-conf-a',
+                        help='Ignore conflicting actions.',
+                        action='store_true')
 
     config = parser.parse_args()
 

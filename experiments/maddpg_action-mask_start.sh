@@ -17,79 +17,79 @@ COMPOSE_DIR=../docker/compositions/redis
 (cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_build.sh)
 
 # With do-nothing
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-if [ "$SIM" = " --sim" ]
-then
-  echo "LAUNCH_ARGS=--sim" > ${COMPOSE_DIR}/${ARGS_FILE}
-else
-  echo "" > ${COMPOSE_DIR}/${ARGS_FILE}
-fi
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_dn)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#if [ "$SIM" = " --sim" ]
+#then
+#  echo "LAUNCH_ARGS=--sim" > ${COMPOSE_DIR}/${ARGS_FILE}
+#else
+#  echo "" > ${COMPOSE_DIR}/${ARGS_FILE}
+#fi
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_dn)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # Without do-nothing
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
-
-# With do-nothing, disregard storage
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--store-m 0.0${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_dn_sm0)
-
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # With do-nothing, disregard storage
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing --store-m 0.0${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_sm0)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--store-m 0.0${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_dn_sm0)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+
+# With do-nothing, disregard storage
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --store-m 0.0${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_sm0)
+
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # With do-nothing, disregard storage, bench at every step
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--store-m 0.0 --bench-psteps 1${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_dn_sm0_b1)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--store-m 0.0 --bench-psteps 1${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_dn_sm0_b1)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # Without do-nothing, disregard storage, bench at every step
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing --store-m 0.0 --bench-psteps 1${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_sm0_b1)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --store-m 0.0 --bench-psteps 1${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_sm0_b1)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # Without do-nothing, disregard storage, bench at every step, 1e7 replay buffer
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing --store-m 0.0 --bench-psteps 1 --buffer_size 10000000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_sm0_b1_10mrb)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --store-m 0.0 --bench-psteps 1 --buffer_size 10000000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_sm0_b1_10mrb)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # Without do-nothing, consider storage, 80 fragments
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing --n-frags 80${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_f80)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --n-frags 80${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_f80)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # Without do-nothing, consider storage, 80 fragments, bench at every step
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --n-frags 80${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_b1_f80)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --n-frags 80${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_b1_f80)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # Without do-nothing, consider storage, 80 fragments, bench at every step, batch size 1000, train batch 4000
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --n-frags 80 --smpl-batch-s 1000 --trn-batch-s 4000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_b1_f80_stm)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --n-frags 80 --smpl-batch-s 1000 --trn-batch-s 4000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_b1_f80_stm)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
 
 # With do-nothing, gamma=0.5
 #rm ${COMPOSE_DIR}/${ARGS_FILE}
@@ -102,6 +102,46 @@ if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
 #rm ${COMPOSE_DIR}/${ARGS_FILE}
 #echo "LAUNCH_ARGS=--no-do-nothing --gamma 0.5" > ${COMPOSE_DIR}/${ARGS_FILE}
 #(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_g05)
+
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+
+# With do-nothing, consider storage, bench at every step, 10000 episodes per 101 step
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--bench-psteps 1 --num_episodes 10000 --ep_len 101${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_dn_b1_e10k_s100)
+
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
+
+# Without do-nothing, consider storage, bench at every step, 10000 episodes per 101 step
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --num_episodes 10000 --ep_len 101${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_b1_e10k_s100)
+
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi 
+
+# With do-nothing, ignore conflicts
+rm ${COMPOSE_DIR}/${ARGS_FILE}
+echo "LAUNCH_ARGS=--ok-conf-a${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_dn_ai)
+
+if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
+
+# Without do-nothing, ignore conflicts
+rm ${COMPOSE_DIR}/${ARGS_FILE}
+echo "LAUNCH_ARGS=--no-do-nothing --ok-conf-a${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_ai)
+
+# With do-nothing, consider storage, bench at every step,  10000 episodes per 101 step, ignore conflicts
+rm ${COMPOSE_DIR}/${ARGS_FILE}
+echo "LAUNCH_ARGS=--bench-psteps 1 --num_episodes 10000 --ep_len 101 --ok-conf-a${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_dn_b1_e10k_s100_ai)
+
+if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
+
+# Without do-nothing, consider storage, bench at every step, 10000 episodes per 101 step, ignore conflicts
+rm ${COMPOSE_DIR}/${ARGS_FILE}
+echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 1 --num_episodes 10000 --ep_len 101 --ok-conf-a${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_start_detached.sh ${PFX}maddpg_am_wdn_b1_e10k_s100_ai)
 
 # Cleanup the args file
 rm ${COMPOSE_DIR}/${ARGS_FILE}
