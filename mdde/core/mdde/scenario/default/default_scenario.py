@@ -33,7 +33,8 @@ class DefaultScenario(ABCScenario):
                  data_gen_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST,
                  bench_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST,
                  corr_act_threshold: float = 0.7,
-                 write_stats: bool = False):
+                 write_stats: bool = False,
+                 ignore_conflicting_actions: bool = False):
         """
         Constructor of the default scenario.
         :param num_fragments: Target number of fragments to be generated out of data record present in data nodes
@@ -116,6 +117,11 @@ class DefaultScenario(ABCScenario):
         self._do_nothing_worth: float = 0.0
         """Default (non-bench) reward for doing nothing"""
 
+        self._ignore_conflicting_actions: bool = ignore_conflicting_actions
+        """If agents take legal actions, but fail due to conflicts, still give the agents a proper reward"""
+        self._latest_legal_actions: Union[None, Dict[int, np.ndarray]] = None
+        """Legal actions as returned to the agents with previously generated observations per agent"""
+
     def set_storage_importance(self, importance: float) -> None:
         """Adjust the multiplier for the storage importance > 0 (Recommended range [0.0, 1.0])"""
 
@@ -195,6 +201,14 @@ class DefaultScenario(ABCScenario):
         for agent_id, action in actions.items():
             s_agent: ABCAgent = self._agents[agent_id]
             aa_res: EActionResult = s_agent.do_action(action)
+
+            if aa_res == EActionResult.denied and self._ignore_conflicting_actions:
+                if self._latest_legal_actions is not None:
+                    agent_legal_act = self._latest_legal_actions[agent_id]
+                    if agent_legal_act[action] == 1:
+                        # If the action was previously declared legal, still ok it.
+                        aa_res = EActionResult.ok
+
             aa_val = np.full(2, [1, aa_res.value], dtype=np.int16)
             step_action_res[agent_id] = aa_val
         self._action_history[self._current_step] = step_action_res
@@ -428,6 +442,8 @@ class DefaultScenario(ABCScenario):
         action_legal_n: Dict[int, np.ndarray] = {}
         for agent in self.get_agents():
             obs_n[agent.id], action_legal_n[agent.id] = agent.filter_observation(agent_nodes, fragments, obs)
+
+        self._latest_legal_actions = action_legal_n
         return obs_n, action_legal_n
 
     def flush(self) -> None:
