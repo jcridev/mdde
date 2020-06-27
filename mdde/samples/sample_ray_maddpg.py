@@ -3,6 +3,7 @@ import argparse
 import logging
 
 from pathlib import Path
+from typing import Callable, Union
 
 import ray
 from ray import utils
@@ -212,6 +213,29 @@ class MADDPGSample:
         if sample_selected_shaper is None:
             raise RuntimeError("Unknown observation shaper")
 
+        # Configure reward scaler
+        reward_scaler: Union[Callable[[float, Environment], float], None] = None
+
+        if config.scale_rew:
+            def scale_reward(reward: float, env: Environment):
+                """A very simplistic reward scaling function, oriented for use with the counterfeit benchmark
+                and default scenario"""
+                if reward < 0:
+                    return reward
+                counterfeit_thr_max = env.counterfeit_throughput_max
+                counterfeit_thr_min = env.counterfeit_throughput_min if config.bench_psteps == 1 else 0.0
+                scenario_rew_max = 1.0
+                scenario_rew_min = 0.0
+                default_scenario_thr_max = counterfeit_thr_max + counterfeit_thr_max * config.store_m
+                scaled_reward = (
+                                   ((reward - counterfeit_thr_min) / (default_scenario_thr_max - counterfeit_thr_min))
+                                   * (scenario_rew_max - scenario_rew_min)  # Unnecessary here, but easier for debug
+                                ) + scenario_rew_min
+                return scaled_reward
+
+            reward_scaler = scale_reward
+
+
         # Create and initialize environment before passing it to Ray
         # This makes it impossible to run multiple instances of the environment, however it's intentional due to the
         # the nature of the environment that's represented as a distributed infrastructure of services, it can't be
@@ -223,7 +247,8 @@ class MADDPGSample:
                                                       write_stats=False,
                                                       initial_benchmark=False,
                                                       do_nothing=config.do_nothing),
-                                         observation_shaper=sample_selected_shaper)
+                                         observation_shaper=sample_selected_shaper,
+                                         reward_scaler=reward_scaler)
 
         input_size = env_instance.observation_space_dict[0].shape[0]
         output_size = env_instance.action_space_dict[0].n
@@ -232,7 +257,8 @@ class MADDPGSample:
         def env_creator(kvargs):
             env = make_env(**kvargs)
             return MddeMultiAgentEnv(env=env,
-                                     observation_shaper=sample_selected_shaper)
+                                     observation_shaper=sample_selected_shaper,
+                                     reward_scaler=reward_scaler)
 
         register_env("mdde", env_creator)
 
@@ -482,6 +508,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--ok-conf-a',
                         help='Ignore conflicting actions.',
+                        action='store_true')
+
+    parser.add_argument('--scale-rew',
+                        help='Scale reward to the range: [-1.0, 1.0].',
                         action='store_true')
 
     config = parser.parse_args()

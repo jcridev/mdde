@@ -16,7 +16,8 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
 
     def __init__(self,
                  env: Environment,
-                 observation_shaper: Union[None, Callable[[np.ndarray], np.ndarray]] = None):
+                 observation_shaper: Union[None, Callable[[np.ndarray], np.ndarray]] = None,
+                 reward_scaler: Union[None, Callable[[float, Environment], float]] = None):
         """
         Initialize Ray environment.
         :param env: MDDE Environment.
@@ -24,6 +25,7 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         :param observation_shaper: (optional) If specified, will be used for re-shaping the observations,
         otherwise the observations are flattened.
         :type observation_shaper: None or Callable[[np.ndarray], np.ndarray]
+        :param reward_scaler: (optional) Reward scaler function.
         """
         logging.basicConfig(level=logging.INFO,
                             format="%(asctime)s [%(levelname)s] %(message)s")
@@ -34,7 +36,10 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
         """MDDE Environment instance."""
 
         self._observation_shaper = observation_shaper
-        """Re-shaper of the environment."""
+        """Re-shaper of the environment observation."""
+
+        self._reward_scaler = reward_scaler
+        """Scale the reward."""
 
     def reset(self):
         """
@@ -112,6 +117,13 @@ class MddeMultiAgentEnv(rllib.MultiAgentEnv):
             # Info
             info_dict[k] = {}  # TODO: return something meaningful here
         done_dict["__all__"] = all(d for d in done.values())
+
+        # Re-scale the rewards if needed
+        if self._reward_scaler is not None:
+            scaled_rewards = {}
+            for rew_k, rew_v in reward.items():
+                scaled_rewards[rew_k] = self._reward_scaler(rew_v, self._env)
+            reward = scaled_rewards
 
         return obs_n, reward, done_dict, info_dict
 

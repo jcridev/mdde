@@ -223,13 +223,16 @@ public class CounterfeitRunner {
                 -(changeDirection) * Math.log10(1 + degreeOfChange + valueDiminisher));
 
         // Get theoretical highest
+        double valueDiminisherMax = baselineDisbalance * ((adjustRangeEnd - adjustRangeStart) / maxDisbalance)
+                + adjustRangeStart;
         double estimatedBestThroughput = Math.pow(10, Math.log10(baselineThroughput)
-                -(changeDirection) * Math.log10(1 + (baselineDisbalance / maxDisbalance) + valueDiminisher));
+                + Math.log10(1 + (baselineDisbalance / maxDisbalance) + valueDiminisherMax));
 
         // Get theoretical lowest
+        double valueDiminisherMin = Math.abs(baselineDisbalance - maxDisbalance)
+                * ((adjustRangeEnd - adjustRangeStart) / maxDisbalance) + adjustRangeStart;
         double estimatedWorstThroughput = Math.pow(10, Math.log10(baselineThroughput)
-                -(baselineDisbalance >= maxDisbalance ? 1 : -1)
-                    * Math.log10(1 + (Math.abs(baselineDisbalance - maxDisbalance) / maxDisbalance) + valueDiminisher));
+                - Math.log10(1 + (Math.abs(baselineDisbalance - maxDisbalance) / maxDisbalance) + valueDiminisherMin));
 
         // Fill out the result
         var result = new BenchmarkRunResult();

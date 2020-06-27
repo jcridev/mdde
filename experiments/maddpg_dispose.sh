@@ -45,6 +45,10 @@ COMPOSE_DIR=../docker/compositions/redis
 # Without do-nothing, consider storage, bench at every step, 10000 episodes per 101 step, ignore conflicts
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_dispose.sh ${PFX}maddpg_wdn_b1_e10k_s100_ai)
 
+
+# Without do-nothing, scale rewards
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_dispose.sh ${PFX}maddpg_wdn_scale)
+
 # Without do-nothing, consider storage, 80 fragments, bench at every step, bench at every step, batch size 1000, train batch 4000
 #(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_dispose.sh ${PFX}maddpg_wdn_b1_f80_stm)
 
