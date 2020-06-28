@@ -1,6 +1,7 @@
 import os
 import argparse
 import logging
+from enum import Enum
 
 from pathlib import Path
 
@@ -47,6 +48,10 @@ class MADDPGSampleActMask:
     NUM_ADVERSARIES = 0
     ADV_POLICY = 'maddpg'
     GOOD_POLICY = 'maddpg'
+
+    class ObservationShapes(Enum):
+        box_flat = 'flatbox'
+        box_2d = '2dbox'
 
     def setUp(self) -> None:
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # {'0': 'DEBUG', '1': 'INFO', '2': 'WARNING', '3': 'ERROR'}
@@ -209,9 +214,9 @@ class MADDPGSampleActMask:
 
         sample_selected_shaper = None
         """Observation shaper selected. Set None if you want to use the default one in the wrapper."""
-        if config.o_shape == 'flatbox':
+        if config.o_shape == self.ObservationShapes.box_flat.value:
             sample_selected_shaper = obs_shaper_flat_box
-        elif config.o_shape == '2dbox':
+        elif config.o_shape == self.ObservationShapes.box_2d.value:
             sample_selected_shaper = obs_shaper_2d_box
 
         if sample_selected_shaper is None:
@@ -230,7 +235,11 @@ class MADDPGSampleActMask:
                                                                 do_nothing=config.do_nothing),
                                                    observation_shaper=sample_selected_shaper)
 
-        input_size = env_instance.observation_space_dict[0]['obs'].shape[0]
+        if config.o_shape == self.ObservationShapes.box_2d.value:
+            input_size = env_instance.observation_space_dict[0]['obs'].shape[0] \
+                         * env_instance.observation_space_dict[0]['obs'].shape[1]
+        else:
+            input_size = env_instance.observation_space_dict[0]['obs'].shape[0]
         output_size = env_instance.action_space_dict[0].n
         maddpg_network = [int((input_size + output_size) * 0.7)] * 2  # [64] * 2
 
@@ -483,7 +492,7 @@ if __name__ == '__main__':
     parser.add_argument('--o-shape',
                         help='Select the observation space shaper. "flatbox" or "2dbox"',
                         type=str,
-                        default='flatbox')
+                        default=MADDPGSampleActMask.ObservationShapes.box_flat.value)
 
     parser.add_argument('--ok-conf-a',
                         help='Ignore conflicting actions.',
