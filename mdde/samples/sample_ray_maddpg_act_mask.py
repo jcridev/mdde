@@ -241,7 +241,11 @@ class MADDPGSampleActMask:
         else:
             input_size = env_instance.observation_space_dict[0]['obs'].shape[0]
         output_size = env_instance.action_space_dict[0].n
-        maddpg_network = [int((input_size + output_size) * 0.7)] * 2  # [64] * 2
+
+        if config.hidden_dim is not None:
+            maddpg_network = [config.hidden_dim] * 2
+        else:
+            maddpg_network = [int((input_size + output_size) * 0.8)] * 2  # [64] * 2
 
         def env_creator(kvargs):
             env = make_env(**kvargs)
@@ -488,6 +492,11 @@ if __name__ == '__main__':
                         help='Number of benchmark clients.',
                         type=int,
                         default=50)
+
+    parser.add_argument('--hidden-dim',
+                        help='Number if neurons in the network layers.',
+                        type=int,
+                        default=None)
 
     parser.add_argument('--o-shape',
                         help='Select the observation space shaper. "flatbox" or "2dbox"',
