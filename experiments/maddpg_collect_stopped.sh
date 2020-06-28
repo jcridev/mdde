@@ -61,8 +61,12 @@ mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_b1_e10k_s100_ai
 
 
 # Without do-nothing, scale rewards
-mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_scale
-(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn_scale ${WORK_DIR}/res_maddpg/maddpg_wdn_scale)
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_dm940
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn_dm940 ${WORK_DIR}/res_maddpg/maddpg_wdn_dm940)
+
+
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_dm480
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn_dm480 ${WORK_DIR}/res_maddpg/maddpg_wdn_dm480)
 
 
 # Without do-nothing, consider storage, 80 fragments, bench at every step, bench at every step, batch size 1000, train batch 4000

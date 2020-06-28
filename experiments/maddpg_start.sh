@@ -113,12 +113,23 @@ COMPOSE_DIR=../docker/compositions/redis
 #if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
 
 #   Without do-nothing, scale rewards
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing --scale-rew${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_scale)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --scale-rew${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_scale)
 
 #if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
 
+rm ${COMPOSE_DIR}/${ARGS_FILE}
+echo "LAUNCH_ARGS=--no-do-nothing --hidden-dim 960${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_dm940)
+
+if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
+
+rm ${COMPOSE_DIR}/${ARGS_FILE}
+echo "LAUNCH_ARGS=--no-do-nothing --hidden-dim 480${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_dm480)
+
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
 
 #   Without do-nothing, consider storage, 80 fragments, bench at every step, bench at every step, batch size 1000, train batch 4000
 #rm ${COMPOSE_DIR}/${ARGS_FILE}
