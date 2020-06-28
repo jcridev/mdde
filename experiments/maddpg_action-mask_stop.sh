@@ -51,6 +51,10 @@ COMPOSE_DIR=../docker/compositions/redis
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_stop.sh ${PFX}maddpg_am_wdn_b1_e10k_s100_ai)
 
 
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_stop.sh ${PFX}maddpg_am_wdn_dm940)
+
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_stop.sh ${PFX}maddpg_am_wdn_dm480)
+
 # With do-nothing, gamma=0.5
 #(cd ${COMPOSE_DIR}/scripts && sh maddpg_act-mask_stop.sh ${PFX}maddpg_am_dn_g05)
 

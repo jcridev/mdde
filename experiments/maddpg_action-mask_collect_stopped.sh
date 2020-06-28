@@ -64,6 +64,12 @@ mkdir -p ${WORK_DIR}/res_am_maddpg/maddpg_am_wdn_b1_e10k_s100_ai
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results_stopped.sh ${PFX}maddpg_am_wdn_b1_e10k_s100_ai ${WORK_DIR}/res_am_maddpg/maddpg_am_wdn_b1_e10k_s100_ai)
 
 
+mkdir -p ${WORK_DIR}/res_am_maddpg/maddpg_am_wdn_dm940
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results_stopped.sh ${PFX}maddpg_am_wdn_dm940 ${WORK_DIR}/res_am_maddpg/maddpg_am_wdn_dm940)
+
+mkdir -p ${WORK_DIR}/res_am_maddpg/maddpg_am_wdn_dm480
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results_stopped.sh ${PFX}maddpg_am_wdn_dm480 ${WORK_DIR}/res_am_maddpg/maddpg_am_wdn_dm480)
+
 # With do-nothing, gamma=0.5
 #mkdir -p ${WORK_DIR}/res_am_maddpg/maddpg_am_dn_g05
 #(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_act-mask_retrieve_results_stopped.sh ${PFX}maddpg_am_dn_g05 ${WORK_DIR}/res_am_maddpg/maddpg_am_dn_g05)
