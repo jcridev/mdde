@@ -119,15 +119,21 @@ COMPOSE_DIR=../docker/compositions/redis
 
 #if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
 
-rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing --hidden-dim 960${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_dm940)
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --hidden-dim 960${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_dm940)
 
-if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
+
+#rm ${COMPOSE_DIR}/${ARGS_FILE}
+#echo "LAUNCH_ARGS=--no-do-nothing --hidden-dim 480${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+#(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_dm480)
+
+#if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
 
 rm ${COMPOSE_DIR}/${ARGS_FILE}
-echo "LAUNCH_ARGS=--no-do-nothing --hidden-dim 480${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
-(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_dm480)
+echo "LAUNCH_ARGS=--no-do-nothing --bench-psteps 250 --learning_starts 2000000 --num_episodes 60000${SIM}" > ${COMPOSE_DIR}/${ARGS_FILE}
+(cd ${COMPOSE_DIR}/scripts && sh maddpg_start_detached.sh ${PFX}maddpg_wdn_long_learn)
 
 #if [ $SLEEP_BETWEEN -eq 1 ]; then sleep $SLEEP_TIME; fi
 

@@ -69,6 +69,9 @@ mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_dm480
 (cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn_dm480 ${WORK_DIR}/res_maddpg/maddpg_wdn_dm480)
 
 
+mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_long_learn
+(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn_long_learn ${WORK_DIR}/res_maddpg/maddpg_wdn_long_learn)
+
 # Without do-nothing, consider storage, 80 fragments, bench at every step, bench at every step, batch size 1000, train batch 4000
 #mkdir -p ${WORK_DIR}/res_maddpg/maddpg_wdn_b1_f80_stm
 #(cd ${COMPOSE_DIR}/scripts/ && sh maddpg_retrieve_results_stopped.sh ${PFX}maddpg_wdn_b1_f80_stm ${WORK_DIR}/res_maddpg/maddpg_wdn_b1_f80_stm)
