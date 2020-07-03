@@ -334,9 +334,12 @@ class DefaultScenario(ABCScenario):
                 # Increase the multiplier for each correct action taken, if no correct actions were taken,
                 # the final agent reward will be 0
                 if a_act[0] == 1:
-                    if a_act[1] == EActionResult.ok.value or a_act[1] == EActionResult.did_nothing.value:
+                    if a_act[1] == EActionResult.ok.value:
                         # Only give rewards for the actions that were success and not "done"
                         agent_correctness_multiplier += 1.0 / self._num_steps_before_bench
+                    elif a_act[1] == EActionResult.did_nothing.value:
+                        # Assign reward portion proportional to do nothing
+                        agent_correctness_multiplier += self._do_nothing_worth / self._num_steps_before_bench
             # Agent reward
 
             self._logger.debug("Real reward: current_throughput={};agent_reads={};total_reads={};"
@@ -347,6 +350,7 @@ class DefaultScenario(ABCScenario):
             if self._dump_stats:
                 stat_agent_reads[agent_obj.id] = agent_reads
                 stat_agent_correct[agent_obj.id] = agent_correctness_multiplier
+
             reward_n[agent_obj.id] = current_throughput * (agent_reads / total_reads) * agent_correctness_multiplier \
                                      + (current_throughput * ((num_fragments - contents_n[agent_obj.id]) / num_fragments)
                                         * self._storage_multiplier)
