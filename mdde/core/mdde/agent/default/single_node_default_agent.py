@@ -119,15 +119,16 @@ class SingleNodeDefaultAgent(DefaultAgent):
                 node_has_copy = own_observation[action_fragment_obs_idx][0]
 
                 # delete actions
-                if action.is_del and node_has_copy:
-                    # verify if the fragment is unique(can't remove a unique fragment)
-                    f_unique = True
-                    for f_node_id, f_node_obs in foreign_nodes_map.items():
-                        if f_node_obs[action_fragment_obs_idx][1]:
-                            f_unique = False
-                            break
-                    if not f_unique:
-                        legal_act[action_idx] = 1
+                if action.is_del:
+                    if node_has_copy:
+                        # verify if the fragment is unique(can't remove a unique fragment)
+                        f_unique = True
+                        for f_node_id, f_node_obs in foreign_nodes_map.items():
+                            if f_node_obs[action_fragment_obs_idx][1]:
+                                f_unique = False
+                                break
+                        if not f_unique:
+                            legal_act[action_idx] = 1
                 # copy actions
                 else:
                     if action.node_source_id != own_node \
