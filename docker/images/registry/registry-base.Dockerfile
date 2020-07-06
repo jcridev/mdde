@@ -5,7 +5,7 @@ FROM maven:3.6.3-jdk-11
 LABEL org.label-schema.name="mdde/registry/base"
 LABEL org.label-schema.description="MDDE Registry"
 LABEL org.label-schema.vcs-url="https://github.com/akharitonov/mdde/"
-LABEL org.label-schema.version="0.5"
+LABEL org.label-schema.version="0.7"
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.docker.cmd="docker run -d -p 8942:8942 -p 8954:8954 mdde/registry"
 LABEL maintainer="https://github.com/akharitonov/"
