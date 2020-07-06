@@ -198,7 +198,10 @@ class DefaultScenario(ABCScenario):
         # Execute actions
         step_action_res = np.zeros((len(self._agents), 2), dtype=np.int16)
         step_action_res.fill(-1)
-        for agent_id, action in actions.items():
+        ordered_a_ids = list(actions.keys())
+        ordered_a_ids.sort()
+        for agent_id in ordered_a_ids:
+            action = actions[agent_id]
             s_agent: ABCAgent = self._agents[agent_id]
             aa_res: EActionResult = s_agent.do_action(action)
 
