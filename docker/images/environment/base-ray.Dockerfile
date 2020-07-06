@@ -6,7 +6,7 @@ FROM ubuntu:18.04
 LABEL org.label-schema.name="mdde/env/ray-base"
 LABEL org.label-schema.description="MDDE Ray base"
 LABEL org.label-schema.vcs-url="https://github.com/akharitonov/mdde/"
-LABEL org.label-schema.version="0.5"
+LABEL org.label-schema.version="0.7"
 LABEL org.label-schema.schema-version="1.0"
 LABEL maintainer="https://github.com/akharitonov/"
 

@@ -21,7 +21,7 @@ requirements = ['typing-extensions; python_version<"3.8"',
 
 setup(
     name='mdde',
-    version='0.1',
+    version='0.7',
     description='Multi-agent Data Distribution Environment',
 
     author='Andrey Kharitonov',

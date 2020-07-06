@@ -13,7 +13,7 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
 
 setup(
     name='mdde.registry.tcp',
-    version='0.5',
+    version='0.7',
     description='Multi-agent Data Distribution Environment: TCP registry client',
 
     author='Andrey Kharitonov',
