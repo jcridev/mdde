@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Parser for CONTROL commands that processes commands passed in a form of a string line with argument sequences
  * in accordance to the expected arguments lists of the EStateControlCommand entries.
- * @param <TOut> Command execution result container type
+ * @param <TOut> Command execution result container type.
  */
 public class TextSequentialControlCommandParser<TOut>  implements ICommandParser<TOut, EStateControlCommand, String>
 {

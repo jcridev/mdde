@@ -67,7 +67,7 @@ public class BenchmarkRunner {
 
     /**
      * Make preparations for running a benchmark.
-     * @throws MddeRegistryException
+     * @throws MddeRegistryException Failure to switch the registry to "Benchmark-ready" state.
      */
     public synchronized void prepareBenchmarkEnvironment()
             throws MddeRegistryException {
@@ -80,7 +80,7 @@ public class BenchmarkRunner {
     /**
      * Call after running a benchmark. It disposes of all resources and memory objects that are needed only at a time
      * of executing the benchmark.
-     * @throws IOException
+     * @throws IOException Failure to switching off the "Benchmark ready" state of the registry.
      */
     public synchronized void disposeBenchmarkEnvironment()
             throws IOException {
@@ -101,6 +101,11 @@ public class BenchmarkRunner {
     private final ReentrantLock _benchmarkRunnerLock = new ReentrantLock();
     private EBenchmarkLoadStage _currentLoadState = EBenchmarkLoadStage.EMPTY;
 
+    /**
+     * Generate data in the nodes.
+     * @param workload YCSB workload name from the catalog.
+     * @return Success flag.
+     */
     public boolean generateData(String workload) {
         var knownWorkload = EYCSBWorkloadCatalog.getWorkloadByTag(workload);
         return generateData(knownWorkload);
@@ -138,11 +143,19 @@ public class BenchmarkRunner {
         return true;
     }
 
+    /**
+     * Check if the benchmark workload is currently in the process of execution.
+     * @return True - workload is running, False otherwise.
+     */
     private boolean isBenchmarkInAMiddleOfARun(){
         return _runnerState.getState() != EBenchmarkRunStage.READY
                 && _runnerState.getState() != EBenchmarkRunStage.DONE;
     }
 
+    /**
+     * Flush all of the data from data nodes.
+     * @return Success flag.
+     */
     public boolean flushData(){
         _benchmarkRunnerLock.lock();
         try {
@@ -247,6 +260,10 @@ public class BenchmarkRunner {
         _tmpTupleLocator.notifyReadFinished(nodeId);
     }
 
+    /**
+     * Initialize the naive benchmark estimator based on the latest YCSB run statistics.
+     * @return Success flag.
+     */
     public boolean initCounterfeitBenchmark(){
         // Fill out Counterfeit benchmark
         if(this._lastValidResult != null){
@@ -285,11 +302,28 @@ public class BenchmarkRunner {
      * Stages of running the benchmark
      */
     private enum EBenchmarkLoadStage {
+        /**
+         * No data was generated.
+         */
         EMPTY("Empty"),
+        /**
+         * Data is generating.
+         */
         LOADING("Loading"),
+        /**
+         * Data generation is finished.
+         */
         READY("Ready");
 
+        /**
+         * Textual value of the current data generation execution stage.
+         */
         private String _stage;
+
+        /**
+         * Constructor.
+         * @param stage Textual value of the current data generation stage.
+         */
         EBenchmarkLoadStage(String stage){
             _stage = stage;
         }
@@ -372,16 +406,16 @@ public class BenchmarkRunner {
         }
 
         /**
-         * Failed state
-         * @return True - the benchmark run has failed
+         * Failed state.
+         * @return True - the benchmark run has failed.
          */
         public boolean isFailed() {
             return isFailed;
         }
 
         /**
-         * Set failed state
-         * @param failed True - the benchmark run has failed
+         * Set failed state.
+         * @param failed True - the benchmark run has failed.
          */
         public void setFailed(boolean failed) {
             isFailed = failed;
@@ -389,24 +423,45 @@ public class BenchmarkRunner {
 
         /**
          * Completion flag
-         * @return True the latest run was finished
+         * @return True the latest run was finished.
          */
         public boolean isCompeted() {
             return isCompeted;
         }
 
+        /**
+         * Set the completion flag value of benchmark.
+         * @param competed True if the benchmark was executed till completion or reached a failed state.
+         */
         public void setCompeted(boolean competed) {
             isCompeted = competed;
         }
     }
 
+    /**
+     * Benchmark runner thread that starts the Benchmark runner and polls it till completion or timeout.
+     */
     private static final class BenchmarkThread implements Runnable{
-
+        /**
+         * Logger
+         */
         private final Logger logger = LogManager.getLogger(BenchmarkThread.class);
 
+        /**
+         * State of the current benchmark run.
+         */
         final RunnerState _state;
+        /**
+         * Instance of YCSB managing class.
+         */
         final YCSBRunner _ycsbRunner;
+        /**
+         * Selected YCSB workload.
+         */
         final EYCSBWorkloadCatalog _workload;
+        /**
+         * Number of YCSB workers.
+         */
         final Integer _workers;
 
         /**
@@ -438,20 +493,23 @@ public class BenchmarkRunner {
                 result.setError(null);
 
                 // Await for node statistics
-                int awaitCycles = 100;
+                int awaitCycles = 1000; // Timout limit
                 if(this._ycsbRunner.statsResultsReady() == false){
                     while(awaitCycles > 0){
                         awaitCycles--;
-                        TimeUnit.SECONDS.sleep(2);
+                        TimeUnit.SECONDS.sleep(3);
                         if(this._ycsbRunner.statsResultsReady()){
                             break;
                         }
                     }
                 }
                 else if(this._ycsbRunner.statsResultsReady() != null){
+                    // Managed to get statistics
                     result.setNodes(this._ycsbRunner.getStats());
                 }
                 else{
+                    // Timed out
+                    logger.warn("Benchmark timed out.");
                     result.setNodes(null);
                 }
 

@@ -19,7 +19,7 @@ public abstract class JsonCommandParserBase {
      * @param command Exact command that's being processed
      * @param arguments Serialized JSON object containing appropriate arguments
      * @return List of object in types and order corresponding to the ones defined in arguments property of ICommand
-     * @throws MalformedCommandStatementException
+     * @throws MalformedCommandStatementException Command statement is unknown or malformed.
      */
     public List<Object> parseArguments(ICommand command, String arguments)
             throws MalformedCommandStatementException {

@@ -11,9 +11,9 @@ import org.apache.logging.log4j.Logger;
 import java.util.Objects;
 
 /**
- * Basic abstract router for the WRITE commands
- * @param <TOut> Expected result type
- * @param <TArgs> Arguments container type
+ * Basic abstract router for the WRITE commands.
+ * @param <TOut> Expected result type.
+ * @param <TArgs> Arguments container type.
  */
 public abstract class CommandParserWriteBase<TOut, TArgs>
         implements ICommandParser<TOut, EWriteCommand, TArgs> {

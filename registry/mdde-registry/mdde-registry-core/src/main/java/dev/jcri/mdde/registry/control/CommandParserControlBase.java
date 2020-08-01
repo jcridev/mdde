@@ -14,9 +14,9 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Basic abstract router for the CONTROL commands
- * @param <TOut> Expected result type
- * @param <TArgs> Arguments container type
+ * Basic abstract router for the CONTROL commands.
+ * @param <TOut> Expected result type.
+ * @param <TArgs> Arguments container type.
  */
 public abstract class CommandParserControlBase<TOut, TArgs>
         implements ICommandParser<TOut, EStateControlCommand, TArgs> {

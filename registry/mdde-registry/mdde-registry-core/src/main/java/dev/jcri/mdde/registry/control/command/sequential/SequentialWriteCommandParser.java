@@ -13,7 +13,10 @@ import java.util.Objects;
 
 import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
-
+/**
+ * Process incoming registry write commands.
+ * @param <T> Type of the serialized result.
+ */
 public class SequentialWriteCommandParser<T> extends CommandParserWriteBase<T, List<Object>> {
     private final WriteCommandResponder _writeCommandHandler;
     public SequentialWriteCommandParser(WriteCommandResponder writeCommandHandler, ResponseSerializerBase<T> serializer) {

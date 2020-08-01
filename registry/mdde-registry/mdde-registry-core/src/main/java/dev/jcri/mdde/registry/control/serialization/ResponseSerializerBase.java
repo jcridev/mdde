@@ -13,7 +13,7 @@ import java.util.Set;
 
 /**
  * Implement to create the registry query response serializer
- * @param <T>
+ * @param <T> Type of response object.
  */
 public abstract class ResponseSerializerBase<T> implements IResponseExceptionSerializer<T> {
     public abstract T serialize(String value) throws ResponseSerializationException;

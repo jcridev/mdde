@@ -16,7 +16,10 @@ import java.util.Set;
 
 import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
-
+/**
+ * Process incoming registry read commands.
+ * @param <T> Type of the serialized result.
+ */
 public class SequentialReadCommandParser<T> extends CommandParserReadBase<T, List<Object>> {
 
     private final ReadCommandResponder _readCommandHandler;
