@@ -25,24 +25,28 @@ class BenchmarkStatus:
 
     @property
     def completed(self) -> bool:
+        """If true, the latest benchmark run was finished (success or failure state achieved)."""
         return self._completed
 
     @property
     def failed(self) -> bool:
+        """If true, the latest benchmark run failed."""
         return self._failed
 
     @property
     def run_id(self) -> str:
+        """ID of the latest benchmark run."""
         return self._run_id
 
     @property
     def stage(self) -> Union[None, EBenchmarkState]:
         """
         Stages unknown by the client are processed as None by default.
-        :return: EBenchmarkState value or None
+        :return: EBenchmarkState value or None.
         """
         return self._stage
 
     @property
     def result(self) -> Union[None, BenchmarkResult]:
+        """Results of the latest completed, successful benchmark run (data record access stats, throughput)."""
         return self._result

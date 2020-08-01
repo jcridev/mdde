@@ -147,6 +147,12 @@ class DefaultFragmenter(PFragmenter):
 
     @staticmethod
     def _find_nodes_containing(nodes: Dict[str, Set[str]], items: Set[str]) -> List[str]:
+        """
+        Check which out of the specified data nodes contain specific data records.
+        :param nodes: Data nodes to look into.
+        :param items: Data records IDs to look for.
+        :return: List of Data node IDs which contain the specified items.
+        """
         items_found_at = []
         for node_key, node_tuples in nodes.items():
             intersection = node_tuples.intersection(items)
@@ -166,6 +172,13 @@ class DefaultFragmenter(PFragmenter):
                        new_frag_id: str,
                        tuples: Set[str],
                        optimal_fragment_size: int) -> None:
+        """
+        Call registy to form a fragment out of the specified data records.
+        :param registry_writer: Write client for the registry.
+        :param new_frag_id: Fragment ID.
+        :param tuples: List of data record IDs.
+        :param optimal_fragment_size: Optima size of a fragment (for soft verification).
+        """
         if len(tuples) < optimal_fragment_size:
             self._logger.warning("Forming a fragment based on intersecting tuples with a suboptimal length "
                                  "of {} instead of the optimal {}".format(len(tuples), optimal_fragment_size))
@@ -175,6 +188,12 @@ class DefaultFragmenter(PFragmenter):
 
     @staticmethod
     def _split_list(items: [], target_splits: int) -> Sequence[Sequence[str]]:
+        """
+        Split the list of items in a number of equal (if possible) length chunks.
+        :param items: List of items to be split.
+        :param target_splits: Number of chunks.
+        :return: Chunks.
+        """
         result = []
         if not target_splits:
             return result

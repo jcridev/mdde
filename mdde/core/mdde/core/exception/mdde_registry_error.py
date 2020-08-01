@@ -7,9 +7,9 @@ class MddeRegistryError(MddeError):
 
     def __init__(self, error_code: Union[int, AnyStr], message=None):
         """
-        Constructor
-        :param error_code: As defined in dev/jcri/mdde/registry/exceptions/EErrorCode.java
-        :param message: Optional string message describing the error
+        Constructor.
+        :param error_code: As defined in dev/jcri/mdde/registry/exceptions/EErrorCode.java.
+        :param message: Optional string message describing the error.
         """
         super(MddeRegistryError, self).__init__(message)
 
@@ -23,17 +23,19 @@ class MddeRegistryError(MddeError):
 
     @property
     def error_code_value(self) -> int:
+        """Error code raw numeric value."""
         return self._error_code
 
     @property
     def error_code(self) -> RegistryErrorCodes:
+        """Error code."""
         return RegistryErrorCodes(self._error_code)
 
     @property
     def is_mdde_error(self) -> bool:
         """
-        Return true if the error is specific to MDDE logic and runtime error
-        :return:
+        Return true if the error is specific to MDDE logic and runtime error.
+        :return: True - The returned value is a not an obvious program failure.
         """
         return self._error_code not in [RegistryErrorCodes.RUNTIME_ERROR, RegistryErrorCodes.UNSPECIFIED_ERROR]
 

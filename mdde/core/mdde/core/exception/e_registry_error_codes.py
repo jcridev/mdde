@@ -4,7 +4,7 @@ import enum
 class RegistryErrorCodes(enum.Enum):
     """
     Error codes that can be returned from the registry.
-    Corresponding catalog in the registry: dev/jcri/mdde/registry/exceptions/EErrorCode.java
+    Corresponding catalog in the registry: dev/jcri/mdde/registry/exceptions/EErrorCode.java.
     """
     RUNTIME_ERROR = 0x00
     UNSPECIFIED_ERROR = 0x0270F
