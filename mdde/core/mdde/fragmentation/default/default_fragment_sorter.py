@@ -11,4 +11,10 @@ class DefaultFragmentSorter(PFragmentSorter):
     fragments do no change over the course of the scenario run).
     """
     def sort(self, fragments: Sequence[str]) -> Tuple[str, ...]:
+        """
+        Sort fragments to make sure that the ordering is stable. Note this function is meant for the static number
+        of fragments and not suitable when the number is changing (fragments are created and removed.)
+        :param fragments: Sequence of unordered fragment IDs.
+        :return: Tuple of ordered fragment IDs.
+        """
         return tuple(natsort.natsorted(fragments, key=lambda fragment: fragment))

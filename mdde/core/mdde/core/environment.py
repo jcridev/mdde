@@ -57,8 +57,10 @@ class Environment:
             raise TypeError("scenario can't be None")
 
         self._write_obs_at_bench = write_obs_at_bench
+        """Flag: if true: save observations in SQLite at benchmark execution."""
 
         self._experiment_id = self.__generate_exp_id(experiment_id)
+        """ID of the experiment run."""
         # Attach scenario and agents to this experiment
         scenario.attach_to_experiment(self.experiment_id)
 
@@ -101,14 +103,18 @@ class Environment:
         """Magnitude of changes in estimated throughput according to the estimated benchmark allocation."""
 
         self._throughput_c_range_max: float = float('inf')
-        """Maximum throughput (counterfeit)"""
+        """Maximum throughput (counterfeit)."""
         self._throughput_c_range_min: float = 0.
-        """Minimum throughput (counterfeit)"""
+        """Minimum throughput (counterfeit)."""
 
         self.__file_csv_writer = None
+        """CSV writer for the statistical data."""
         self.activate_scenario()
 
     def __del__(self):
+        """
+        Destructor. Make a log record and shut down the open resources such as CSV writers.
+        """
         self._logger.info('Shutting down')
         if self.__file_csv_writer:
             # Close a CSV writer if there's one
@@ -162,7 +168,6 @@ class Environment:
         """
         Initialize or re-initialize the registry. All existing data will be removed, all data generated anew.
         :param with_benchmark:
-        :return:
         """
         self._logger.info("Environment initialization starting")
         # Registry must be in the 'shuffle' mode
@@ -230,6 +235,7 @@ class Environment:
             self.__initialize_counterfeit_benchmark()
 
     def __initialize_counterfeit_benchmark(self):
+        """Initialize initial values for the benchmark estimation. Call after at least one real benchmark execution."""
         counterfeit_init_response = self._registry_ctrl.ctrl_init_benchmark_counterfeit()
         if counterfeit_init_response.result is False:
             raise RuntimeError("Failed to initialize counterfeit benchmark.")
@@ -440,7 +446,12 @@ class Environment:
         return act_n
 
     def _bench_request_stats(self, without_waiting: bool = False) -> Union[None, BenchmarkStatus]:
-        """Initialize and execute benchmark runner against the real data nodes."""
+        """
+        Initialize and execute benchmark runner against the real data nodes. By default blocks till the end of execution.
+
+        :param without_waiting: If True, do not block until the end of benchmark execution.
+        :return: Benchmark execution results.
+        """
         # Execute the shuffle queue
         self._set_registry_mode(target_mode=ERegistryMode.shuffle)
         self._logger.info('Executing the shuffle queue')
@@ -471,7 +482,7 @@ class Environment:
         if without_waiting:
             return None  # Don't wait for the benchmark to end
         while True:
-            time.sleep(15)
+            time.sleep(3)  # Timeout before requesting the results, avoid excessive frequency of requests
             bench_status_response = self.benchmark_status()
             if bench_status_response.completed or bench_start_result.failed:
                 break
@@ -481,7 +492,12 @@ class Environment:
         return bench_status_response
 
     def benchmark(self, without_waiting: bool = False) -> Union[None, BenchmarkStatus]:
-        """Execute benchmark run and pass the results to the active scenario."""
+        """
+        Execute benchmark run and pass the results to the active scenario.
+
+        :param without_waiting: If True, do not block until the end of benchmark execution.
+        :return: Status of the latest benchmark run and statistics if the run was completed successfully.
+        """
         bench_status_response = self._bench_request_stats(without_waiting=without_waiting)
         # Return the result
         self._scenario.process_benchmark_stats(registry_read=self._registry_read,
@@ -489,7 +505,10 @@ class Environment:
         return bench_status_response
 
     def benchmark_status(self) -> BenchmarkStatus:
-        """Request status of the running benchmark."""
+        """
+        Request status of the running benchmark.
+        :return: Status of the latest benchmark run and statistics if the run was completed successfully.
+        """
         bench_status = self._registry_ctrl.ctrl_get_benchmark()
         if bench_status.failed:
             raise RuntimeError(bench_status.error)
@@ -505,7 +524,7 @@ class Environment:
         allocation for throughput. If None, default value self.bench_estimation_magnitude_start is used.
         :param magnitude_end_override: Override value for the adjustment range end of the magnitude of changes in
         allocation for throughput. If None, default value self.bench_estimation_magnitude_end is used.
-        :return: BenchmarkStatus.
+        :return: Counterfeit benchmark estimation.
         """
         if magnitude_start_override is not None:
             magnitude_adjustment_start = magnitude_start_override
@@ -524,8 +543,12 @@ class Environment:
         return bench_status_response.result
 
     def benchmark_counterfeit(self) -> BenchmarkStatus:
-        """Request reads and stats estimation from the registry, then pass it for processing into the active
-        scenario."""
+        """
+        Request reads and stats estimation from the registry, then pass it for processing into the active
+        scenario.
+
+        :return: Estimated (counterfeit) benchmark statistics.
+        """
         bench_status = self._bench_request_stats_counterfeit()
         self._scenario.process_benchmark_stats(registry_read=self._registry_read,
                                                bench_end_result=bench_status)
@@ -533,7 +556,7 @@ class Environment:
 
     def _initialize_action_space(self) -> None:
         """
-        Initialize actions for agents
+        Initialize actions for agents.
         """
         agent_nodes, fragments, obs = self._scenario.get_full_allocation_observation(registry_read=self._registry_read)
         for agent in self._scenario.get_agents():
@@ -554,11 +577,11 @@ class Environment:
         if get_mode_result.result != target_mode:
             self._logger.info("Switching registry to %s mode, current mode: %s",
                               target_mode.name, get_mode_result.result.name)
-            if target_mode == ERegistryMode.benchmark:
+            if target_mode == ERegistryMode.benchmark:  # Registry is prepared for executing benchmark.
                 set_bench_result = self._registry_ctrl.ctrl_set_benchmark_mode()
-            elif target_mode == ERegistryMode.shuffle:
+            elif target_mode == ERegistryMode.shuffle:  # Registry is prepared for data record manipulation.
                 set_bench_result = self._registry_ctrl.ctrl_set_shuffle_mode()
-            else:
+            else:  # State is not known.
                 raise RuntimeError("Illegal registry mode switch attempt")
             if set_bench_result.failed:
                 raise RuntimeError(set_bench_result.error)

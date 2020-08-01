@@ -4,14 +4,14 @@ from mdde.registry.container import RegistryResponse
 
 class RegistryResponseHelper:
     """
-    Functions commonly used when working with the objects returned from the registry
+    Functions commonly used when working with the objects returned from the registry.
     """
 
     @staticmethod
     def raise_on_error(response: RegistryResponse):
         """
-        Raise an exception if the the registry response returned an error
-        :param response: RegistryResponse
+        Raise an exception if the the registry response returned an error.
+        :param response: RegistryResponse.
         """
         try:
             if response.failed:  # RegistryResponseError
