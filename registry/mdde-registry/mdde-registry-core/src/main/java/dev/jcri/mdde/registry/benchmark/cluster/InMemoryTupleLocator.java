@@ -38,6 +38,11 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
      */
     private Map<String, Integer> _tuples = new HashMap<>();
 
+    /**
+     * Select the node from which the tuple should be read.
+     * @param tupleId Tuple Id.
+     * @return Node Id.
+     */
     @Override
     public String getNodeForRead(String tupleId) {
         if(_registrySnapshot == null){
@@ -78,6 +83,11 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
         }
     }
 
+    /**
+     * Decrease the used capacity counter for the selected Node Id.
+     * @param nodeId Node Id.
+     * @throws KeyNotFoundException Node Id is not found in the records locator.
+     */
     @Override
     public void notifyReadFinished(String nodeId) throws KeyNotFoundException {
         var nodeIdx = _nodesInverse.get(nodeId);
@@ -134,9 +144,9 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
     }
 
     /**
-     * Dumb linear iteration. Slow but it's guaranteed to be O(1)
-     * @param tupleId ID of the tuple in question
-     * @return Integer internal ID of the tuple or null if not found
+     * Dumb linear iteration. Slow but it's guaranteed to be O(1).
+     * @param tupleId ID of the tuple in question.
+     * @return Integer internal ID of the tuple or null if not found.
      */
     private Integer getTupleIndexByIteratingThroughAllRecords(String tupleId){
         Integer result = null;
@@ -150,7 +160,7 @@ public class InMemoryTupleLocator implements IReadOnlyTupleLocator {
     }
 
     /**
-     * Not really necessary in this implementation
+     * Not really necessary in this implementation as we don't open any external I/O resources, all is stored in RAM.
      * @throws IOException
      */
     @Override

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- * Capacity counter simply using atomic counter per node
+ * Capacity counter simply using atomic counter per node.
  * @param <TNodeId>
  */
 public final class DefaultCapacityCounter<TNodeId> implements ICapacityCounter<TNodeId> {

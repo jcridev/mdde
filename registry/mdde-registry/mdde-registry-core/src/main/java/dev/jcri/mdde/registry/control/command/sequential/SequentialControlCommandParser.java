@@ -17,8 +17,8 @@ import java.util.Set;
 import static dev.jcri.mdde.registry.shared.commands.ExpectedCommandArgument.*;
 
 /**
- * Process incoming registry state control commands
- * @param <T> Type of the serialized result
+ * Process incoming registry state control commands.
+ * @param <T> Type of the serialized result.
  */
 public class SequentialControlCommandParser<T> extends CommandParserControlBase<T, List<Object>> {
     private final RegistryStateCommandHandler _stateCommandHandler;

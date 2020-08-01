@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Common methods for working with the ICommands definitions
+ * Common methods for working with the ICommands definitions.
  */
 public class CommandParserHelper {
 
@@ -30,10 +30,10 @@ public class CommandParserHelper {
     }
 
     /**
-     * Generate error message for IllegalCommandArgumentPosition
-     * @param command Command object
-     * @param argument Out of place argument
-     * @return Text describing the out of place error
+     * Generate error message for IllegalCommandArgumentPosition.
+     * @param command Command object.
+     * @param argument Out of place argument.
+     * @return Text describing the out of place error.
      */
     public String getPositionalArgumentError(final ICommand command,
                                              final ExpectedCommandArgument argument){
@@ -41,11 +41,11 @@ public class CommandParserHelper {
     }
 
     /**
-     * Generate error message for IllegalCommandArgumentPosition
-     * @param command Command object
-     * @param argument Out of place argument
-     * @param position Real position in the sequence
-     * @return Text describing the out of place error
+     * Generate error message for IllegalCommandArgumentPosition.
+     * @param command Command object.
+     * @param argument Out of place argument.
+     * @param position Real position in the sequence.
+     * @return Text describing the out of place error.
      */
     public String getPositionalArgumentError(final ICommand command,
                                              final ExpectedCommandArgument argument,
@@ -55,10 +55,10 @@ public class CommandParserHelper {
     }
 
     /**
-     * Generate an error message for IllegalCommandArgument
-     * @param command Command
-     * @param argument Argument
-     * @return Text describing illegal argument
+     * Generate an error message for IllegalCommandArgument.
+     * @param command Command.
+     * @param argument Argument.
+     * @return Text describing illegal argument.
      */
     private String getIllegalArgumentError(ICommand command,
                                            ExpectedCommandArgument argument){
@@ -66,11 +66,11 @@ public class CommandParserHelper {
     }
 
     /**
-     * Read argument as a String value from the position as specified in the corresponding ICommands
-     * @param arguments List of arguments
-     * @param command Command name
-     * @param argument Argument description object
-     * @return Argument value
+     * Read argument as a String value from the position as specified in the corresponding ICommands.
+     * @param arguments List of arguments.
+     * @param command Command name.
+     * @param argument Argument description object.
+     * @return Argument value.
      */
     public String getPositionalArgumentAsString(List<Object> arguments,
                                                 ICommand command,
@@ -88,11 +88,11 @@ public class CommandParserHelper {
     }
 
     /**
-     * Read argument as an Inteeger value from the position as specified in the corresponding ICommands
-     * @param arguments List of arguments
-     * @param command Command name
-     * @param argument Argument description object
-     * @return Argument value
+     * Read argument as an Inteeger value from the position as specified in the corresponding ICommands.
+     * @param arguments List of arguments.
+     * @param command Command name.
+     * @param argument Argument description object.
+     * @return Argument value.
      */
     public Integer getPositionalArgumentAsInteger(List<Object> arguments,
                                                 ICommand command,
@@ -125,12 +125,12 @@ public class CommandParserHelper {
     }
 
     /**
-     * Read argument as a Boolean value from the position as specified in the corresponding ICommands
-     * @param arguments List of arguments
-     * @param command Command name
-     * @param argument Argument description object
-     * @return Argument value
-     * @throws CommandException
+     * Read argument as a Boolean value from the position as specified in the corresponding ICommands.
+     * @param arguments List of arguments.
+     * @param command Command name.
+     * @param argument Argument description object.
+     * @return Argument value.
+     * @throws CommandException Malformed command statement.
      */
     public Boolean getPositionalArgumentAsBoolean(List<Object> arguments,
                                                   ICommand command,
@@ -152,11 +152,11 @@ public class CommandParserHelper {
     }
 
     /**
-     * Read argument as a Set<String> value from the position as specified in the corresponding ICommands
-     * @param arguments List of arguments
-     * @param command Command name
-     * @param argument Argument description object
-     * @return Argument value
+     * Read argument as a Set<String> value from the position as specified in the corresponding ICommands.
+     * @param arguments List of arguments.
+     * @param command Command name.
+     * @param argument Argument description object.
+     * @return Argument value.
      */
     public Set<String> getPositionalArgumentAsSet(List<Object> arguments,
                                                   ICommand command,

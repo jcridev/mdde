@@ -9,7 +9,16 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+/**
+ * Parses command incoming as textual sequences such as "COMMAND ARG_0 ARG_2 ...". Order of arguments depends on
+ * such defined in ICommand descendants.
+ */
 public class SimpleSequenceParser implements ISequenceParser {
+    /**
+     * Get the command keyword from the statement line.
+     * @param command Keyword + args string.
+     * @return Command keyword string.
+     */
     private String getCommandOpeningStatement(String command){
         var spaceIdx = command.indexOf(" ");
         if(spaceIdx == -1 ){
@@ -19,6 +28,11 @@ public class SimpleSequenceParser implements ISequenceParser {
         return command.substring(0, spaceIdx);
     }
 
+    /**
+     * Get a container with the keyword and args separated.
+     * @param command Full command to split.
+     * @return Split command string container.
+     */
     @Override
     public CommandComponents<String> getArgumentsFromLine(String command) {
         var keyword = getCommandOpeningStatement(command);
@@ -27,8 +41,17 @@ public class SimpleSequenceParser implements ISequenceParser {
         return new CommandComponents<>(keyword, arguments);
     }
 
+    /**
+     * Get an ordered list of parsed arguments from the string of arguments for the specific command keyword.
+     * @param thisCommand Command keyword from the internal catalog.
+     * @param arguments Use getArgumentsFromLine to get this argument.
+     * @return Ordered list of arguments parsed from string to Object according to the command keyword scheme.
+     * @throws UnknownRegistryCommandExceptions The command is unknown or statement is malformed.
+     */
     @Override
-    public List<Object> parseLineArguments(ICommand thisCommand, String arguments) throws UnknownRegistryCommandExceptions {
+    public List<Object> parseLineArguments(ICommand thisCommand,
+                                           String arguments)
+            throws UnknownRegistryCommandExceptions {
         List<Object> parsedArguments = new ArrayList<>();
         String inProcessString = arguments.trim();
         Character currentDelimiter = ' ';

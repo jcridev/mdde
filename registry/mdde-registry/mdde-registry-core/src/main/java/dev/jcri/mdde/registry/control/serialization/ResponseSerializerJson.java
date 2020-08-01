@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Serialize responses to raw JSON String
+ * Serialize responses to raw JSON String.
  */
 public class ResponseSerializerJson extends ResponseSerializerBase<String> {
     private final ObjectMapper _mapper;

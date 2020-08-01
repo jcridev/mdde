@@ -21,15 +21,15 @@ public interface IReadOnlyTupleLocator extends Closeable {
      * Implementation of the method is dependant on the chosen execution strategy.
      *
      * This should be returned to the benchmark runner (YCSB).
-     * @param tupleId Tuple Id
-     * @return Node Id
+     * @param tupleId Tuple Id.
+     * @return Node Id.
      */
     String getNodeForRead(String tupleId);
 
     /**
      * When the read operation is complete from a node Id, notify the locator by calling this functions.
      * It can be used for statistics gathering purposes or internal load balancing purposes
-     * @param nodeId Node Id
+     * @param nodeId Node Id.
      */
     void notifyReadFinished(String nodeId) throws KeyNotFoundException;
 
@@ -41,7 +41,7 @@ public interface IReadOnlyTupleLocator extends Closeable {
      * write) within the same event loop, meaning sequentially. While for benchmark we want a data structure that can be
      * queried concurrently.
      *
-     * @param tupleCatalog
+     * @param tupleCatalog Allocation map.
      */
     void initializeDataLocator(TupleCatalog tupleCatalog) throws MddeRegistryException;
 }
