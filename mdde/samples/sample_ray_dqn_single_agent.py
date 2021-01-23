@@ -66,12 +66,10 @@ class DQNTestSample:
 
         os.makedirs(os.path.abspath(temp_env_dir), exist_ok=True)
 
-        ray.init(redis_max_memory=int(ray.utils.get_system_memory() * 0.4),
-                 memory=int(ray.utils.get_system_memory() * 0.2),
-                 object_store_memory=int(ray.utils.get_system_memory() * 0.2),
-                 num_gpus=0,
+        ray.init(num_gpus=0,
                  num_cpus=4,
-                 temp_dir=temp_dir_full_path)
+                 #temp_dir=temp_dir_full_path
+                 )
 
         mdde_config = ConfigEnvironment(tmp_dir=temp_env_dir,
                                         result_dir=result_dir_path_mdde)

@@ -1,54 +1,16 @@
 # Base image for the ray-based experiments
-FROM ubuntu:18.04
+FROM python:3.7.9-buster
+# If switched to `alpine` or `slim` variations, install GCC manually in the container or use multi-stage builds if the final size of the container is an issue.
+
 # CPU bound environment container for algorithms implemented in Ray RLlib
 # Context (repo root): ../../../
 
 LABEL org.label-schema.name="mdde/env/ray-base"
 LABEL org.label-schema.description="MDDE Ray base"
 LABEL org.label-schema.vcs-url="https://github.com/akharitonov/mdde/"
-LABEL org.label-schema.version="0.7"
+LABEL org.label-schema.version="0.8"
 LABEL org.label-schema.schema-version="1.0"
 LABEL maintainer="https://github.com/akharitonov/"
-
-SHELL ["/bin/bash", "-c"]
-
-RUN apt-get update
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    ca-certificates \
-    cmake \
-    git \
-    sudo \
-    rsync \
-    ssh\
-    wget \
-    software-properties-common \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libopenmpi-dev
-
-
-RUN update-ca-certificates
-
-ENV HOME /home
-WORKDIR ${HOME}/
-
-# Download Miniconda
-# https://docs.anaconda.com/anaconda/install/silent-mode/
-RUN wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
-    chmod +x ~/miniconda.sh
-RUN bash ~/miniconda.sh -b -p $HOME/miniconda
-RUN rm miniconda.sh
-
-ENV PATH ${HOME}/miniconda/bin:$PATH
-ENV CONDA_PATH ${HOME}/miniconda
-# https://docs.conda.io/projects/conda-build/en/latest/resources/use-shared-libraries.html
-# Relying on LD_LIBRARY_PATH is not recommended but in case issues with any shred libraries, uncomment the next line
-#ENV LD_LIBRARY_PATH ${CONDA_PATH}/lib:${LD_LIBRARY_PATH}
-
-RUN eval "$(conda shell.bash hook)"
 
 ENV MDDE_SRC /usr/src/mdde
 
@@ -65,18 +27,15 @@ COPY $GIT_MDDE_SRC/extensions/mdde-registry-client-tcp ./mdde-registry-client-tc
 # Ray extension
 COPY $GIT_MDDE_SRC/extensions/integration-ray ./integration-ray
 
-# Script creating the conda environment suitable for the used version of MADDPG from RLlib
-COPY $GIT_MDDE_SRC/support/scripts-ray/sample_create_conda_env.sh ./sample_create_conda_env.sh
+# Script preparing the environment suitable for the used version of MADDPG from RLlib
+COPY $GIT_MDDE_SRC/support/scripts-ray/sample_create_env.sh ./sample_create_env.sh
 # Entrypoint script
-COPY $GIT_MDDE_SRC/support/scripts-ray/sample_execute_in_conda.sh ./sample_execute_in_conda.sh
-RUN chmod +x ./sample_create_conda_env.sh
-RUN chmod +x ./sample_execute_in_conda.sh
+COPY $GIT_MDDE_SRC/support/scripts-ray/sample_execute.sh ./sample_execute.sh
+RUN chmod +x ./sample_create_env.sh
+RUN chmod +x ./sample_execute.sh
 
 # Create environment
-RUN bash ./sample_create_conda_env.sh $MDDE_SRC
-
-# Make sure conda has execution permissions
-RUN find ${CONDA_PATH} -type d -exec chmod +x {} \;
+RUN bash ./sample_create_env.sh $MDDE_SRC
 
 # A volume for shared files, such as MDDE config.yml
 ENV MDDE_RESULTS /mdde/results
@@ -89,4 +48,4 @@ RUN mkdir -p $MDDE_SHARED
 VOLUME $MDDE_SHARED
 
 # Run experiments
-ENTRYPOINT $MDDE_SRC/sample_execute_in_conda.sh $MDDE_SRC/run.py $MDDE_RESULTS $REG_HOST $REG_PORT $MDDE_SHARED/config.yml $LAUNCH_ARGS
+ENTRYPOINT $MDDE_SRC/sample_execute.sh $MDDE_SRC/run.py $MDDE_RESULTS $REG_HOST $REG_PORT $MDDE_SHARED/config.yml $LAUNCH_ARGS

@@ -5,7 +5,7 @@ FROM mdde/env/ray-base:latest
 LABEL org.label-schema.name="mdde/env/ray-dqn"
 LABEL org.label-schema.description="MDDE Ray DQN"
 LABEL org.label-schema.vcs-url="https://github.com/akharitonov/mdde/"
-LABEL org.label-schema.version="0.7"
+LABEL org.label-schema.version="0.8"
 LABEL org.label-schema.schema-version="1.0"
 LABEL maintainer="https://github.com/akharitonov/"
 

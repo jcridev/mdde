@@ -87,14 +87,12 @@ class MADDPGSample:
         # MDDE tmp
         temp_env_dir = self.env_temp_dir
 
-        ray.init(redis_max_memory=int(ray.utils.get_system_memory() * 0.4),
-                 memory=int(ray.utils.get_system_memory() * 0.2),
-                 object_store_memory=int(ray.utils.get_system_memory() * 0.2),
-                 num_gpus=0,
+        ray.init(num_gpus=0,
                  num_cpus=4,
-                 temp_dir=temp_dir_full_path)
+                 #temp_dir=temp_dir_full_path
+                 )
 
-        MddeMultiAgentEnv.configure_ray(ray)
+        #MddeMultiAgentEnv.configure_ray(ray)
 
         maddpg_agent = MADDPGTrainer.with_updates(
             mixins=[MADDPGSample.CustomStdOut]
@@ -330,9 +328,9 @@ class MADDPGSample:
             "actor_lr": config.actor_lr,
             "critic_lr": config.critic_lr,
             "learning_starts": config.learning_starts,
-            "sample_batch_size": config.smpl_batch_s,
+            #"sample_batch_size": config.smpl_batch_s,
             "train_batch_size": config.trn_batch_s,
-            "batch_mode": "truncate_episodes",
+            #"batch_mode": "truncate_episodes",
 
             # --- Parallelism ---
             "num_workers": 0,  # run only one env process

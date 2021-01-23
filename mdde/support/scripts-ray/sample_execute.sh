@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source ~/miniconda/etc/profile.d/conda.sh
-
 # For debug
 echo "Expected location of MDDE registry: $3:$4"
 echo "Expected location of the registry config: $5"
@@ -23,7 +21,6 @@ do
     if [ $result -eq 0 ] ; then
         # Registry is reachable
         echo "MDDE Registry is up at: $3:$4"
-        conda activate mdde
         python $1 --result-dir $2 --temp-dir /ray_temp --reg-host "$3" --reg-port $4 --env-temp-dir /agents_temp --config "$5" $ADDITINAL_ARGS
         exit 0
     fi
