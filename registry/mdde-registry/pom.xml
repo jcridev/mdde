@@ -17,9 +17,9 @@
         <maven.compiler.source>11</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Libs -->
-        <jackson.version>2.12.1</jackson.version>
+        <jackson.version>2.13.1</jackson.version>
         <log4j.version>2.17.0</log4j.version>
-        <testcontainers.version>1.12.4</testcontainers.version>
+        <testcontainers.version>1.16.2</testcontainers.version>
     </properties>
 
     <modules>
@@ -68,7 +68,7 @@
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>3.2.0</version>
+            <version>3.7.1</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
@@ -97,7 +97,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.30</version>
+            <version>1.7.32</version>
         </dependency>
 
         <!-- Tests -->
@@ -105,7 +105,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.6.0</version>
+            <version>5.8.2</version>
             <scope>test</scope>
         </dependency>
 
