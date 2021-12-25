@@ -1,5 +1,5 @@
 ---
-mddePort:
+interface:
   mddeHost: "localhost"
   mddePort: 8942
   mddeBenchPort: 8954
