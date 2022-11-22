@@ -7,7 +7,8 @@ import org.apache.logging.log4j.Logger;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 import redis.clients.jedis.Response;
-import redis.clients.jedis.ScanResult;
+import redis.clients.jedis.resps.ScanResult;
+
 
 import java.io.*;
 import java.nio.channels.FileLock;
