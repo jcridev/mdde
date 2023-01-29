@@ -17,7 +17,7 @@ Pre-requisites:
 3. ``` 
    cd ../docker/compositions/redis/scripts
    sh start_redis_only.sh
-   cd ../../../debug
+   cd ../../../../debug
    ```
 
 Leave the databases running. To shut down the Redis nodes, press Ctrl-C in the terminal window where the `up` command was executed or `sudo docker-compose -f ../docker/compositions/redis/docker-compose.debug.yml down` in another.

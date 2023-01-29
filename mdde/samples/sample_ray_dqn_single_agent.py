@@ -1,18 +1,20 @@
 import os
 import argparse
-import logging
 
 from pathlib import Path
 
 import ray
-from ray import utils
-from ray.rllib.agents.dqn import DQNTrainer
+from ray import air
+from ray import tune
+from ray.air import CheckpointConfig
+from ray.rllib.algorithms.dqn import dqn
 from ray.tune import run_experiments
 from ray.tune.registry import register_env
 
 from mdde.core import Environment
 from mdde.agent.default import DefaultAgent
-from mdde.scenario.default import DefaultScenario
+from mdde.registry.workload import EDefaultYCSBWorkload
+from mdde.scenario.default import DefaultScenario, DefaultScenarioSimulation
 from mdde.config import ConfigRegistry, ConfigEnvironment
 from mdde.registry.protocol import PRegistryControlClient, PRegistryWriteClient, PRegistryReadClient
 from mdde.registry.tcp import RegistryClientTCP
@@ -46,6 +48,11 @@ class DQNTestSample:
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # {'0': 'DEBUG', '1': 'INFO', '2': 'WARNING', '3': 'ERROR'}
 
     def run_dqn(self, config):
+        # Workload
+        selected_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST_LARGE
+        if config.light:
+            selected_workload: EDefaultYCSBWorkload = EDefaultYCSBWorkload.READ_10000_100000_LATEST
+
         # RAY tmp
         temp_dir_full_path_obj = Path(self.ray_temp_dir).resolve()
         temp_dir_full_path_obj.mkdir(parents=True, exist_ok=True)
@@ -116,7 +123,26 @@ class DQNTestSample:
                                        write_stats=write_stats,
                                        allow_do_nothing=do_nothing))
 
+            num_fragments: int = config.n_frags
             # Create scenario
+            if config.sim:
+                scenario = DefaultScenarioSimulation(num_fragments=num_fragments,
+                                                     num_steps_before_bench=config.bench_psteps,
+                                                     agents=agents,
+                                                     benchmark_clients=config.bench_clients,
+                                                     data_gen_workload=selected_workload,
+                                                     bench_workload=selected_workload,
+                                                     write_stats=write_stats,
+                                                     ignore_conflicting_actions=config.ok_conf_a)  # Number of YCSB threads
+            else:
+                scenario = DefaultScenario(num_fragments=num_fragments,
+                                           num_steps_before_bench=config.bench_psteps,
+                                           agents=agents,
+                                           benchmark_clients=config.bench_clients,
+                                           data_gen_workload=selected_workload,
+                                           bench_workload=selected_workload,
+                                           write_stats=write_stats,
+                                           ignore_conflicting_actions=config.ok_conf_a)  # Number of YCSB threads
             scenario = DefaultScenario(num_fragments=20,
                                        num_steps_before_bench=config.bench_psteps,
                                        agents=agents,
@@ -176,63 +202,94 @@ class DQNTestSample:
 
         register_env("mdde_s", env_creator)
 
+        dqn_config = (
+            dqn.DQNConfig()
+            .environment(
+                env='mdde_s',
+                env_config={
+                    "host": self.mdde_registry_host,
+                    "port": self.mdde_registry_port,
+                    "reg_config": config_file_full_path,
+                    "env_config": mdde_config,
+                    "write_stats": True,
+                    "do_nothing": config.do_nothing
+                },
+            )
+        )
 
         exp_name = "DQN_MDDE_SINGLE"
-        exp_config = {
-            # === Log ===
-            "log_level": "ERROR",
-
-            # === Environment ===
-            "env_config": {
-                "host": self.mdde_registry_host,
-                "port": self.mdde_registry_port,
-                "reg_config": config_file_full_path,
-                "env_config": mdde_config,
-                "write_stats": True,
-                "do_nothing": config.do_nothing
-            },
-            "num_envs_per_worker": 1,
-            "horizon": config.ep_len,
-
-            # === Policy Config ===
-            # --- Model ---
-            "n_step": 1,
-            # "gamma": config.gamma,
-
-            # --- Replay buffer ---
-            "buffer_size": config.buffer_size,
-
-            # --- Optimization ---
-            "lr": config.lr,
-            "learning_starts": config.learning_starts,
-            "train_batch_size": self.TRAIN_BATCH_SIZE,
-            "batch_mode": "truncate_episodes",
-
-            # --- Parallelism ---
-            "num_workers": 0,
-            "num_gpus": 0,
-            "num_gpus_per_worker": 0
-        }
+        # exp_config = {
+        #     # === Log ===
+        #     "log_level": "ERROR",
+        #
+        #     # === Environment ===
+        #     "env_config": {
+        #         "host": self.mdde_registry_host,
+        #         "port": self.mdde_registry_port,
+        #         "reg_config": config_file_full_path,
+        #         "env_config": mdde_config,
+        #         "write_stats": True,
+        #         "do_nothing": config.do_nothing
+        #     },
+        #     "num_envs_per_worker": 1,
+        #     "horizon": config.ep_len,
+        #
+        #     # === Policy Config ===
+        #     # --- Model ---
+        #     "n_step": 1,
+        #     # "gamma": config.gamma,
+        #
+        #     # --- Replay buffer ---
+        #     "buffer_size": config.buffer_size,
+        #
+        #     # --- Optimization ---
+        #     "lr": config.lr,
+        #     "learning_starts": config.learning_starts,
+        #     "train_batch_size": self.TRAIN_BATCH_SIZE,
+        #     "batch_mode": "truncate_episodes",
+        #
+        #     # --- Parallelism ---
+        #     "num_workers": 0,
+        #     "num_gpus": 0,
+        #     "num_gpus_per_worker": 0
+        # }
 
         if config.debug:  # Run DQN within the same process (useful for debugging)
-            dqn_trainer = DQNTrainer(env="mdde_s", config=exp_config)
+            dqn_trainer = dqn_config.build()
             for step in range(0, config.num_episodes * config.ep_len):
                 dqn_trainer.train()
         else:
-            trainer = DQNTrainer
-            run_experiments({
-                exp_name: {
-                    "run": trainer,
-                    "env": "mdde_s",
-                    "stop": {
-                        "episodes_total": config.num_episodes,
+            tune.Tuner(
+                "DQN",
+                run_config=air.RunConfig(
+                    name=exp_name,
+                    verbose=2,
+                    log_to_file=False,
+                    local_dir=result_dir_path_ray,
+                    stop={
+                        "episodes_total": config.num_episodes
                     },
-                    "checkpoint_freq": 0,
-                    "local_dir": result_dir_path_ray,
-                    "restore": False,
-                    "config": exp_config
-                },
-            }, verbose=0, reuse_actors=False)  # reuse_actors=True - messes up the results
+                    checkpoint_config=CheckpointConfig(
+                        checkpoint_frequency=0,
+                        checkpoint_at_end=False
+                    )
+                ),
+                param_space=dqn_config.to_dict()
+            ).fit()
+            # trainer = DQNTrainer
+            # run_experiments({
+            #     exp_name: {
+            #         "run": trainer,
+            #         "env": "mdde_s",
+            #         "stop": {
+            #             "episodes_total": config.num_episodes,
+            #         },
+            #         "checkpoint_freq": 0,
+            #         "local_dir": result_dir_path_ray,
+            #         "restore": False,
+            #         "config": exp_config
+            #     },
+            # }, verbose=0, reuse_actors=False)  # reuse_actors=True - messes up the results
 
 
 if __name__ == '__main__':
@@ -264,6 +321,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--debug',
                         help='Debug flag. If set, the agents are executed within the same process (without Tune).',
+                        action='store_true')
+
+    parser.add_argument('--sim',
+                        help='Simulated benchmark (except the first run).',
                         action='store_true')
 
     # DQN params
@@ -314,6 +375,19 @@ if __name__ == '__main__':
                         help='Number of benchmark clients.',
                         type=int,
                         default=50)
+
+    parser.add_argument('--n-frags',
+                        help='Number of fragments to generate.',
+                        type=int,
+                        default=20)
+
+    parser.add_argument('--light',
+                        help='Execute corresponding "light" workload.',
+                        action='store_true')
+
+    parser.add_argument('--ok-conf-a',
+                        help='Ignore conflicting actions.',
+                        action='store_true')
 
     config = parser.parse_args()
 
