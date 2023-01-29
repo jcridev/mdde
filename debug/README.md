@@ -4,18 +4,18 @@ The current directory `debug` is the working directory.
 
 Pre-requisites:
 * Anaconda 1.7 
-* OpenJDK 11
-* Maven 3.6
+* OpenJDK 18
+* Maven 3.8
 
 ## Linux
 
 1. `sh prepare_test.sh`
    
-2. `conda env create -f ../mdde/support/conda-p37.yml`
-   * To *remove* the environment or its old version, run `conda env remove --name mdde-p37 --all` 
+2. `conda env create -f ../mdde/support/conda-p310.yml`
+   * To *remove* the environment or its old version, run `conda env remove --name mdde-p310 --all` 
   
 3. ``` 
-   cd ../docker/compositions/redis
+   cd ../docker/compositions/redis/scripts
    sh start_redis_only.sh
    cd ../../../debug
    ```
@@ -29,7 +29,7 @@ Open another window and start the Registry server.
 
 In yet another terminal window, activate conda environment.
 
-5. `conda activate mdde-p37`
+5. `conda activate mdde-p310`
 
 Setup MDDE.
 
@@ -37,10 +37,10 @@ Setup MDDE.
    
 7. `pip install -e ./core`
    
-8.  `pip install -e ./extensions/mdde-registry-client-tcp`    
+8. `pip install -e ./extensions/mdde-registry-client-tcp`    
 
 9. `pip install -e ./extensions/integration-ray`
-   * You might need to additionally install TensorFlow `pip install tensorflow==1.15.2'`. Currently it's not installed by default to simplify experimental environments configuration (CPU or GPU). 
+   * You might need to additionally install TensorFlow `pip install tensorflow==2.11.0'`. Currently it's not installed by default to simplify experimental environments configuration (CPU or GPU). 
 
 10. Run debug **or** sample configuration
     *  Debug, without a learner:
@@ -48,6 +48,6 @@ Setup MDDE.
         2.  `python test_environment.py`
     *  Sample:
         1.  `cd samples`
-        2.  Ray RLlib MADDPG: `python sample_ray_maddpg.py` 
+        2.  Ray RLlib MADDPG: `python sample_ray_maddpg.py --debug` 
             1.  *[optional]* argument `--result-dir` - Path to results dir (tensorboard)
             2.  *[optional]* argument `--temp-dir` - Path to where Ray should store temp folder. Make sure it's not too long for the plasma store, otherwise ray will fail.

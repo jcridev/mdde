@@ -22,6 +22,6 @@ setup(
     license='MIT Licence',
     packages=find_namespace_packages(include=['mdde.registry.*'], exclude=['mdde.test.*']),
 
-    install_requires=['typing-extensions; python_version<"3.8"'],
+    install_requires=[],
     zip_safe=False,
 )

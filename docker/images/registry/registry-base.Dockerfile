@@ -1,6 +1,6 @@
 # Base registry image
 # Context: ../../../registry
-FROM maven:3.6.3-jdk-11
+FROM maven:3.8.6-openjdk-18
 
 LABEL org.label-schema.name="mdde/registry/base"
 LABEL org.label-schema.description="MDDE Registry"

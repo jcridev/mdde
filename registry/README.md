@@ -21,8 +21,8 @@ Additionally, the registry provides the benchmarking capability allowing to run 
 
 ## Requirements
 
-* OpenJDK 11
-* Maven 3.6.x
+* OpenJDK 18
+* Maven 3.8.x
 
 ## Dependencies
 

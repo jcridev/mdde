@@ -6,10 +6,11 @@ from pathlib import Path
 from typing import Callable, Union
 
 import ray
-from ray import utils
-from ray.tune import run_experiments
-from ray.tune.registry import register_trainable, register_env
-from ray.rllib.contrib.maddpg.maddpg import MADDPGTrainer
+from ray import air
+from ray import tune
+from ray.air import CheckpointConfig
+from ray.tune.registry import register_env
+from ray.rllib.algorithms.maddpg import maddpg
 
 from mdde.core import Environment
 from mdde.agent.default import SingleNodeDefaultAgent
@@ -89,15 +90,15 @@ class MADDPGSample:
 
         ray.init(num_gpus=0,
                  num_cpus=4,
-                 #temp_dir=temp_dir_full_path
+                 # temp_dir=temp_dir_full_path
                  )
 
-        #MddeMultiAgentEnv.configure_ray(ray)
+        # MddeMultiAgentEnv.configure_ray(ray)
 
-        maddpg_agent = MADDPGTrainer.with_updates(
-            mixins=[MADDPGSample.CustomStdOut]
-        )
-        register_trainable("MADDPG", maddpg_agent)
+        # maddpg_agent = MADDPG.with_updates(
+        #     mixins=[MADDPGSample.CustomStdOut]
+        # )
+        # register_trainable("MADDPG", maddpg_agent)
 
         mdde_config = ConfigEnvironment(tmp_dir=temp_env_dir,
                                         result_dir=result_dir_path_mdde)
@@ -226,13 +227,14 @@ class MADDPGSample:
                 scenario_rew_min = 0.0
                 default_scenario_thr_max = counterfeit_thr_max + counterfeit_thr_max * config.store_m
                 scaled_reward = (
-                                   ((reward - counterfeit_thr_min) / (default_scenario_thr_max - counterfeit_thr_min))
-                                   * (scenario_rew_max - scenario_rew_min)  # Unnecessary here, but easier for debug
+                                        ((reward - counterfeit_thr_min) / (
+                                                    default_scenario_thr_max - counterfeit_thr_min))
+                                        * (scenario_rew_max - scenario_rew_min)
+                                # Unnecessary here, but easier for debug
                                 ) + scenario_rew_min
                 return scaled_reward
 
             reward_scaler = scale_reward
-
 
         # Create and initialize environment before passing it to Ray
         # This makes it impossible to run multiple instances of the environment, however it's intentional due to the
@@ -289,79 +291,116 @@ class MADDPGSample:
         def policy_mapping_fn(agent_id):
             return policy_ids[agent_id]
 
+        maddpg_config = (
+            maddpg.MADDPGConfig()
+            .environment(
+                env='mdde',
+                env_config={
+                    "host": self.mdde_registry_host,
+                    "port": self.mdde_registry_port,
+                    "reg_config": config_file_full_path,
+                    "env_config": mdde_config,
+                    "write_stats": True,
+                    "do_nothing": config.do_nothing
+                },
+            )
+            .multi_agent(
+                policies=policies,
+                policy_mapping_fn=policy_mapping_fn,
+            )
+        )
+
         exp_name = "MADDPG_MDDE_DEBUG"
 
-        exp_config = {
-            # === Log ===
-            "log_level": "ERROR",
-
-            # === Environment ===
-            "env_config": {
-                "host": self.mdde_registry_host,
-                "port": self.mdde_registry_port,
-                "reg_config": config_file_full_path,
-                "env_config": mdde_config,
-                "write_stats": True,
-                "do_nothing": config.do_nothing
-            },
-            "num_envs_per_worker": 1,
-            "horizon": config.ep_len,
-
-            # === Policy Config ===
-            # --- Model ---
-            "good_policy": self.GOOD_POLICY,
-            "adv_policy": self.ADV_POLICY,
-            "actor_hiddens": maddpg_network,
-            "actor_hidden_activation": "relu",
-            "critic_hiddens": maddpg_network,
-            "critic_hidden_activation": "relu",
-            "n_step": 1,
-            "gamma": config.gamma,
-
-            # --- Exploration ---
-            "tau": config.tau,
-
-            # --- Replay buffer ---
-            "buffer_size": config.buffer_size,
-
-            # --- Optimization ---
-            "actor_lr": config.actor_lr,
-            "critic_lr": config.critic_lr,
-            "learning_starts": config.learning_starts,
-            #"sample_batch_size": config.smpl_batch_s,
-            "train_batch_size": config.trn_batch_s,
-            #"batch_mode": "truncate_episodes",
-
-            # --- Parallelism ---
-            "num_workers": 0,  # run only one env process
-            "num_gpus": 0,
-            "num_gpus_per_worker": 0,
-
-            # === Multi-agent setting ===
-            "multiagent": {
-                "policies": policies,
-                "policy_mapping_fn": policy_mapping_fn
-            },
-        }
+        # exp_config = {
+        #     # === Log ===
+        #     "log_level": "ERROR",
+        #
+        #     # === Environment ===
+        #     "env_config": {
+        #         "host": self.mdde_registry_host,
+        #         "port": self.mdde_registry_port,
+        #         "reg_config": config_file_full_path,
+        #         "env_config": mdde_config,
+        #         "write_stats": True,
+        #         "do_nothing": config.do_nothing
+        #     },
+        #     "num_envs_per_worker": 1,
+        #     "horizon": config.ep_len,
+        #
+        #     # === Policy Config ===
+        #     # --- Model ---
+        #     "good_policy": self.GOOD_POLICY,
+        #     "adv_policy": self.ADV_POLICY,
+        #     "actor_hiddens": maddpg_network,
+        #     "actor_hidden_activation": "relu",
+        #     "critic_hiddens": maddpg_network,
+        #     "critic_hidden_activation": "relu",
+        #     "n_step": 1,
+        #     "gamma": config.gamma,
+        #
+        #     # --- Exploration ---
+        #     "tau": config.tau,
+        #
+        #     # --- Replay buffer ---
+        #     "buffer_size": config.buffer_size,
+        #
+        #     # --- Optimization ---
+        #     "actor_lr": config.actor_lr,
+        #     "critic_lr": config.critic_lr,
+        #     "learning_starts": config.learning_starts,
+        #     # "sample_batch_size": config.smpl_batch_s,
+        #     "train_batch_size": config.trn_batch_s,
+        #     # "batch_mode": "truncate_episodes",
+        #
+        #     # --- Parallelism ---
+        #     "num_workers": 0,  # run only one env process
+        #     "num_gpus": 0,
+        #     "num_gpus_per_worker": 0,
+        #
+        #     # === Multi-agent setting ===
+        #     "multiagent": {
+        #         "policies": policies,
+        #         "policy_mapping_fn": policy_mapping_fn
+        #     },
+        # }
 
         if config.debug:  # Run MADDPG within the same process (useful for debugging)
-            maddpg_trainer = MADDPGTrainer(env="mdde", config=exp_config)
+            maddpg_trainer = maddpg_config.build()
             for step in range(0, config.num_episodes * config.ep_len):
                 maddpg_trainer.train()
         else:  # Run using Tune
-            run_experiments({
-                exp_name: {
-                    "run": "contrib/MADDPG",
-                    "env": "mdde",
-                    "stop": {
-                        "episodes_total": config.num_episodes,
+            tune.Tuner(
+                "MADDPG",
+                run_config=air.RunConfig(
+                    name=exp_name,
+                    verbose=2,
+                    log_to_file=False,
+                    local_dir=result_dir_path_ray,
+                    stop={
+                        "episodes_total": config.num_episodes
                     },
-                    "checkpoint_freq": 0,
-                    "local_dir": result_dir_path_ray,
-                    "restore": False,
-                    "config": exp_config
-                },
-            }, verbose=0, reuse_actors=False)  # reuse_actors=True - messes up the results
+                    checkpoint_config=CheckpointConfig(
+                        checkpoint_frequency=0,
+                        checkpoint_at_end=False
+                    )
+                ),
+                param_space=maddpg_config.to_dict()
+            ).fit()
+
+            # run_experiments({
+            #     exp_name: {
+            #         "run": "contrib/MADDPG",
+            #         "env": "mdde",
+            #         "stop": {
+            #             "episodes_total": config.num_episodes,
+            #         },
+            #         "checkpoint_freq": 0,
+            #         "local_dir": result_dir_path_ray,
+            #         "restore": False,
+            #         "config": exp_config
+            #     },
+            # }, verbose=0, reuse_actors=False)  # reuse_actors=True - messes up the results
 
 
 if __name__ == '__main__':

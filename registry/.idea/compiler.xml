@@ -13,11 +13,11 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="mdde-registry" target="17" />
-      <module name="mdde-registry-core" target="17" />
-      <module name="mdde-registry-shared" target="17" />
-      <module name="mdde-registry-tcp" target="17" />
-      <module name="mdde-registry-tcp-shared" target="17" />
+      <module name="mdde-registry" target="18" />
+      <module name="mdde-registry-core" target="18" />
+      <module name="mdde-registry-shared" target="18" />
+      <module name="mdde-registry-tcp" target="18" />
+      <module name="mdde-registry-tcp-shared" target="18" />
       <module name="test" target="11" />
     </bytecodeTargetLevel>
   </component>

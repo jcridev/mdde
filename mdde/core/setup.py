@@ -10,18 +10,18 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
                      .format(REQUIRED_PYTHON, CURRENT_PYTHON))
     sys.exit(1)
 
-
 packages = find_namespace_packages(include=['mdde.*'], exclude=['mdde.test.*'])
 
-requirements = ['typing-extensions; python_version<"3.8"',
-                'tiledb>=0.5.6',  # conda install -c conda-forge tiledb-py
-                'natsort',
-                'PyYAML',
-                'numpy>=1.18.1']
+requirements = [
+    'tiledb==0.20.0',
+    'natsort==8.2.0',
+    'PyYAML==6.0',
+    'numpy==1.23.5',
+]
 
 setup(
     name='mdde',
-    version='0.7',
+    version='0.7.1',
     description='Multi-agent Data Distribution Environment',
 
     author='Andrey Kharitonov',
@@ -29,7 +29,6 @@ setup(
 
     license='MIT Licence',
     packages=packages,
-
 
     install_requires=requirements,
     zip_safe=False,

@@ -1,5 +1,5 @@
 # Base image for the ray-based experiments
-FROM python:3.7.9-buster
+FROM python:3.10.9-buster
 # If switched to `alpine` or `slim` variations, install GCC manually in the container or use multi-stage builds if the final size of the container is an issue.
 
 # CPU bound environment container for algorithms implemented in Ray RLlib
